@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 
 public class DBConnection {
 
+    
     private static final String URL =
         "jdbc:mysql://gondola.proxy.rlwy.net:54684/railway?useSSL=false&allowPublicKeyRetrieval=true";
 
