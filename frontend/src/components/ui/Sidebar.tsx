@@ -10,15 +10,15 @@ import {
 import clsx from "clsx";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/customers", label: "Customers", icon: Users },
-  { href: "/rooms", label: "Rooms", icon: BedDouble },
-  { href: "/bookings", label: "Bookings", icon: CalendarCheck },
-  { href: "/services", label: "Services", icon: Wrench },
-  { href: "/service-usage", label: "Service Usage", icon: FileText },
-  { href: "/invoices", label: "Invoices", icon: Receipt },
-  { href: "/employees", label: "Employees", icon: UserCog },
-  { href: "/reports", label: "Reports", icon: BarChart3 },
+  { href: "/dashboard", label: "Trang Chủ", icon: LayoutDashboard },
+  { href: "/customers", label: "Khách Hàng", icon: Users },
+  { href: "/rooms", label: "Phòng", icon: BedDouble },
+  { href: "/bookings", label: "Đặt Phòng", icon: CalendarCheck },
+  { href: "/services", label: "Dịch Vụ", icon: Wrench },
+  { href: "/serviceusage", label: "Yêu Cầu Dịch Vụ", icon: FileText },
+  { href: "/invoices", label: "Hóa Đơn", icon: Receipt },
+  { href: "/employees", label: "Nhân Viên", icon: UserCog },
+  { href: "/reports", label: "Báo Cáo", icon: BarChart3 },
 ];
 
 export default function Sidebar() {
