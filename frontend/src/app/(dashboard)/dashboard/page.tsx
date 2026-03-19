@@ -1,3 +1,4 @@
+"use client";
 import { BedDouble, CheckCircle, XCircle, CalendarCheck, CalendarX, DollarSign } from "lucide-react";
 import StatCard from "@/components/ui/StatCard";
 import RevenueChart from "@/components/dashboard/RevenueChart";
@@ -12,18 +13,22 @@ const stats = [
   { title: "Total Revenue Today", value: "$15,420", change: "+18%", isPositive: true, icon: <DollarSign className="w-6 h-6 text-emerald-600" />, iconBg: "bg-emerald-100" },
 ];
 
+const SayHi = () => {console.log("Hi from the dashboard!");}
+  
+
+
 export default function DashboardPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+      <div className="p-6 rounded-lg bg-white shadow-sm">
+        <h1 className="text-2xl font-bold text-gray-800">Trang Chủ</h1>
         <p className="text-gray-500 text-sm">Welcome back, Admin</p>
       </div>
 
       {/* Actions */}
       <div className="flex gap-3">
-        <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl flex items-center gap-2 transition">
+        <button onClick={SayHi} className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl flex items-center gap-2 transition">
           + New Booking
         </button>
         <button className="border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-medium px-4 py-2.5 rounded-xl transition">
