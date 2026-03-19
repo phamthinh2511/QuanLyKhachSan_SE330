@@ -1,0 +1,36 @@
+package hotelmanagement.backend.entity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@Entity
+@Table(name = "dichvu")
+public class Dichvu {
+    @Id
+    @Column(name = "MaDichVu", nullable = false)
+    private Integer id;
+
+    @Size(max = 100)
+    @NotNull
+    @Column(name = "TenDichVu", nullable = false, length = 100)
+    private String tenDichVu;
+
+    @NotNull
+    @Column(name = "GiaDichVu", nullable = false)
+    private Double giaDichVu;
+
+    @Size(max = 200)
+    @NotNull
+    @Column(name = "MoTa", nullable = false, length = 200)
+    private String moTa;
+
+
+}
