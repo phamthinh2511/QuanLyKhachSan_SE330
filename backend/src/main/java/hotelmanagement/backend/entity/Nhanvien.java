@@ -37,5 +37,9 @@ public class Nhanvien {
     @Column(name = "ChucVu", nullable = false, length = 50)
     private String chucVu;
 
+    @NotNull
+    @Column(name = "MaTaiKhoan", nullable = false)
+    private Integer maTaiKhoan;
+
 
 }
