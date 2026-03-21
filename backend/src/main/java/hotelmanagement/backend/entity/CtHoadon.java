@@ -12,6 +12,7 @@ import lombok.Setter;
 @Table(name = "ct_hoadon")
 public class CtHoadon {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaCTHoaDon", nullable = false)
     private Integer id;
 
