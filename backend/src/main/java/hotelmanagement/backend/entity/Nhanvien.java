@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDate;
 
@@ -37,9 +39,10 @@ public class Nhanvien {
     @Column(name = "ChucVu", nullable = false, length = 50)
     private String chucVu;
 
-    @NotNull
-    @Column(name = "MaTaiKhoan", nullable = false)
-    private Integer maTaiKhoan;
+    @OneToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "MaTaiKhoan",nullable = false , unique = true)
+    private Taikhoan taikhoan;
 
 
 }

@@ -5,8 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
+
 
 import java.time.LocalDate;
 
@@ -16,14 +15,10 @@ import java.time.LocalDate;
 @Table(name = "taikhoan")
 public class Taikhoan {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaTaiKhoan", nullable = false)
     private Integer id;
 
-    @MapsId
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "MaTaiKhoan", nullable = false, referencedColumnName = "MaTaiKhoan")
-    private Khachhang khachhang;
 
     @Size(max = 50)
     @NotNull
