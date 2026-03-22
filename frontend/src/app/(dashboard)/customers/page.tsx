@@ -7,7 +7,7 @@ import { Customer } from "@/types/customer";
 import CustomerTable from "@/components/customers/CustomerTable";
 import CustomerModal from "@/components/customers/CustomerModal";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 50;
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
@@ -116,7 +116,7 @@ export default function CustomersPage() {
             onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
             className="px-6 py-2.5 border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 text-sm font-medium rounded-xl transition"
           >
-            Xem thêm 10 khách hàng
+            Xem thêm
           </button>
         </div>
       )}
