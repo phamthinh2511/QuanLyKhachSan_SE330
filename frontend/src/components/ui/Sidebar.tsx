@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation"; // Thêm useRouter
 import {
   LayoutDashboard, Users, BedDouble, CalendarCheck,
   Wrench, FileText, Receipt, UserCog, BarChart3,
-  Settings, Hotel,
+  Settings, Hotel, LogOut // Thêm icon LogOut
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -22,7 +22,18 @@ const navItems = [
 ];
 
 export default function Sidebar() {
+  // Khai báo Hook ở ngay dòng đầu tiên của Component
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Hàm xử lý đăng xuất
+  const handleLogout = () => {
+    // 1. Xóa token khỏi bộ nhớ trình duyệt
+    localStorage.removeItem("token");
+    
+    // 2. Chuyển hướng về trang đăng nhập
+    router.push("/login");
+  };
 
   return (
     <aside className="w-56 min-h-screen bg-white border-r border-gray-100 flex flex-col">
@@ -53,15 +64,24 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Settings */}
-      <div className="px-3 pb-4 border-t border-gray-100 pt-3">
+      {/* Settings & Logout */}
+      <div className="px-3 pb-4 border-t border-gray-100 pt-3 space-y-1">
         <Link
           href="/settings"
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition"
         >
           <Settings className="w-4 h-4" />
-          Settings
+          Cài đặt
         </Link>
+        
+        {/* NÚT ĐĂNG XUẤT */}
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition w-full text-left"
+        >
+          <LogOut className="w-4 h-4" />
+          Đăng xuất
+        </button>
       </div>
     </aside>
   );
