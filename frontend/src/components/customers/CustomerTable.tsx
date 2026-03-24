@@ -6,6 +6,7 @@ interface Props {
   customers: Customer[];
   onEdit: (c: Customer) => void;
   onDelete: (id: number) => void;
+  onView?: (data: Customer) => void;
 }
 
 const statusStyle: Record<string, string> = {
@@ -14,7 +15,7 @@ const statusStyle: Record<string, string> = {
   "Khách hàng thân thiết":  "bg-yellow-100 text-yellow-700",
 };
 
-export default function CustomerTable({ customers, onEdit, onDelete }: Props) {
+export default function CustomerTable({ customers, onEdit, onDelete, onView }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-100">
@@ -58,7 +59,9 @@ export default function CustomerTable({ customers, onEdit, onDelete }: Props) {
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-1">
-                      <button className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                      <button 
+                        onClick={() => onView?.(c)}
+                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
                         <Eye className="w-4 h-4" />
                       </button>
                       <button

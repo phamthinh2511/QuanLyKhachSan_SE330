@@ -55,6 +55,11 @@ export default function CustomersPage() {
     setModalOpen(true);
   };
 
+  const handleView = (customer: Customer) => {
+    setEditing(customer);
+    setModalOpen(true);
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -104,6 +109,7 @@ export default function CustomersPage() {
         customers={visibleCustomers}  // 👈 truyền visibleCustomers thay vì filtered
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView={handleView}
       />
 
       {/* Load more */}

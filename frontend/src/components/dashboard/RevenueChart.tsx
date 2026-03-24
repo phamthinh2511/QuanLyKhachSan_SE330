@@ -13,8 +13,8 @@ const data = [
 export default function RevenueChart() {
   return (
     <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-      <h3 className="font-semibold text-gray-800 mb-1">Revenue & Bookings Overview</h3>
-      <p className="text-gray-400 text-xs mb-4">Monthly revenue and booking trends</p>
+      <h3 className="font-semibold text-gray-800 mb-1">Hóa đơn và Đặt phòng</h3>
+      <p className="text-gray-400 text-xs mb-4">Theo tháng</p>
       <ResponsiveContainer width="100%" height={260}>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -22,8 +22,8 @@ export default function RevenueChart() {
           <YAxis tick={{ fontSize: 12 }} />
           <Tooltip />
           <Legend />
-          <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} name="Revenue ($)" />
-          <Line type="monotone" dataKey="bookings" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} name="Bookings" />
+          <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} name="Doanh thu (đ)" />
+          <Line type="monotone" dataKey="bookings" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} name="Đặt phòng" />
         </LineChart>
       </ResponsiveContainer>
     </div>
