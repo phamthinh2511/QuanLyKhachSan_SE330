@@ -13,7 +13,7 @@ const categoryStyle: Record<ServiceCategory, string> = {
   "Phòng":    "bg-purple-100 text-purple-600",
   "Spa":        "bg-pink-100 text-pink-600",
   "Đưa đón":  "bg-green-100 text-green-600",
-  "Khác":     "bg-gray-100 text-gray-500",
+  "Khác":           "bg-gray-100 text-gray-500",
 };
 
 export default function ServiceTable({ services, onEdit, onDelete }: Props) {
