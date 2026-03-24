@@ -44,7 +44,7 @@ public class AuthController {
             // Nếu có bất kỳ lỗi gì (Sai pass, lỗi SQL, lỗi JWT...), nó sẽ hiện ở đây.
             ApiResponse<String> errorResponse = new ApiResponse<>();
             errorResponse.setCode(401);
-            errorResponse.setMessage("Đăng nhập thất bại: " + e.getMessage());
+            errorResponse.setMessage("Đăng nhập thất bại!");
             return errorResponse;
         }
 
