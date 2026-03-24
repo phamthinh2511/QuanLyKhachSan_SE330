@@ -9,13 +9,41 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ username: "", password: "" });
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // TODO: gọi API xác thực thật
-    await new Promise((r) => setTimeout(r, 1000)); // giả lập delay
-    router.push("/dashboard");
+    setErrorMsg("");
+
+    try {
+      const response = await fetch('http://localhost:8080/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: form.username,
+          password: form.password
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.code === 200) {
+        localStorage.setItem('token', data.result);
+        console.log(data.message);
+        router.push("/dashboard");
+      } else {
+        console.log(data.message);
+        setErrorMsg(data.message);
+      }
+    } catch (error) {
+      console.log("Lỗi kết nối server");
+      setErrorMsg("Không thể kết nối đến server.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -93,6 +121,11 @@ export default function LoginPage() {
               </a>
             </div>
 
+            {errorMsg && (
+                <div className="mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-200 text-sm text-center">
+                  {errorMsg}
+                </div>
+            )}
             {/* Submit */}
             <button
               type="submit"

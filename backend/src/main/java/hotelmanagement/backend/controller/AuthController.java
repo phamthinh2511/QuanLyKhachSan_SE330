@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
+@CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
 
     @Autowired
@@ -44,7 +45,7 @@ public class AuthController {
             // Nếu có bất kỳ lỗi gì (Sai pass, lỗi SQL, lỗi JWT...), nó sẽ hiện ở đây.
             ApiResponse<String> errorResponse = new ApiResponse<>();
             errorResponse.setCode(401);
-            errorResponse.setMessage("Đăng nhập thất bại: " + e.getMessage());
+            errorResponse.setMessage("Đăng nhập thất bại!");
             return errorResponse;
         }
 
