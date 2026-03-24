@@ -8,6 +8,7 @@ interface Props {
   customer: Customer | null;
   onSave: (data: Customer) => void;
   onClose: () => void;
+  onView?: (data: Customer) => void;
 }
 
 const emptyForm: Omit<Customer, "id"> = {

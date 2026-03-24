@@ -51,7 +51,7 @@ export default function BookingsPage() {
     setEditing(null);
   };
 
-  const handleEdit = (booking: Booking) => {
+   const handleEdit = (booking: Booking) => {
     setEditing(booking);
     setModalOpen(true);
   };
