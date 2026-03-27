@@ -60,7 +60,7 @@ export default function ServicesPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="p-6 rounded-lg bg-white shadow-sm item-start sm:flex sm:justify-between">
-          <div><h1 className="text-2xl font-bold text-gray-800">Quản lý đặt phòng</h1>
+          <div><h1 className="text-2xl font-bold text-gray-800">Quản lý dịch vụ</h1>
           <p className="text-gray-500 text-sm">Welcome back, Admin</p></div>
           
           <button

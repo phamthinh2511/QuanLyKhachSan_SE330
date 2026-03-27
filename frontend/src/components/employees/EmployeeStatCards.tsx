@@ -1,0 +1,28 @@
+import { Employee } from "@/types/employee";
+
+interface Props { employees: Employee[] }
+
+export default function EmployeeStatCards({ employees }: Props) {
+  const total      = employees.length;
+  const active     = employees.filter((e) => e.status === "Active").length;
+  const departments = new Set(employees.map((e) => e.department)).size;
+  const positions   = new Set(employees.map((e) => e.position)).size;
+
+  const cards = [
+    { label: "Tổng nhân viên", value: String(total),       color: "text-gray-800"  },
+    { label: "Đang làm việc",  value: String(active),      color: "text-green-600" },
+    { label: "Phòng ban",      value: String(departments), color: "text-blue-600"  },
+    { label: "Vị trí",         value: String(positions),   color: "text-purple-600"},
+  ];
+
+  return (
+    <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      {cards.map((c) => (
+        <div key={c.label} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm text-center">
+          <p className="text-gray-400 text-sm mb-2">{c.label}</p>
+          <p className={`text-3xl font-bold ${c.color}`}>{c.value}</p>
+        </div>
+      ))}
+    </div>
+  );
+}

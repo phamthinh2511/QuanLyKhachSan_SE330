@@ -16,6 +16,10 @@ export default function LoginPage() {
     setLoading(true);
     setErrorMsg("");
 
+    if (process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === "true") {
+      router.push("/dashboard");
+      return;
+    }
     try {
       const response = await fetch('http://localhost:8080/auth/login', {
         method: 'POST',
