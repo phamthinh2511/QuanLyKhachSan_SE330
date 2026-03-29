@@ -6,7 +6,7 @@ import OccupancyRate from "./tabs/OccupancyRate";
 import ServiceUsageReport from "./tabs/ServiceUsageReport";
 import RoomPerformance from "./tabs/RoomPerformance";
 
-const TABS: ReportTab[] = ["Revenue Analysis", "Occupancy Rate", "Service Usage", "Room Performance"];
+const TABS: ReportTab[] = ["Phân tích doanh thu", "Tỉ lệ bận phòng", "Sử dụng dịch vụ", "Năng suất phòng"];
 
 interface Props {
   activeTab: ReportTab;
@@ -34,10 +34,10 @@ export default function ReportTabs({ activeTab, onTabChange, data, stats, period
       </div>
 
       {/* Tab content */}
-      {activeTab === "Revenue Analysis"  && <RevenueAnalysis  data={data} stats={stats} />}
-      {activeTab === "Occupancy Rate"    && <OccupancyRate    data={data} />}
-      {activeTab === "Service Usage"     && <ServiceUsageReport />}
-      {activeTab === "Room Performance"  && <RoomPerformance />}
+      {activeTab === "Phân tích doanh thu"  && <RevenueAnalysis  data={data} stats={stats} />}
+      {activeTab === "Tỉ lệ bận phòng"    && <OccupancyRate    data={data} />}
+      {activeTab === "Sử dụng dịch vụ"     && <ServiceUsageReport />}
+      {activeTab === "Năng suất phòng"  && <RoomPerformance />}
     </div>
   );
 }

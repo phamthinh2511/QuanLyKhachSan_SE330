@@ -14,7 +14,7 @@ interface Props {
 
 const emptyForm: Omit<Booking, "id" | "bookingCode"> = {
   customerName: "", roomNumber: "", checkIn: "", checkOut: "",
-  guests: 1, amount: 0, status: "Booked",
+  guests: 1, amount: 0, status: "Đã đặt",
 };
 
 export default function BookingModal({ booking, onSave, onClose }: Props) {
@@ -117,7 +117,7 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
                 className={inputClass} required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tổng tiền ($)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tổng tiền (VND)</label>
               <input type="number" value={form.amount} readOnly
                 className={inputClass + " bg-gray-50 text-gray-500 cursor-not-allowed"} />
             </div>

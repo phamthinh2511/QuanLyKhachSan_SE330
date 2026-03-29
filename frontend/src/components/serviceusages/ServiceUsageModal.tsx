@@ -17,7 +17,7 @@ const today = new Date().toISOString().split("T")[0];
 const emptyForm: Omit<ServiceUsage, "id" | "usageCode"> = {
   bookingCode: "", customerName: "", roomNumber: "",
   serviceName: "", quantity: 1, unitPrice: 0,
-  total: 0, date: today, status: "Pending",
+  total: 0, date: today, status: "Chờ sử dụng",
 };
 
 export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
@@ -134,12 +134,12 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
                 className={inputClass} required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Đơn giá ($)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Đơn giá (VND)</label>
               <input type="number" value={form.unitPrice} readOnly
                 className={inputClass + " bg-gray-50 text-gray-500 cursor-not-allowed"} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tổng ($)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tổng (VND)</label>
               <input type="number" value={form.total} readOnly
                 className={inputClass + " bg-gray-50 text-gray-500 cursor-not-allowed"} />
             </div>
@@ -158,8 +158,9 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
               <select value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value as ServiceUsageStatus })}
                 className={inputClass}>
-                <option>Pending</option>
-                <option>Paid</option>
+                <option>Đã sử dụng</option>
+                <option>Chờ sử dụng</option>
+                <option>Đã hủy</option>
               </select>
             </div>
           </div>

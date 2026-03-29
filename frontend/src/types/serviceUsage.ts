@@ -1,4 +1,4 @@
-export type ServiceUsageStatus = "Paid" | "Pending";
+export type ServiceUsageStatus = "Đã sử dụng" | "Chờ sử dụng" | "Đã hủy";
 
 export interface ServiceUsage {
   id: number;

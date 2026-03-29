@@ -109,8 +109,9 @@ export default function ServiceUsagePage() {
             className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option>Tất cả</option>
-            <option>Paid</option>
-            <option>Pending</option>
+            <option>Đã sử dụng</option>
+            <option>Chờ sử dụng</option>
+            <option>Đã hủy</option>
           </select>
         </div>
 

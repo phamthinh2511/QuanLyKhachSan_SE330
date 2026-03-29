@@ -56,9 +56,9 @@ export default function EmployeesPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div>
         <div className="p-6 rounded-lg bg-white shadow-sm">
-          <h1 className="text-2xl font-bold text-gray-800">Quản lý hóa đơn</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Quản lý nhân viên</h1>
           <p className="text-gray-500 text-sm">Welcome back, Admin</p>
         </div>
       </div>
@@ -94,13 +94,13 @@ export default function EmployeesPage() {
           className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option>Tất cả</option>
-          <option>Receptionist</option>
-          <option>Manager</option>
-          <option>Housekeeping</option>
-          <option>Chef</option>
-          <option>Maintenance</option>
-          <option>Security</option>
-          <option>Other</option>
+          <option>Lễ Tân</option>
+          <option>Quản Lý</option>
+          <option>Vệ Sinh</option>
+          <option>Bếp</option>
+          <option>Bảo Dưỡng</option>
+          <option>Bảo Vệ</option>
+          <option>Khác</option>
         </select>
       </div>
 

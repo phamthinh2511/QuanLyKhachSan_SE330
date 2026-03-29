@@ -6,31 +6,31 @@ import ReportStatCards from "@/components/reports/ReportStatCards";
 import ReportTabs from "@/components/reports/ReportTabs";
 import { monthlyData, quarterlyData, thisMonthData } from "@/lib/data/reports";
 
-export type Period = "This Month" | "This Quarter" | "This Year";
+export type Period = "Tháng này" | "Quý này" | "Năm nay";
 export type ReportTab = "Revenue Analysis" | "Occupancy Rate" | "Service Usage" | "Room Performance";
 
 const periodData = {
-  "This Month":   thisMonthData,
-  "This Quarter": quarterlyData,
-  "This Year":    monthlyData,
+  "Tháng này":   thisMonthData,
+  "Quý này": quarterlyData,
+  "Năm nay":    monthlyData,
 };
 
 const periodStats = {
-  "This Month": {
+  "Tháng này": {
     revenue: 76000, revenueChange: "+8.3%",
     profit:  40000, profitChange:  "+11.2%",
     occupancy: 82,  occupancyChange: "+5.1%",
     guests:  348,   guestsChange:  "+7.4%",
     expenses: 36000,
   },
-  "This Quarter": {
+  "Quý này": {
     revenue: 198000, revenueChange: "+10.5%",
     profit:  101000, profitChange:  "+15.8%",
     occupancy: 77,   occupancyChange: "+3.2%",
     guests:  921,    guestsChange:  "+6.1%",
     expenses: 97000,
   },
-  "This Year": {
+  "Năm nay": {
     revenue: 757000, revenueChange: "+12.5%",
     profit:  391000, profitChange:  "+18.2%",
     occupancy: 78,   occupancyChange: "+5.8%",
@@ -40,8 +40,8 @@ const periodStats = {
 };
 
 export default function ReportsPage() {
-  const [period, setPeriod] = useState<Period>("This Year");
-  const [activeTab, setActiveTab] = useState<ReportTab>("Revenue Analysis");
+  const [period, setPeriod] = useState<Period>("Năm nay");
+  const [activeTab, setActiveTab] = useState<ReportTab>("Phân tích doanh thu");
   const [periodOpen, setPeriodOpen] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
@@ -86,7 +86,7 @@ export default function ReportsPage() {
             </button>
             {periodOpen && (
               <div className="absolute right-0 top-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-10 min-w-[160px] overflow-hidden">
-                {(["This Month", "This Quarter", "This Year"] as Period[]).map((p) => (
+                {(["Tháng này", "Quý này", "Năm nay"] as Period[]).map((p) => (
                   <button key={p} onClick={() => { setPeriod(p); setPeriodOpen(false); }}
                     className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between hover:bg-gray-50 transition
                       ${period === p ? "text-blue-600 font-medium" : "text-gray-700"}`}>

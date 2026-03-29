@@ -13,16 +13,16 @@ export default function BookingStatCards({ bookings }: Props) {
 
   const total = thisMonthBookings.length;
   const checkedIn = bookings.filter((b) => b.status === "Checked-in").length;
-  const upcoming = thisMonthBookings.filter((b) => b.status === "Booked").length;
+  const upcoming = thisMonthBookings.filter((b) => b.status === "Đã đặt").length;
   const totalRevenue = thisMonthBookings
-    .filter((b) => b.status !== "Cancelled")
+    .filter((b) => b.status !== "Đã hủy")
     .reduce((sum, b) => sum + b.amount, 0);
 
   const cards = [
     { label: "Lượt đặt trong tháng",   value: String(total),        color: "text-gray-800" },
     { label: "Đang ở",         value: String(checkedIn),    color: "text-green-600" },
     { label: "Sắp tới trong tháng",        value: String(upcoming),     color: "text-blue-600"  },
-    { label: "Tổng doanh thu tháng", value: `$${totalRevenue.toLocaleString()}`, color: "text-green-600" },
+    { label: "Tổng doanh thu tháng", value: `${totalRevenue.toLocaleString()}`, color: "text-green-600" },
   ];
 
   return (

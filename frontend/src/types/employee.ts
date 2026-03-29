@@ -1,5 +1,5 @@
-export type EmployeeStatus   = "Active" | "Inactive";
-export type EmployeePosition = "Receptionist" | "Manager" | "Housekeeping" | "Chef" | "Maintenance" | "Security" | "Other";
+export type EmployeeStatus   = "Đang làm việc" | "Đã nghỉ việc" | "Đang nghỉ phép";
+export type EmployeePosition = "Lễ Tân" | "Quản Lý" | "Vệ Sinh" | "Bếp" | "Bảo Dưỡng" | "Bảo Vệ" | "Khác";
 
 export interface Employee {
   id: number;
