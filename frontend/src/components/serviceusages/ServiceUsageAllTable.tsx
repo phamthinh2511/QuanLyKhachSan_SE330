@@ -9,8 +9,9 @@ interface Props {
 }
 
 const statusStyle = {
-  Paid:    "bg-green-100 text-green-700",
-  Pending: "bg-orange-100 text-orange-600",
+  "Đã sử dụng":    "bg-green-100 text-green-700",
+  "Chờ sử dụng": "bg-orange-100 text-orange-600",
+  "Đã hủy": "bg-red-100 text-red-700",
 };
 
 const headers = ["ID", "Booking", "Khách hàng", "Phòng", "Dịch vụ", "SL", "Đơn giá", "Tổng", "Ngày", "Trạng thái", "Thao tác"];
@@ -46,8 +47,8 @@ export default function ServiceUsageAllTable({ usages, onEdit, onDelete }: Props
                 <td className="px-4 py-4 text-gray-600">{u.roomNumber}</td>
                 <td className="px-4 py-4 text-gray-700 whitespace-nowrap">{u.serviceName}</td>
                 <td className="px-4 py-4 text-gray-600">{u.quantity}</td>
-                <td className="px-4 py-4 text-gray-600">${u.unitPrice}</td>
-                <td className="px-4 py-4 font-semibold text-gray-800">${u.total}</td>
+                <td className="px-4 py-4 text-gray-600">{u.unitPrice}</td>
+                <td className="px-4 py-4 font-semibold text-gray-800">{u.total}</td>
                 <td className="px-4 py-4 text-gray-600 whitespace-nowrap">{u.date}</td>
                 <td className="px-4 py-4">
                   <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium", statusStyle[u.status])}>

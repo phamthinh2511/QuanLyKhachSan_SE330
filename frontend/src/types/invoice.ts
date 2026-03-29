@@ -1,5 +1,5 @@
-export type InvoiceStatus  = "Paid" | "Pending" | "Partial";
-export type PaymentMethod  = "Credit Card" | "Cash" | "Bank Transfer" | "";
+export type InvoiceStatus  = "Đã thanh toán" | "Chờ thanh toán" | "Một phần";
+export type PaymentMethod  = "Thẻ" | "Tiền mặt" | "Chuyển khoản" | "";
 
 export interface Invoice {
   id: number;

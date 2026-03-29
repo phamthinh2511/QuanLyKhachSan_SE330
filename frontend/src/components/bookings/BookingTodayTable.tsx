@@ -11,8 +11,8 @@ interface Props {
 const statusStyle: Record<string, string> = {
   "Checked-in":  "bg-green-100 text-green-700",
   "Checked-out": "bg-gray-100 text-gray-500",
-  "Booked":      "bg-blue-100 text-blue-700",
-  "Cancelled":   "bg-red-100 text-red-500",
+  "Đã đặt":      "bg-blue-100 text-blue-700",
+  "Đã hủy":   "bg-red-100 text-red-500",
 };
 
 export default function BookingTodayTable({ bookings, onEdit, onDelete }: Props) {
@@ -44,7 +44,7 @@ export default function BookingTodayTable({ bookings, onEdit, onDelete }: Props)
                 <td className="px-4 py-4 text-gray-600 whitespace-nowrap">{b.checkIn}</td>
                 <td className="px-4 py-4 text-gray-600 whitespace-nowrap">{b.checkOut}</td>
                 <td className="px-4 py-4 text-gray-600">{b.guests}</td>
-                <td className="px-4 py-4 font-semibold text-gray-800">${b.amount.toLocaleString()}</td>
+                <td className="px-4 py-4 font-semibold text-gray-800">{b.amount.toLocaleString()}</td>
                 <td className="px-4 py-4">
                   <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap", statusStyle[b.status])}>
                     {b.status}

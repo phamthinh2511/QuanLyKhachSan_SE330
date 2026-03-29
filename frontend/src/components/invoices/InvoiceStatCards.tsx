@@ -12,13 +12,13 @@ export default function InvoiceStatCards({ invoices }: Props) {
   });
 
   const total   = thisMonth.length;
-  const paid    = thisMonth.filter((i) => i.status === "Paid").reduce((s, i) => s + i.total, 0);
-  const pending = thisMonth.filter((i) => i.status !== "Paid").reduce((s, i) => s + i.total, 0);
+  const paid    = thisMonth.filter((i) => i.status === "Đã thanh toán").reduce((s, i) => s + i.total, 0);
+  const pending = thisMonth.filter((i) => i.status !== "Đã thanh toán").reduce((s, i) => s + i.total, 0);
 
   const cards = [
     { label: `Tổng hóa đơn (${monthLabel})`, value: String(total),              color: "text-gray-800"   },
-    { label: `Đã thanh toán (${monthLabel})`, value: `$${paid.toLocaleString()}`,    color: "text-green-600"  },
-    { label: `Chờ thanh toán (${monthLabel})`,value: `$${pending.toLocaleString()}`, color: "text-orange-500" },
+    { label: `Đã thanh toán (${monthLabel})`, value: `${paid.toLocaleString()}`,    color: "text-green-600"  },
+    { label: `Chờ thanh toán (${monthLabel})`,value: `${pending.toLocaleString()}`, color: "text-orange-500" },
     { label: `Tháng này`,                     value: String(total),              color: "text-blue-600"   },
   ];
 

@@ -9,15 +9,15 @@ interface Props {
 }
 
 const statusStyle: Record<string, string> = {
-  Paid:    "bg-green-100 text-green-700",
-  Pending: "bg-orange-100 text-orange-600",
-  Partial: "bg-yellow-100 text-yellow-700",
+  "Đã thanh toán":    "bg-green-100 text-green-700",
+  "Chờ thanh toán": "bg-orange-100 text-orange-600",
+  "Một phần": "bg-yellow-100 text-yellow-700",
 };
 
 const PaymentIcon = ({ method }: { method: string }) => {
-  if (method === "Credit Card") return <><CreditCard className="w-3.5 h-3.5 text-blue-500" /> Credit Card</>;
-  if (method === "Cash")        return <><Banknote   className="w-3.5 h-3.5 text-green-500" /> Cash</>;
-  if (method === "Bank Transfer") return <><Building2 className="w-3.5 h-3.5 text-purple-500" /> Bank Transfer</>;
+  if (method === "Thẻ") return <><CreditCard className="w-3.5 h-3.5 text-blue-500" /> Thẻ</>;
+  if (method === "Tiền mặt")        return <><Banknote   className="w-3.5 h-3.5 text-green-500" /> Tiền mặt</>;
+  if (method === "Chuyển khoản") return <><Building2 className="w-3.5 h-3.5 text-purple-500" /> Chuyển khoản</>;
   return <span className="text-gray-300">—</span>;
 };
 
@@ -48,9 +48,9 @@ export default function InvoiceTable({ invoices, onView, onDelete }: Props) {
                 <td className="px-4 py-4 text-gray-600">{inv.bookingCode}</td>
                 <td className="px-4 py-4 text-gray-700 whitespace-nowrap">{inv.customerName}</td>
                 <td className="px-4 py-4 text-gray-600">{inv.roomNumber}</td>
-                <td className="px-4 py-4 text-gray-600">${inv.roomCost.toLocaleString()}</td>
-                <td className="px-4 py-4 text-gray-600">${inv.serviceCost.toLocaleString()}</td>
-                <td className="px-4 py-4 font-semibold text-gray-800">${inv.total.toLocaleString()}</td>
+                <td className="px-4 py-4 text-gray-600">{inv.roomCost.toLocaleString()}</td>
+                <td className="px-4 py-4 text-gray-600">{inv.serviceCost.toLocaleString()}</td>
+                <td className="px-4 py-4 font-semibold text-gray-800">{inv.total.toLocaleString()}</td>
                 <td className="px-4 py-4">
                   <div className="flex items-center gap-1.5 text-gray-600 text-xs">
                     <PaymentIcon method={inv.paymentMethod} />

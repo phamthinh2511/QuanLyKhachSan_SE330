@@ -59,10 +59,4 @@ public class Khachhang {
     @Column(name = "LoaiKhachHang", nullable = false, length = 50)
     private String loaiKhachHang;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaTaiKhoan",nullable = false, unique = true)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private Taikhoan taikhoan;
-
-
 }

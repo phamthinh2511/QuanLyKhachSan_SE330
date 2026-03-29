@@ -9,13 +9,13 @@ interface Props {
 }
 
 const positionStyle: Record<EmployeePosition, string> = {
-  Receptionist: "bg-blue-100 text-blue-700",
-  Manager:      "bg-purple-100 text-purple-700",
-  Housekeeping: "bg-green-100 text-green-700",
-  Chef:         "bg-orange-100 text-orange-600",
-  Maintenance:  "bg-gray-100 text-gray-600",
-  Security:     "bg-red-100 text-red-600",
-  Other:        "bg-gray-100 text-gray-500",
+  "Lễ Tân": "bg-blue-100 text-blue-700",
+  "Quản Lý":      "bg-purple-100 text-purple-700",
+  "Vệ Sinh": "bg-green-100 text-green-700",
+  "Bếp":         "bg-orange-100 text-orange-600",
+  "Bảo Dưỡng":  "bg-gray-100 text-gray-600",
+  "Bảo Vệ":     "bg-red-100 text-red-600",
+  "Khác":        "bg-gray-100 text-gray-500",
 };
 
 // Avatar màu từ tên
@@ -85,7 +85,7 @@ export default function EmployeeTable({ employees, onEdit, onDelete }: Props) {
                 {/* Trạng thái */}
                 <td className="px-4 py-4">
                   <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium",
-                    e.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                    e.status === "Đang làm việc" ? "bg-green-100 text-green-700" : (e.status === "Đang nghỉ phép" ? "bg-yellow-100 text-yellow-700" : "bg-gray-100 text-gray-500")
                   )}>
                     {e.status}
                   </span>

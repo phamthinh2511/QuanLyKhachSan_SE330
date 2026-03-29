@@ -50,7 +50,7 @@ export default function InvoiceModal({ onSave, onClose }: Props) {
       serviceCost,
       total,
       paymentMethod,
-      status: paymentMethod ? "Paid" : "Pending",
+      status: paymentMethod ? "Đã thanh toán" : "Chờ thanh toán",
       createdAt: new Date().toISOString().split("T")[0],
     });
   };
@@ -110,9 +110,9 @@ export default function InvoiceModal({ onSave, onClose }: Props) {
             <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
               className={inputClass}>
               <option value="">Chọn phương thức</option>
-              <option>Credit Card</option>
-              <option>Cash</option>
-              <option>Bank Transfer</option>
+              <option>Thẻ</option>
+              <option>Tiền mặt</option>
+              <option>Chuyển khoản</option>
             </select>
           </div>
 

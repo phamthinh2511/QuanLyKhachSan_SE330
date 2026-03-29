@@ -1,4 +1,4 @@
-export type BookingStatus = "Checked-in" | "Checked-out" | "Booked" | "Cancelled";
+export type BookingStatus = "Checked-in" | "Checked-out" | "Đã đặt" | "Đã hủy";
 
 export interface Booking {
   id: number;

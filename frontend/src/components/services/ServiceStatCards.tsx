@@ -1,6 +1,9 @@
 import { Service } from "@/types/service";
+import { text } from "stream/consumers";
 
 interface Props { services: Service[] }
+
+
 
 export default function ServiceStatCards({ services }: Props) {
   const totalServices = services.length;
@@ -14,10 +17,10 @@ export default function ServiceStatCards({ services }: Props) {
   );
 
   const cards = [
-    { label: "Tổng dịch vụ",    value: String(totalServices), sub: null },
-    { label: "Danh mục",         value: String(categories),    sub: null },
-    { label: "Giá trung bình",   value: `${avgPrice}đ`,        sub: null },
-    { label: "Phổ biến nhất",    value: popular?.name ?? "-",  sub: null },
+    { label: "Tổng dịch vụ",    value: String(totalServices), sub: null , color: "text-black-800"},
+    { label: "Danh mục",         value: String(categories),    sub: null , color: "text-green-600"},
+    { label: "Giá trung bình",   value: `${avgPrice}đ`,        sub: null , color: "text-green-800"},
+    { label: "Phổ biến nhất",    value: popular?.name ?? "-",  sub: null , color: "text-violet-800"},
   ];
 
   return (
@@ -25,7 +28,7 @@ export default function ServiceStatCards({ services }: Props) {
       {cards.map((c) => (
         <div key={c.label} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm text-center">
           <p className="text-gray-400 text-sm mb-2">{c.label}</p>
-          <p className="text-2xl font-bold text-gray-800">{c.value}</p>
+          <p className={`text-2xl font-bold ${c.color}`}>{c.value}</p>
         </div>
       ))}
     </div>

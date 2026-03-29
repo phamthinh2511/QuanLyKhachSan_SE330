@@ -56,9 +56,7 @@ export default function InvoiceDetailModal({ invoice, onClose }: Props) {
         <div ref={printRef} className="p-8 bg-white">
           {/* Hotel Header */}
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-blue-600">HOTEL MANAGER</h1>
-            <p className="text-gray-500 text-sm mt-1">123 Đường ABC, TP. Hồ Chí Minh</p>
-            <p className="text-gray-500 text-sm">Tel: +84 123 456 789 | Email: info@hotelmanager.com</p>
+            <h1 className="text-2xl font-bold text-blue-600">Nhóm 1</h1>
           </div>
 
           {/* Invoice Title */}
@@ -79,8 +77,8 @@ export default function InvoiceDetailModal({ invoice, onClose }: Props) {
               <p className="text-gray-500">Thanh toán: <span className="font-semibold text-gray-800">{invoice.paymentMethod || "—"}</span></p>
               <p className="text-gray-500">Trạng thái:&nbsp;
                 <span className={`font-semibold ${
-                  invoice.status === "Paid" ? "text-green-600" :
-                  invoice.status === "Partial" ? "text-yellow-600" : "text-orange-600"
+                  invoice.status === "Đã thanh toán" ? "text-green-600" :
+                  invoice.status === "Một phần" ? "text-yellow-600" : "text-orange-600"
                 }`}>{invoice.status}</span>
               </p>
             </div>
@@ -97,15 +95,15 @@ export default function InvoiceDetailModal({ invoice, onClose }: Props) {
             <tbody>
               <tr>
                 <td className="px-4 py-3 text-gray-700 border border-gray-200">Tiền phòng {invoice.roomNumber}</td>
-                <td className="px-4 py-3 text-right text-gray-700 border border-gray-200">${invoice.roomCost.toLocaleString()}</td>
+                <td className="px-4 py-3 text-right text-gray-700 border border-gray-200">{invoice.roomCost.toLocaleString()}</td>
               </tr>
               <tr>
                 <td className="px-4 py-3 text-gray-700 border border-gray-200">Dịch vụ sử dụng</td>
-                <td className="px-4 py-3 text-right text-gray-700 border border-gray-200">${invoice.serviceCost.toLocaleString()}</td>
+                <td className="px-4 py-3 text-right text-gray-700 border border-gray-200">{invoice.serviceCost.toLocaleString()}</td>
               </tr>
               <tr className="bg-blue-50">
                 <td className="px-4 py-3 font-bold text-gray-800 border border-gray-200">Tổng cộng</td>
-                <td className="px-4 py-3 text-right font-bold text-blue-600 text-lg border border-gray-200">${invoice.total.toLocaleString()}</td>
+                <td className="px-4 py-3 text-right font-bold text-blue-600 text-lg border border-gray-200">{invoice.total.toLocaleString()}</td>
               </tr>
             </tbody>
           </table>

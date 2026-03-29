@@ -4,7 +4,7 @@ interface Props { employees: Employee[] }
 
 export default function EmployeeStatCards({ employees }: Props) {
   const total      = employees.length;
-  const active     = employees.filter((e) => e.status === "Active").length;
+  const active     = employees.filter((e) => e.status === "Đang làm việc").length;
   const departments = new Set(employees.map((e) => e.department)).size;
   const positions   = new Set(employees.map((e) => e.position)).size;
 

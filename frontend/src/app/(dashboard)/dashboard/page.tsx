@@ -10,7 +10,7 @@ const stats = [
   { title: "Đang ở", value: "105", change: "+12%", isPositive: true, icon: <XCircle className="w-6 h-6 text-orange-500" />, iconBg: "bg-orange-100" },
   { title: "Check-ins hôm nay", value: "23", change: "+5%", isPositive: true, icon: <CalendarCheck className="w-6 h-6 text-purple-600" />, iconBg: "bg-purple-100" },
   { title: "Check-outs hôm nay", value: "18", change: "+3%", isPositive: true, icon: <CalendarX className="w-6 h-6 text-pink-600" />, iconBg: "bg-pink-100" },
-  { title: "Doanh thu tháng", value: "$15,420", change: "+18%", isPositive: true, icon: <DollarSign className="w-6 h-6 text-emerald-600" />, iconBg: "bg-emerald-100" },
+  { title: "Doanh thu tháng", value: "15,420", change: "+18%", isPositive: true, icon: <DollarSign className="w-6 h-6 text-emerald-600" />, iconBg: "bg-emerald-100" },
 ];
 
 const SayHi = () => {console.log("Hi from the dashboard!");}

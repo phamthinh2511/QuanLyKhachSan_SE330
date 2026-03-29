@@ -12,8 +12,8 @@ interface Props {
 
 const emptyForm: Omit<Employee, "id" | "employeeCode"> = {
   name: "", email: "", phone: "",
-  position: "Receptionist", department: "",
-  joinDate: "", status: "Active",
+  position: "Lễ Tân", department: "",
+  joinDate: "", status: "Đang làm việc",
 };
 
 export default function EmployeeModal({ employee, onSave, onClose }: Props) {

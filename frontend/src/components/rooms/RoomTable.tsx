@@ -43,7 +43,7 @@ export default function RoomTable({ rooms, onEdit, onDelete }: Props) {
                 <td className="px-6 py-4 text-gray-600">{r.type}</td>
                 <td className="px-6 py-4 text-gray-600">{r.floor}</td>
                 <td className="px-6 py-4 text-gray-600">{r.capacity} khách</td>
-                <td className="px-6 py-4 font-semibold text-gray-800">${r.pricePerNight}</td>
+                <td className="px-6 py-4 font-semibold text-gray-800">{r.pricePerNight}</td>
                 <td className="px-6 py-4">
                   <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium", statusStyle[r.status])}>
                     {r.status}
