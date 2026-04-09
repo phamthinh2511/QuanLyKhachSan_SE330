@@ -1,6 +1,7 @@
 package hotelmanagement.backend.service;
 
-import hotelmanagement.backend.dto.KhachhangDTO;
+import hotelmanagement.backend.dto.request.KhachhangRequestDto;
+import hotelmanagement.backend.dto.response.KhachhangResponseDto;
 import hotelmanagement.backend.entity.Khachhang;
 import hotelmanagement.backend.repository.KhachhangRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +17,8 @@ public class KhachhangService {
 
     private final KhachhangRepository khachhangRepository;
 
-    // ── Chuyển Entity → DTO ──────────────────────────────────────────────
-    private KhachhangDTO toDTO(Khachhang kh) {
-        return KhachhangDTO.builder()
+    private KhachhangResponseDto toResponseDto(Khachhang kh) {
+        return KhachhangResponseDto.builder()
                 .id(kh.getId())
                 .name(kh.getTenKhachHang())
                 .phone(kh.getSoDienThoai())
@@ -27,12 +27,11 @@ public class KhachhangService {
                 .address(kh.getDiaChi())
                 .email(kh.getEmail())
                 .idCard(kh.getCccd())
-                .status(kh.getLoaiKhachHang())
+                .type(kh.getLoaiKhachHang())
                 .build();
     }
 
-    // ── Chuyển DTO → Entity ──────────────────────────────────────────────
-    private void applyDTO(Khachhang kh, KhachhangDTO dto) {
+    private void applyRequestDto(Khachhang kh, KhachhangRequestDto dto) {
         kh.setTenKhachHang(dto.getName());
         kh.setSoDienThoai(dto.getPhone());
         kh.setGioiTinh(dto.getGender());
@@ -40,40 +39,45 @@ public class KhachhangService {
         kh.setDiaChi(dto.getAddress());
         kh.setEmail(dto.getEmail());
         kh.setCccd(dto.getIdCard());
-        kh.setLoaiKhachHang(dto.getStatus());
+        kh.setLoaiKhachHang(dto.getType());
     }
 
-    // ── CRUD ─────────────────────────────────────────────────────────────
-
-    public List<KhachhangDTO> getAll() {
+    public List<KhachhangResponseDto> getAll() {
         return khachhangRepository.findAll()
                 .stream()
-                .map(this::toDTO)
+                .map(this::toResponseDto)
                 .collect(Collectors.toList());
     }
 
-    public KhachhangDTO getById(Integer id) {
+    public KhachhangResponseDto getById(Integer id) {
         Khachhang kh = khachhangRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng với id: " + id));
-        return toDTO(kh);
+                .orElseThrow(() -> new RuntimeException("Khong tim thay khach hang voi id: " + id));
+        return toResponseDto(kh);
     }
 
-    public KhachhangDTO create(KhachhangDTO dto) {
+    public KhachhangResponseDto create(KhachhangRequestDto dto) {
+        if (khachhangRepository.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("Email da ton tai trong he thong");
+        }
+        if (khachhangRepository.existsByCccd(dto.getIdCard())) {
+            throw new RuntimeException("CCCD da ton tai trong he thong");
+        }
+
         Khachhang kh = new Khachhang();
-        applyDTO(kh, dto);
-        return toDTO(khachhangRepository.save(kh));
+        applyRequestDto(kh, dto);
+        return toResponseDto(khachhangRepository.save(kh));
     }
 
-    public KhachhangDTO update(Integer id, KhachhangDTO dto) {
+    public KhachhangResponseDto update(Integer id, KhachhangRequestDto dto) {
         Khachhang kh = khachhangRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng với id: " + id));
-        applyDTO(kh, dto);
-        return toDTO(khachhangRepository.save(kh));
+                .orElseThrow(() -> new RuntimeException("Khong tim thay khach hang voi id: " + id));
+        applyRequestDto(kh, dto);
+        return toResponseDto(khachhangRepository.save(kh));
     }
 
     public void delete(Integer id) {
         if (!khachhangRepository.existsById(id)) {
-            throw new RuntimeException("Không tìm thấy khách hàng với id: " + id);
+            throw new RuntimeException("Khong tim thay khach hang voi id: " + id);
         }
         khachhangRepository.deleteById(id);
     }
