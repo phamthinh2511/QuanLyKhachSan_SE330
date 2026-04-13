@@ -70,6 +70,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ← THÊM
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/bookings/**").permitAll()
                         .requestMatchers("/api/nhanvien/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
