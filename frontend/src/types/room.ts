@@ -1,5 +1,5 @@
 export type RoomStatus = "Trống" | "Đang sử dụng" | "Đã đặt" | "Bảo trì";
-export type RoomType = "Thường" | "Cao cấp" | "Sang trọng" | "Siêu cấp vip pro";
+export type RoomType = "Thường" | "Cao cấp" | "Sang trọng" | "Presidential";
 
 export interface Room {
   id: number;
