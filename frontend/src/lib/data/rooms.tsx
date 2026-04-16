@@ -8,5 +8,5 @@ export const mockRooms: Room[] = [
   { id: 5, roomNumber: "301", type: "Sang trọng",        floor: 3, capacity: 4, pricePerNight: 350, status: "Trống",          description: "Suite cao cấp với phòng khách riêng biệt" },
   { id: 6, roomNumber: "302", type: "Sang trọng",        floor: 3, capacity: 4, pricePerNight: 350, status: "Đang sử dụng",   description: "Suite cao cấp với phòng khách riêng biệt" },
   { id: 7, roomNumber: "305", type: "Sang trọng",        floor: 3, capacity: 4, pricePerNight: 350, status: "Bảo trì",        description: "Suite cao cấp với phòng khách riêng biệt" },
-  { id: 8, roomNumber: "401", type: "Siêu cấp vip pro", floor: 4, capacity: 6, pricePerNight: 650, status: "Trống",          description: "Suite tổng thống với tầm nhìn toàn cảnh" },
+  { id: 8, roomNumber: "401", type: "Presidential", floor: 4, capacity: 6, pricePerNight: 650, status: "Trống",          description: "Suite tổng thống với tầm nhìn toàn cảnh" },
 ];

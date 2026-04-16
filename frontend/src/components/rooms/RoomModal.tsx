@@ -65,9 +65,9 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
               <select value={form.type}
                 onChange={(e) => setForm({ ...form, type: e.target.value as RoomType })}
                 className={inputClass}>
-                <option>Standard</option>
-                <option>Deluxe</option>
-                <option>Suite</option>
+                <option>Thường</option>
+                <option>Cao cấp</option>
+                <option>Sang trọng</option>
                 <option>Presidential</option>
               </select>
             </div>
