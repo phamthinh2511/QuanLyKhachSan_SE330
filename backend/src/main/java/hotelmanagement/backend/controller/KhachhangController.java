@@ -1,10 +1,12 @@
 package hotelmanagement.backend.controller;
 
-import hotelmanagement.backend.dto.KhachhangDTO;
+import hotelmanagement.backend.dto.request.KhachhangRequestDto;
+import hotelmanagement.backend.dto.response.KhachhangResponseDto;
 import hotelmanagement.backend.service.KhachhangService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,34 +18,34 @@ public class KhachhangController {
 
     private final KhachhangService khachhangService;
 
-    // GET /api/customers
     @GetMapping
-    public ResponseEntity<List<KhachhangDTO>> getAll() {
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
+    public ResponseEntity<List<KhachhangResponseDto>> getAll() {
         return ResponseEntity.ok(khachhangService.getAll());
     }
 
-    // GET /api/customers/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<KhachhangDTO> getById(@PathVariable Integer id) {
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
+    public ResponseEntity<KhachhangResponseDto> getById(@PathVariable Integer id) {
         return ResponseEntity.ok(khachhangService.getById(id));
     }
 
-    // POST /api/customers
     @PostMapping
-    public ResponseEntity<KhachhangDTO> create(@RequestBody KhachhangDTO dto) {
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
+    public ResponseEntity<KhachhangResponseDto> create(@RequestBody KhachhangRequestDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(khachhangService.create(dto));
     }
 
-    // PUT /api/customers/{id}
     @PutMapping("/{id}")
-    public ResponseEntity<KhachhangDTO> update(
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
+    public ResponseEntity<KhachhangResponseDto> update(
             @PathVariable Integer id,
-            @RequestBody KhachhangDTO dto) {
+            @RequestBody KhachhangRequestDto dto) {
         return ResponseEntity.ok(khachhangService.update(id, dto));
     }
 
-    // DELETE /api/customers/{id}
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         khachhangService.delete(id);
         return ResponseEntity.noContent().build();

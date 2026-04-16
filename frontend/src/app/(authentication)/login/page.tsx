@@ -18,7 +18,6 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    // Bypass auth khi dev
     if (process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === "true") {
       saveAuth("dev-token", { name: "Admin User", role: "ADMIN" });
       router.push("/dashboard");
