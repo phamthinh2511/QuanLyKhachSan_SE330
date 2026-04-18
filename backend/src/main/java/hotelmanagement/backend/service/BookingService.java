@@ -1,14 +1,9 @@
 package hotelmanagement.backend.service;
 
 import hotelmanagement.backend.dto.request.BookingRequest;
-import hotelmanagement.backend.entity.CtDatphong;
-import hotelmanagement.backend.entity.Datphong;
-import hotelmanagement.backend.entity.Khachhang;
-import hotelmanagement.backend.entity.Phong;
-import hotelmanagement.backend.repository.CtDatphongRepository;
-import hotelmanagement.backend.repository.DatphongRepository;
-import hotelmanagement.backend.repository.KhachhangRepository;
-import hotelmanagement.backend.repository.PhongRepository;
+import hotelmanagement.backend.dto.request.CheckInRequest;
+import hotelmanagement.backend.entity.*;
+import hotelmanagement.backend.repository.*;
 import jakarta.transaction.Transactional;
 import org.apache.catalina.LifecycleState;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +22,14 @@ public class BookingService {
     @Autowired
     private CtDatphongRepository ctDatphongRepository;
     @Autowired
+    private NhanvienRepository nhanvienRepository;
+    @Autowired
     private KhachhangRepository khachhangRepository;
-
+    @Autowired
+    private PhieuthuephongRepository phieuthuephongRepository;
+    @Autowired
+    private CtPhieuthuephongRepository ctPhieuthuephongRepository;
+    private Phong maPhong;
     // Thuat toan kiem tra phong trong
     public List<Phong> getAvailableRooms(LocalDate checkIn, LocalDate checkOut) {
         List<Integer> bookedRoomIds = datphongRepository.findBookedRoomIds(checkIn, checkOut);
@@ -73,6 +74,22 @@ public class BookingService {
         return saveDp;
 
     }
+
+//    @Transactional
+//    public Phieuthuephong checkIn(CheckInRequest request){
+//        Datphong datphong = datphongRepository.findById(request.getMaDatPhong())
+//                .orElseThrow(()->new RuntimeException("Khong tim thay don dat phong"));
+//        Phieuthuephong phieu = new Phieuthuephong();
+//        phieu.setMaDatPhong(datphong);
+//        phieu.setMaKhachHang(datphong.getMaKhachHang()); // Lấy khách từ đơn đặt
+//        phieu.setMaNhanVien(nhanvienRepository.findById(request.getMaNhanVien()).get());
+//        phieu.setNgayNhanPhong(LocalDate.now());
+//        phieu.setNgayTraPhong(datphong.getNgayTra());
+//        phieu.setTrangThai("DANG_THUE");
+//        Phieuthuephong savedPhieu = phieuthuephongRepository.save(phieu);
+//
+//
+//    }
 
 
 
