@@ -1,14 +1,9 @@
 package hotelmanagement.backend.service;
 
 import hotelmanagement.backend.dto.request.BookingRequest;
-import hotelmanagement.backend.entity.CtDatphong;
-import hotelmanagement.backend.entity.Datphong;
-import hotelmanagement.backend.entity.Khachhang;
-import hotelmanagement.backend.entity.Phong;
-import hotelmanagement.backend.repository.CtDatphongRepository;
-import hotelmanagement.backend.repository.DatphongRepository;
-import hotelmanagement.backend.repository.KhachhangRepository;
-import hotelmanagement.backend.repository.PhongRepository;
+import hotelmanagement.backend.dto.request.CheckInRequest;
+import hotelmanagement.backend.entity.*;
+import hotelmanagement.backend.repository.*;
 import jakarta.transaction.Transactional;
 import org.apache.catalina.LifecycleState;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +22,14 @@ public class BookingService {
     @Autowired
     private CtDatphongRepository ctDatphongRepository;
     @Autowired
+    private NhanvienRepository nhanvienRepository;
+    @Autowired
     private KhachhangRepository khachhangRepository;
-
+    @Autowired
+    private PhieuthuephongRepository phieuthuephongRepository;
+    @Autowired
+    private CtPhieuthuephongRepository ctPhieuthuephongRepository;
+    private Phong maPhong;
     // Thuat toan kiem tra phong trong
     public List<Phong> getAvailableRooms(LocalDate checkIn, LocalDate checkOut) {
         List<Integer> bookedRoomIds = datphongRepository.findBookedRoomIds(checkIn, checkOut);
@@ -71,6 +72,44 @@ public class BookingService {
             ctDatphongRepository.save(ct);
         }
         return saveDp;
+
+    }
+
+    @Transactional
+    public Phieuthuephong checkIn(CheckInRequest request){
+        Datphong datphong = datphongRepository.findById(request.getMaDatPhong())
+                .orElseThrow(()->new RuntimeException("Khong tim thay don dat phong"));
+        Nhanvien nhanvien = nhanvienRepository.findById(request.getMaNhanVien())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên có ID: " + request.getMaNhanVien()));
+        Phieuthuephong phieu = new Phieuthuephong();
+        phieu.setMaDatPhong(datphong);
+        phieu.setMaKhachHang(datphong.getMaKhachHang());
+        phieu.setMaNhanVien(nhanvien);
+        phieu.setNgayNhanPhong(LocalDate.now());
+        phieu.setNgayTraPhong(datphong.getNgayTra());
+        phieu.setTrangThai("DANG_THUE");
+        Phieuthuephong savedPhieu = phieuthuephongRepository.save(phieu);
+
+        List<CtDatphong> dsPhongDat = ctDatphongRepository.findByMaDatPhong(datphong);
+        for (CtDatphong ct : dsPhongDat) {
+            Phong phong = ct.getMaPhong();
+            phong.setTrangThai("DANG_SU_DUNG");
+            phongRepository.save(phong);
+            CtPhieuthuephong ctPhieu = new CtPhieuthuephong();
+            ctPhieu.setMaPhieuThue(savedPhieu);
+            ctPhieu.setMaPhong(phong);
+            if (phong.getMaLoaiPhong() != null) {
+                ctPhieu.setDonGia(phong.getMaLoaiPhong().getDonGia());
+            } else {
+                throw new RuntimeException("Phòng " + phong.getId() + " chưa được gán loại phòng hoặc đơn giá!");
+            }
+            ctPhieuthuephongRepository.save(ctPhieu);
+        }
+        datphong.setTrangThai("DA_NHAN_PHONG");
+        datphongRepository.save(datphong);
+
+        return savedPhieu;
+
 
     }
 

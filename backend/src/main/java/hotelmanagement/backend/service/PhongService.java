@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class PhongService {
-    private LoaiphongRepository loaiphongRepository;
-    private PhongRepository phongRepository;
+    private final LoaiphongRepository loaiphongRepository;
+    private final PhongRepository phongRepository;
 
     // Entity -> DTO
     private LoaiphongDTO toLoaiphongDTO(Loaiphong loaiphong){
