@@ -10,5 +10,5 @@ import java.util.List;
 
 @Repository
 public interface CtPhieuthuephongRepository extends JpaRepository<CtPhieuthuephong, Integer> {
-    List<CtDatphong> findByMaDatPhong(Datphong datphong);
+
 }
