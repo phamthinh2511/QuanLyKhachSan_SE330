@@ -7,11 +7,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface PhongRepository extends JpaRepository<Phong, Integer> {
-
-    @Modifying (clearAutomatically = true)
-    @Query("UPDATE Phong p set p.trangThai = :status WHERE p.id= :id")
-    void updatePhongStatus(@Param("id") Integer id, @Param("status") String status);
-
+    List<Phong> findByTrangThai(String trangThai);
+    List<Phong> findBySoTang(Integer soTang);
+    List<Phong> findByMaLoaiPhong(Integer maLoaiPhong);
 }
