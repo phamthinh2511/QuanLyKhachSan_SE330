@@ -1,4 +1,4 @@
-export type ServiceCategory = "Ăn uống" | "Phòng" | "Spa" | "Đưa đón" | "Khác";
+export type ServiceCategory = "Ăn uống" | "Phòng" | "Sức khoẻ" | "Đưa đón" | "Khác";
 
 export interface Service {
   id: number;
