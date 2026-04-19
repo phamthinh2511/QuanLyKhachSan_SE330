@@ -12,7 +12,6 @@ import lombok.Setter;
 @Table(name = "dichvu")
 public class Dichvu {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaDichVu", nullable = false)
     private Integer id;
 
