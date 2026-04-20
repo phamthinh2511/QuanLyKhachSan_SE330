@@ -80,7 +80,7 @@ export default function ServiceModal({ service, onSave, onClose }: Props) {
 
           {/* Giá */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Giá ($)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Giá (đ)</label>
             <input
               type="number"
               min={0}

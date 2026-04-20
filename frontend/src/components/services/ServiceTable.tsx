@@ -48,7 +48,7 @@ export default function ServiceTable({ services, onEdit, onDelete }: Props) {
                     {s.category}
                   </span>
                 </td>
-                <td className="px-6 py-4 font-semibold text-gray-800">${s.price}</td>
+                <td className="px-6 py-4 font-semibold text-gray-800">{s.price.toLocaleString('vi-VN')} đ</td>
                 <td className="px-6 py-4 text-gray-500 max-w-xs truncate">{s.description}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">

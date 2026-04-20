@@ -82,7 +82,7 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
           {/* Giá/đêm + Trạng thái */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Giá/đêm ($)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Giá/đêm (đ)</label>
               <input type="number" min={0} value={form.pricePerNight}
                 onChange={(e) => setForm({ ...form, pricePerNight: +e.target.value })}
                 className={inputClass} required />

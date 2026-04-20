@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { Customer, CustomerStatus } from "@/types/customer";
+import { Customer } from "@/types/customer";
 
 interface Props {
   customer: Customer | null;
@@ -13,7 +13,7 @@ interface Props {
 
 const emptyForm: Omit<Customer, "id"> = {
   name: "", phone: "", email: "", gender: "Nam",
-  birthday: "", address: "", idCard: "", status: "Thường",
+  birthday: "", address: "", idCard: "",
 };
 
 export default function CustomerModal({ customer, onSave, onClose }: Props) {
@@ -91,15 +91,6 @@ export default function CustomerModal({ customer, onSave, onClose }: Props) {
             <input type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={inputClass} required />
           </div>
 
-          {/* Trạng thái */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
-            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as CustomerStatus })} className={inputClass}>
-              <option>Thường</option>
-              <option>VIP</option>
-              <option>Khách hàng thân thiết</option>
-            </select>
-          </div>
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">

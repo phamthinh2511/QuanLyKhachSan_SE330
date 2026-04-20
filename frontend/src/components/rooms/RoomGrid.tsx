@@ -50,7 +50,7 @@ export default function RoomGrid({ rooms, onEdit, onDelete }: Props) {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Giá:</span>
-              <span className="font-semibold text-blue-600">${r.pricePerNight}/đêm</span>
+              <span className="font-semibold text-blue-600">{r.pricePerNight.toLocaleString('vi-VN')} đ/đêm</span>
             </div>
           </div>
 
