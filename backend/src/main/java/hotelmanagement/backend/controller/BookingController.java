@@ -43,6 +43,13 @@ public class BookingController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    @org.springframework.web.bind.annotation.GetMapping("/all")
+    public ResponseEntity<java.util.List<Datphong>> getAllBookings() {
+        // Bạn có thể gọi trực tiếp Repository hoặc qua Service nếu đã viết hàm findAll
+        return ResponseEntity.ok(bookingService.getAllBookings());
+    }
+
+
 
 
 }

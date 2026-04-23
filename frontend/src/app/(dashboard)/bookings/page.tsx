@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import axios from "axios"
 import { Plus } from "lucide-react";
-import { mockBookings } from "@/lib/data/bookings";
+//import { mockBookings } from "@/lib/data/bookings";
 import { Booking, BookingStatus } from "@/types/booking";
 import BookingStatCards from "@/components/bookings/BookingStatCards";
 import BookingTodayTable from "@/components/bookings/BookingTodayTable";
@@ -13,12 +14,40 @@ const today = new Date().toISOString().split("T")[0];
 const PAGE_SIZE_ALL = 50;
 
 export default function BookingsPage() {
-  const [bookings, setBookings] = useState<Booking[]>(mockBookings);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Tất cả");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE_ALL);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Booking | null>(null);
+
+        const fetchData = useCallback(async () => {
+            try {
+              setLoading(true);
+              const response = await axios.get("http://localhost:8080/api/bookings/all");
+              const mappedData = response.data.map((b: any) => ({
+                id: b.id,
+                bookingCode: `BK-${1000 + b.id}`,
+                customerName: b.maKhachHang?.tenKhachHang || "Khách vãng lai",
+                roomNumber: b.dsChiTietDatPhong?.map((ct: any) => ct.maPhong?.id).join(", ") || "Chưa gán",
+                checkIn: b.ngayNhan,
+                checkOut: b.ngayTra,
+                status: b.trangThai === "DA_NHAN_PHONG" ? "Checked-in" : "Booked",
+                amount: b.dsChiTietDatPhong?.reduce((sum: number, ct: any) => sum + (ct.donGia || 0), 0) || 0,
+                guests: 1
+              }));
+              setBookings(mappedData);
+            } catch (error) {
+              console.error("Lỗi kết nối API:", error);
+            } finally {
+              setLoading(false);
+            }
+          }, []);
+        useEffect(() => {
+            fetchData();
+          }, [fetchData]);
+
 
   // Danh sách hôm nay — không filter, không phân trang
   const todayBookings = bookings.filter((b) => b.checkIn === today);
@@ -39,28 +68,68 @@ export default function BookingsPage() {
   const handleSearch = (val: string) => { setSearch(val); setVisibleCount(PAGE_SIZE_ALL); };
   const handleFilter = (val: string) => { setFilter(val); setVisibleCount(PAGE_SIZE_ALL); };
 
-  const handleSave = (data: Booking) => {
-    if (editing) {
-      setBookings((prev) => prev.map((b) => (b.id === data.id ? data : b)));
-    } else {
-      const newId = bookings.length > 0 ? Math.max(...bookings.map((b) => b.id)) + 1 : 1;
-      const newCode = `BK-${String(1000 + newId)}`;
-      setBookings((prev) => [...prev, { ...data, id: newId, bookingCode: newCode }]);
-    }
-    setModalOpen(false);
-    setEditing(null);
-  };
+//   const handleSave = (data: Booking) => {
+//     if (editing) {
+//       setBookings((prev) => prev.map((b) => (b.id === data.id ? data : b)));
+//     } else {
+//       const newId = bookings.length > 0 ? Math.max(...bookings.map((b) => b.id)) + 1 : 1;
+//       const newCode = `BK-${String(1000 + newId)}`;
+//       setBookings((prev) => [...prev, { ...data, id: newId, bookingCode: newCode }]);
+//     }
+//     setModalOpen(false);
+//     setEditing(null);
+//   };
+        const handleSave = async (data: any) => {
+            try {
+              if (editing) {
+                // Viết API Update ở Backend trước khi dùng ở đây
+                alert("Chức năng cập nhật đang được phát triển");
+              } else {
+                // Map dữ liệu từ Form Modal sang BookingRequest của Backend
+                const bookingRequest = {
+                  maKhachHang: data.customerId || 1, // Giả sử ID khách hàng là 1 nếu form chưa có
+                  ngayNhan: data.checkIn,
+                  ngayTra: data.checkOut,
+                  dsMaPhong: [parseInt(data.roomNumber) || 101] // Lấy ID phòng từ form
+                };
+
+                const response = await axios.post("http://localhost:8080/api/bookings/create", bookingRequest);
+
+                if (response.status === 200 || response.status === 201) {
+                  alert("Thêm mới đặt phòng thành công vào Database!");
+                  await fetchData(); // Tải lại dữ liệu mới nhất từ Neon DB
+                }
+              }
+            } catch (error: any) {
+              console.error("Lỗi khi lưu dữ liệu:", error);
+              alert("Lỗi: " + (error.response?.data?.message || "Không thể kết nối Backend"));
+            }
+            setModalOpen(false);
+            setEditing(null);
+          };
 
    const handleEdit = (booking: Booking) => {
     setEditing(booking);
     setModalOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("Bạn có chắc muốn xóa booking này?")) {
+//   const handleDelete = (id: number) => {
+//     if (confirm("Bạn có chắc muốn xóa booking này?")) {
+//       setBookings((prev) => prev.filter((b) => b.id !== id));
+//     }
+//   };
+const handleDelete = async (id: number) => {
+  if (confirm("Bạn có chắc muốn xóa booking này?")) {
+    try {
+      // Giả sử bạn có endpoint xóa ở BE
+      await axios.delete(`http://localhost:8080/api/bookings/delete/${id}`);
+      // Cập nhật lại UI sau khi xóa thành công
       setBookings((prev) => prev.filter((b) => b.id !== id));
+    } catch (error) {
+      alert("Lỗi khi xóa dữ liệu trên Server!");
     }
-  };
+  }
+};
 
   return (
     <div className="p-6 space-y-6">
