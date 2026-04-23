@@ -112,6 +112,9 @@ public class BookingService {
 
 
     }
+    public List<Datphong> getAllBookings() {
+        return datphongRepository.findAll();
+    }
 
 
 
