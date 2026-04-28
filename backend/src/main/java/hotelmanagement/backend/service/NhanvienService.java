@@ -4,6 +4,7 @@ import hotelmanagement.backend.dto.request.NhanvienRequestDto;
 import hotelmanagement.backend.dto.response.NhanvienResponseDto;
 import hotelmanagement.backend.entity.Nhanvien;
 import hotelmanagement.backend.entity.Taikhoan;
+import hotelmanagement.backend.enums.TrangThaiNhanVien;
 import hotelmanagement.backend.repository.NhanvienRepository;
 import hotelmanagement.backend.repository.TaikhoanRepository;
 import lombok.RequiredArgsConstructor;
@@ -75,6 +76,7 @@ public class NhanvienService {
             throw new RuntimeException("So dien thoai da ton tai");
         }
         Nhanvien nv = new Nhanvien();
+        nv.setTrangThai(TrangThaiNhanVien.DANG_LAM_VIEC.name());
         applyRequestDto(nv, dto);
         return toResponseDto(nhanvienRepository.save(nv));
     }
@@ -87,9 +89,13 @@ public class NhanvienService {
     }
 
     public void delete(Integer id) {
-        if (!nhanvienRepository.existsById(id)) {
-            throw new RuntimeException("Khong tim thay nhan vien id: " + id);
+        Nhanvien nv = nhanvienRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay nhan vien id: " + id));
+        nv.setTrangThai(TrangThaiNhanVien.NGHI_VIEC.name());
+        nhanvienRepository.save(nv);
+
+        if (nv.getTaikhoan() != null) {
+            taikhoanRepository.delete(nv.getTaikhoan());
         }
-        nhanvienRepository.deleteById(id);
     }
 }
