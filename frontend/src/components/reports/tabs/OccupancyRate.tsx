@@ -30,7 +30,7 @@ export default function OccupancyRate({ data }: Props) {
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-              <Tooltip formatter={(v: number) => `${v}%`} />
+              <Tooltip formatter={(v: any) => `${v}%`} />
               <Line type="monotone" dataKey="occupancy" name="Tỷ lệ lấp đầy"
                 stroke="#8b5cf6" strokeWidth={2.5} dot={{ r: 4 }} />
             </LineChart>

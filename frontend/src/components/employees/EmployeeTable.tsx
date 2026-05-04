@@ -6,6 +6,7 @@ interface Props {
   employees: Employee[];
   onEdit: (e: Employee) => void;
   onDelete: (id: number) => void;
+  onView?: (e: Employee) => void;
 }
 
 const positionStyle: Record<EmployeePosition, string> = {
@@ -32,7 +33,7 @@ function getAvatarColor(id: number) {
   return avatarColors[id % avatarColors.length];
 }
 
-export default function EmployeeTable({ employees, onEdit, onDelete }: Props) {
+export default function EmployeeTable({ employees, onEdit, onDelete, onView }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-100">
@@ -43,7 +44,7 @@ export default function EmployeeTable({ employees, onEdit, onDelete }: Props) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-gray-400 text-xs uppercase tracking-wide">
-              {["Nhân viên", "Liên hệ", "Vị trí", "Phòng ban", "Ngày vào", "Trạng thái", "Thao tác"].map((h) => (
+              {["Nhân viên", "Liên hệ", "Vị trí", "Phòng ban", "Tài khoản", "Trạng thái", "Thao tác"].map((h) => (
                 <th key={h} className="px-4 py-3 text-left font-medium whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -81,7 +82,20 @@ export default function EmployeeTable({ employees, onEdit, onDelete }: Props) {
                   </span>
                 </td>
                 <td className="px-4 py-4 text-gray-600">{e.department}</td>
-                <td className="px-4 py-4 text-gray-600 whitespace-nowrap">{e.joinDate}</td>
+                <td className="px-4 py-4">
+                  {e.username ? (
+                    <div>
+                      <p className="font-medium text-gray-800">{e.username}</p>
+                      <span className={clsx("px-2 py-0.5 mt-1 inline-block rounded text-[10px] font-bold uppercase", 
+                        e.role === "ADMIN" ? "bg-red-100 text-red-700" : (e.role === "MANAGER" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700")
+                      )}>
+                        {e.role}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-gray-400 text-xs italic">Chưa có</span>
+                  )}
+                </td>
                 {/* Trạng thái */}
                 <td className="px-4 py-4">
                   <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium",
@@ -93,7 +107,8 @@ export default function EmployeeTable({ employees, onEdit, onDelete }: Props) {
                 {/* Thao tác */}
                 <td className="px-4 py-4">
                   <div className="flex items-center gap-1.5">
-                    <button className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                    <button onClick={() => onView?.(e)}
+                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
                       <Eye className="w-4 h-4" />
                     </button>
                     <button onClick={() => onEdit(e)}

@@ -7,6 +7,7 @@ import { useCustomers } from "@/hooks/useCustomers";
 import { Customer } from "@/types/customer";
 import CustomerTable from "@/components/customers/CustomerTable";
 import CustomerModal from "@/components/customers/CustomerModal";
+import CustomerViewModal from "@/components/customers/CustomerViewModal";
 
 const PAGE_SIZE = 50;
 
@@ -17,7 +18,8 @@ export default function CustomersPage() {
   const [filter, setFilter] = useState("Tất cả");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE); // 👈 thêm
+  const [viewing, setViewing] = useState<Customer | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const filtered = customers.filter((c) => {
     const matchSearch =
@@ -89,8 +91,7 @@ if (error) {
   };
 
   const handleView = (customer: Customer) => {
-    setEditing(customer);
-    setModalOpen(true);
+    setViewing(customer);
   }
 return (
     <div className="p-6 space-y-6">
@@ -131,6 +132,7 @@ return (
       <CustomerTable
         customers={visibleCustomers}
         onEdit={(c) => { setEditing(c); setModalOpen(true); }}
+        onView={handleView}
         onDelete={handleDeleteConfirm}
       />
 
@@ -152,6 +154,13 @@ return (
           customer={editing}
           onSave={handleSave}
           onClose={() => { setModalOpen(false); setEditing(null); }}
+        />
+      )}
+
+      {viewing && (
+        <CustomerViewModal
+          customer={viewing}
+          onClose={() => setViewing(null)}
         />
       )}
     </div>

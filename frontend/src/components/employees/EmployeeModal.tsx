@@ -11,9 +11,10 @@ interface Props {
 }
 
 const emptyForm: Omit<Employee, "id" | "employeeCode"> = {
-  name: "", email: "", phone: "",
+  name: "", birthday: "", email: "", phone: "",
   position: "Lễ Tân", department: "",
   joinDate: "", status: "Đang làm việc",
+  username: "", password: "", role: "USER",
 };
 
 export default function EmployeeModal({ employee, onSave, onClose }: Props) {
@@ -51,7 +52,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Họ tên + SĐT */}
+          {/* Họ tên + Ngày sinh */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Họ tên</label>
@@ -60,19 +61,27 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
                 className={inputClass} required />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Ngày sinh</label>
+              <input type="date" value={form.birthday}
+                onChange={(e) => setForm({ ...form, birthday: e.target.value })}
+                className={inputClass} required />
+            </div>
+          </div>
+
+          {/* SĐT + Email */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
               <input type="text" placeholder="+84 234-567-8900" value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className={inputClass} required />
             </div>
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input type="email" placeholder="employee@hotel.com" value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className={inputClass} required />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input type="email" placeholder="employee@hotel.com" value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                className={inputClass} required />
+            </div>
           </div>
 
           {/* Vị trí + Phòng ban */}
@@ -82,13 +91,13 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
               <select value={form.position}
                 onChange={(e) => setForm({ ...form, position: e.target.value as EmployeePosition })}
                 className={inputClass}>
-                <option>Receptionist</option>
-                <option>Manager</option>
-                <option>Housekeeping</option>
-                <option>Chef</option>
-                <option>Maintenance</option>
-                <option>Security</option>
-                <option>Other</option>
+                <option value="Lễ Tân">Lễ Tân</option>
+                <option value="Quản Lý">Quản Lý</option>
+                <option value="Vệ Sinh">Vệ Sinh</option>
+                <option value="Bếp">Bếp</option>
+                <option value="Bảo Dưỡng">Bảo Dưỡng</option>
+                <option value="Bảo Vệ">Bảo Vệ</option>
+                <option value="Khác">Khác</option>
               </select>
             </div>
             <div>
@@ -112,8 +121,40 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
               <select value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value as EmployeeStatus })}
                 className={inputClass}>
-                <option>Active</option>
-                <option>Inactive</option>
+                <option value="Đang làm việc">Đang làm việc</option>
+                <option value="Đã nghỉ việc">Đã nghỉ việc</option>
+                <option value="Đang nghỉ phép">Đang nghỉ phép</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Tài khoản */}
+          <div className="pt-4 border-t border-gray-100">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Thông tin tài khoản</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tên đăng nhập</label>
+                <input type="text" placeholder="Tên đăng nhập" value={form.username || ""}
+                  onChange={(e) => setForm({ ...form, username: e.target.value })}
+                  className={inputClass} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mật khẩu {employee && <span className="text-xs text-gray-400 font-normal">(để trống nếu không đổi)</span>}
+                </label>
+                <input type="password" placeholder="Mật khẩu" value={form.password || ""}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  className={inputClass} />
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Loại tài khoản (Quyền)</label>
+              <select value={form.role || "USER"}
+                onChange={(e) => setForm({ ...form, role: e.target.value })}
+                className={inputClass}>
+                <option value="ADMIN">Quản trị viên (ADMIN)</option>
+                <option value="MANAGER">Quản lý (MANAGER)</option>
+                <option value="USER">Nhân viên (USER)</option>
               </select>
             </div>
           </div>

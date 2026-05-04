@@ -16,4 +16,6 @@ public class NhanvienResponseDto {
     private String phongBan;
     private String ngayVaoLam;
     private String trangThai;
+    private String tenDangNhap;
+    private String loaiTaiKhoan;
 }

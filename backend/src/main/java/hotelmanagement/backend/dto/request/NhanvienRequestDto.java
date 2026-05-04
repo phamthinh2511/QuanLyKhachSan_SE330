@@ -15,6 +15,8 @@ public class NhanvienRequestDto {
     private String phongBan;
     private String ngayVaoLam;
     private String trangThai;
-    private Integer maTaiKhoan;
+    private String tenDangNhap;
+    private String matKhau;
+    private String loaiTaiKhoan;
 
 }

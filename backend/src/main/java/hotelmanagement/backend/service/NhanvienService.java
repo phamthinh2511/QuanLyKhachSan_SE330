@@ -8,6 +8,7 @@ import hotelmanagement.backend.enums.TrangThaiNhanVien;
 import hotelmanagement.backend.repository.NhanvienRepository;
 import hotelmanagement.backend.repository.TaikhoanRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,6 +21,7 @@ public class NhanvienService {
 
     private final NhanvienRepository nhanvienRepository;
     private final TaikhoanRepository taikhoanRepository;
+    private final PasswordEncoder passwordEncoder;
 
     private NhanvienResponseDto toResponseDto(Nhanvien nv) {
         // Format ID thành chuỗi EMP-001, EMP-012...
@@ -35,6 +37,8 @@ public class NhanvienService {
                 .phongBan(nv.getPhongBan())
                 .ngayVaoLam(nv.getNgayVaoLam() != null ? nv.getNgayVaoLam().toString() : null)
                 .trangThai(nv.getTrangThai())
+                .tenDangNhap(nv.getTaikhoan() != null ? nv.getTaikhoan().getTenDangNhap() : null)
+                .loaiTaiKhoan(nv.getTaikhoan() != null ? nv.getTaikhoan().getLoaiTaiKhoan() : null)
                 .build();
     }
 
@@ -47,15 +51,6 @@ public class NhanvienService {
         nv.setPhongBan(dto.getPhongBan());
         nv.setNgayVaoLam(dto.getNgayVaoLam() != null ? LocalDate.parse(dto.getNgayVaoLam()) : null);
         nv.setTrangThai(dto.getTrangThai());
-
-        // Xử lý liên kết tài khoản nếu có
-        if (dto.getMaTaiKhoan() != null) {
-            Taikhoan tk = taikhoanRepository.findById(dto.getMaTaiKhoan())
-                    .orElseThrow(() -> new RuntimeException("Khong tim thay tai khoan id: " + dto.getMaTaiKhoan()));
-            nv.setTaikhoan(tk);
-        } else {
-            nv.setTaikhoan(null);
-        }
     }
 
     public List<NhanvienResponseDto> getAll() {
@@ -75,9 +70,24 @@ public class NhanvienService {
         if (nhanvienRepository.existsBySoDienThoai(dto.getSoDienThoai())) {
             throw new RuntimeException("So dien thoai da ton tai");
         }
+        
+        Taikhoan tk = null;
+        if (dto.getTenDangNhap() != null && !dto.getTenDangNhap().trim().isEmpty()) {
+            if (taikhoanRepository.existsByTenDangNhap(dto.getTenDangNhap())) {
+                throw new RuntimeException("Ten dang nhap da ton tai trong he thong");
+            }
+            tk = new Taikhoan();
+            tk.setTenDangNhap(dto.getTenDangNhap());
+            tk.setMatKhau(passwordEncoder.encode(dto.getMatKhau() != null && !dto.getMatKhau().isEmpty() ? dto.getMatKhau() : "123456"));
+            tk.setLoaiTaiKhoan(dto.getLoaiTaiKhoan() != null ? dto.getLoaiTaiKhoan() : "USER");
+            tk.setNgayTao(LocalDate.now());
+            tk = taikhoanRepository.save(tk);
+        }
+
         Nhanvien nv = new Nhanvien();
         nv.setTrangThai(TrangThaiNhanVien.DANG_LAM_VIEC.name());
         applyRequestDto(nv, dto);
+        nv.setTaikhoan(tk);
         return toResponseDto(nhanvienRepository.save(nv));
     }
 
@@ -85,6 +95,35 @@ public class NhanvienService {
         Nhanvien nv = nhanvienRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay nhan vien id: " + id));
         applyRequestDto(nv, dto);
+
+        if (dto.getTenDangNhap() != null && !dto.getTenDangNhap().trim().isEmpty()) {
+            Taikhoan tk = nv.getTaikhoan();
+            if (tk == null) {
+                if (taikhoanRepository.existsByTenDangNhap(dto.getTenDangNhap())) {
+                    throw new RuntimeException("Ten dang nhap da ton tai trong he thong");
+                }
+                tk = new Taikhoan();
+                tk.setTenDangNhap(dto.getTenDangNhap());
+                tk.setNgayTao(LocalDate.now());
+                nv.setTaikhoan(tk);
+            } else {
+                if (!tk.getTenDangNhap().equals(dto.getTenDangNhap()) && taikhoanRepository.existsByTenDangNhap(dto.getTenDangNhap())) {
+                    throw new RuntimeException("Ten dang nhap da ton tai trong he thong");
+                }
+                tk.setTenDangNhap(dto.getTenDangNhap());
+            }
+            
+            tk.setLoaiTaiKhoan(dto.getLoaiTaiKhoan() != null ? dto.getLoaiTaiKhoan() : tk.getLoaiTaiKhoan());
+            
+            if (dto.getMatKhau() != null && !dto.getMatKhau().trim().isEmpty()) {
+                tk.setMatKhau(passwordEncoder.encode(dto.getMatKhau()));
+            } else if (tk.getId() == null) {
+                tk.setMatKhau(passwordEncoder.encode("123456"));
+            }
+            
+            taikhoanRepository.save(tk);
+        }
+
         return toResponseDto(nhanvienRepository.save(nv));
     }
 

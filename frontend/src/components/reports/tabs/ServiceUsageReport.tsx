@@ -25,7 +25,7 @@ export default function ServiceUsageReport() {
         <p className="text-gray-400 text-xs mb-4">Phân bổ theo số lượt sử dụng</p>
         <ResponsiveContainer width="100%" height={260}>
           <PieChart>
-            <Pie data={pieData} cx="50%" cy="50%" outerRadius={90} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+            <Pie data={pieData} cx="50%" cy="50%" outerRadius={90} dataKey="value" label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}>
               {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
             </Pie>
             <Tooltip />
@@ -41,7 +41,7 @@ export default function ServiceUsageReport() {
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis type="number" tick={{ fontSize: 11 }} />
             <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={100} />
-            <Tooltip formatter={(v: number) => `$${v}`} />
+            <Tooltip formatter={(v: any) => `$${v}`} />
             <Bar dataKey="revenue" name="Doanh thu" fill="#10b981" radius={[0,4,4,0]} />
           </BarChart>
         </ResponsiveContainer>

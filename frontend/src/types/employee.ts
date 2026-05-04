@@ -5,10 +5,14 @@ export interface Employee {
   id: number;
   employeeCode: string;
   name: string;
+  birthday: string; // YYYY-MM-DD
   email: string;
   phone: string;
   position: EmployeePosition;
   department: string;
   joinDate: string; // YYYY-MM-DD
   status: EmployeeStatus;
+  username?: string;
+  password?: string;
+  role?: string;
 }

@@ -11,7 +11,7 @@ interface Props {
 const categoryStyle: Record<ServiceCategory, string> = {
   "Ăn uống": "bg-orange-100 text-orange-600",
   "Phòng":    "bg-purple-100 text-purple-600",
-  "Spa":        "bg-pink-100 text-pink-600",
+  "Sức khoẻ":        "bg-pink-100 text-pink-600",
   "Đưa đón":  "bg-green-100 text-green-600",
   "Khác":           "bg-gray-100 text-gray-500",
 };
