@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation"; // Thêm useRouter
 import {
   LayoutDashboard, Users, BedDouble, CalendarCheck,
   Wrench, FileText, Receipt, UserCog, BarChart3,
-  Settings, Hotel, LogOut // Thêm icon LogOut
+  Settings, Hotel, LogOut, ShieldCheck
 } from "lucide-react";
 import clsx from "clsx";
 

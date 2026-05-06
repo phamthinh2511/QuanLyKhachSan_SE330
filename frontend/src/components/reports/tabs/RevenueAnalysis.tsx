@@ -29,7 +29,7 @@ export default function RevenueAnalysis({ data, stats }: Props) {
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: number) => `$${v.toLocaleString()}`} />
+              <Tooltip formatter={(v: any) => `$${v.toLocaleString()}`} />
               <Legend />
               <Bar dataKey="revenue" name="Doanh thu" fill="#3b82f6" radius={[4,4,0,0]} />
               <Bar dataKey="profit"  name="Lợi nhuận" fill="#10b981" radius={[4,4,0,0]} />
@@ -52,7 +52,7 @@ export default function RevenueAnalysis({ data, stats }: Props) {
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: number) => `$${v.toLocaleString()}`} />
+              <Tooltip formatter={(v: any) => `$${v.toLocaleString()}`} />
               <Area type="monotone" dataKey="revenue" name="Doanh thu"
                 stroke="#3b82f6" strokeWidth={2} fill="url(#revGrad)" />
             </AreaChart>

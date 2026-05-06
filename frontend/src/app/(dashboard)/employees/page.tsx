@@ -1,22 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
-import { mockEmployees } from "@/lib/data/employees";
+import { employeesApi } from "@/lib/api/employees";
 import { Employee } from "@/types/employee";
 import EmployeeStatCards from "@/components/employees/EmployeeStatCards";
 import EmployeeTable from "@/components/employees/EmployeeTable";
 import EmployeeModal from "@/components/employees/EmployeeModal";
+import EmployeeViewModal from "@/components/employees/EmployeeViewModal";
 
 const PAGE_SIZE = 10;
 
 export default function EmployeesPage() {
-  const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [search, setSearch] = useState("");
   const [filterPosition, setFilterPosition] = useState("Tất cả");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
+  const [viewing, setViewing] = useState<Employee | null>(null);
+
+  const fetchEmployees = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await employeesApi.getAll();
+      if (res.result) setEmployees(res.result);
+    } catch (err: any) {
+      setError(err.message || "Lỗi tải danh sách nhân viên");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
 
   const filtered = employees.filter((e) => {
     const matchSearch =
@@ -33,25 +55,49 @@ export default function EmployeesPage() {
   const handleSearch = (val: string) => { setSearch(val); setVisibleCount(PAGE_SIZE); };
   const handleFilter = (val: string) => { setFilterPosition(val); setVisibleCount(PAGE_SIZE); };
 
-  const handleSave = (data: Employee) => {
-    if (editing) {
-      setEmployees((prev) => prev.map((e) => (e.id === data.id ? data : e)));
-    } else {
-      const newId = employees.length > 0 ? Math.max(...employees.map((e) => e.id)) + 1 : 1;
-      const newCode = `EMP-${String(newId).padStart(3, "0")}`;
-      setEmployees((prev) => [...prev, { ...data, id: newId, employeeCode: newCode }]);
+  const handleSave = async (data: Employee) => {
+    try {
+      if (editing) {
+        await employeesApi.update(editing.id, data);
+      } else {
+        await employeesApi.create(data);
+      }
+      await fetchEmployees();
+      setModalOpen(false);
+      setEditing(null);
+    } catch (err: any) {
+      alert("Lỗi khi lưu nhân viên: " + (err.message || "Không xác định"));
     }
-    setModalOpen(false);
-    setEditing(null);
   };
 
   const handleEdit = (emp: Employee) => { setEditing(emp); setModalOpen(true); };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Bạn có chắc muốn xóa nhân viên này?")) {
-      setEmployees((prev) => prev.filter((e) => e.id !== id));
+      try {
+        await employeesApi.delete(id);
+        await fetchEmployees();
+      } catch (err: any) {
+        alert("Lỗi khi xóa nhân viên: " + (err.message || "Không xác định"));
+      }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-full min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-red-600 bg-red-50 rounded-xl border border-red-100">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -109,6 +155,7 @@ export default function EmployeesPage() {
         employees={visibleEmployees}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView={(emp) => setViewing(emp)}
       />
 
       {hasMore && (
@@ -130,6 +177,13 @@ export default function EmployeesPage() {
           employee={editing}
           onSave={handleSave}
           onClose={() => { setModalOpen(false); setEditing(null); }}
+        />
+      )}
+
+      {viewing && (
+        <EmployeeViewModal
+          employee={viewing}
+          onClose={() => setViewing(null)}
         />
       )}
     </div>

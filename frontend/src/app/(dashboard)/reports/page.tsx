@@ -7,7 +7,7 @@ import ReportTabs from "@/components/reports/ReportTabs";
 import { monthlyData, quarterlyData, thisMonthData } from "@/lib/data/reports";
 
 export type Period = "Tháng này" | "Quý này" | "Năm nay";
-export type ReportTab = "Revenue Analysis" | "Occupancy Rate" | "Service Usage" | "Room Performance";
+export type ReportTab = "Phân tích doanh thu" | "Tỉ lệ bận phòng" | "Sử dụng dịch vụ" | "Năng suất phòng";
 
 const periodData = {
   "Tháng này":   thisMonthData,
