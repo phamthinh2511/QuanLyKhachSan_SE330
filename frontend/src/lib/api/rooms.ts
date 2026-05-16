@@ -1,21 +1,29 @@
 import { apiClient } from "./client";
-import { Room, RoomType, RoomStatus } from "@/types/room";
+import { Room, RoomStatus } from "@/types/room";
 
 // ── Interface khớp với PhongDTO Java ─────────────────────────────────────
 export interface LoaiphongApi {
   id: number;
   tenLoaiPhong: string;
-  donGia: number;        // ← donGia
+  donGia: number;
   moTa: string;
-  sucChuaToiDa: number;  // ← sucChuaToiDa
+  sucChuaToiDa: number;
 }
 
-export interface PhongApi {
+export interface PhongResponseApi {
   id: number;
   trangThai: string;
   soTang: number;
   sucChua: number;
-  loaiPhong: LoaiphongApi;
+  maLoaiPhong: LoaiphongApi; // response trả về maLoaiPhong là object
+}
+
+export interface PhongRequestApi {
+  id: number;
+  trangThai: string;
+  soTang: number;
+  sucChua: number;
+  maLoaiPhong?: number; // payload gửi ID
 }
 
 // ── Map trangThai DB → RoomStatus TypeScript ─────────────────────────────
@@ -29,61 +37,45 @@ function mapStatus(trangThai: string): RoomStatus {
   return map[trangThai] ?? "Trống";
 }
 
-// ── Map tenLoaiPhong DB → RoomType TypeScript ────────────────────────────
-function mapType(tenLoaiPhong: string): RoomType {
-  const map: Record<string, RoomType> = {
-    "Thường":     "Thường",
-    "Cao cấp":       "Cao cấp",
-    "Sang trọng":        "Sang trọng",
-    "Presidential": "Presidential",
-  };
-  return map[tenLoaiPhong] ?? "Thường";
-}
-
-// ── PhongApi → Room ───────────────────────────────────────────────────────
-function mapToRoom(r: PhongApi): Room {
+// ── PhongResponseApi → Room ───────────────────────────────────────────────────────
+function mapToRoom(r: PhongResponseApi): Room {
   return {
     id:            r.id,
     roomNumber:    String(r.id),
-    type:          mapType(r.loaiPhong?.tenLoaiPhong ?? ""),
+    loaiPhongId:   r.maLoaiPhong?.id,
+    type:          r.maLoaiPhong?.tenLoaiPhong ?? "Chưa xác định",
     floor:         r.soTang,
     capacity:      r.sucChua,
-    pricePerNight: r.loaiPhong?.donGia ?? 0,   // ← donGia
+    pricePerNight: r.maLoaiPhong?.donGia ?? 0,
     status:        mapStatus(r.trangThai),
-    description:   r.loaiPhong?.moTa ?? "",
+    description:   r.maLoaiPhong?.moTa ?? "",
   };
 }
 
-// ── Room → PhongDTO để gửi lên API ────────────────────────────────────────
-function mapToPhongDTO(room: Room): Partial<PhongApi> {
+// ── Room → PhongRequestApi để gửi lên API ────────────────────────────────────────
+function mapToPhongDTO(room: Room): PhongRequestApi {
   return {
-    id:        room.id,
-    trangThai: room.status,
-    soTang:    room.floor,
-    sucChua:   room.capacity,
-    loaiPhong: {
-      id:            0,
-      tenLoaiPhong:  room.type,
-      donGia:        room.pricePerNight,  // ← donGia
-      moTa:          room.description,
-      sucChuaToiDa:  room.capacity,       // ← sucChuaToiDa
-    },
+    id:          room.id,
+    trangThai:   room.status,
+    soTang:      room.floor,
+    sucChua:     room.capacity,
+    maLoaiPhong: room.loaiPhongId, // gửi ID loại phòng
   };
 }
 
 // ── API calls ─────────────────────────────────────────────────────────────
 export async function getRooms(): Promise<Room[]> {
-  const data = await apiClient<PhongApi[]>("/api/rooms");
+  const data = await apiClient<PhongResponseApi[]>("/api/rooms");
   return data.map(mapToRoom);
 }
 
 export async function getRoomById(id: number): Promise<Room> {
-  const data = await apiClient<PhongApi>(`/api/rooms/${id}`);
+  const data = await apiClient<PhongResponseApi>(`/api/rooms/${id}`);
   return mapToRoom(data);
 }
 
 export async function createRoom(room: Room): Promise<Room> {
-  const data = await apiClient<PhongApi>("/api/rooms", {
+  const data = await apiClient<PhongResponseApi>("/api/rooms", {
     method: "POST",
     body: JSON.stringify(mapToPhongDTO(room)),
   });
@@ -91,7 +83,7 @@ export async function createRoom(room: Room): Promise<Room> {
 }
 
 export async function updateRoom(id: number, room: Room): Promise<Room> {
-  const data = await apiClient<PhongApi>(`/api/rooms/${id}`, {
+  const data = await apiClient<PhongResponseApi>(`/api/rooms/${id}`, {
     method: "PUT",
     body: JSON.stringify(mapToPhongDTO(room)),
   });
