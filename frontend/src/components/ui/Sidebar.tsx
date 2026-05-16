@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation"; // Thêm useRouter
 import {
   LayoutDashboard, Users, BedDouble, CalendarCheck,
   Wrench, FileText, Receipt, UserCog, BarChart3,
-  Settings, Hotel, LogOut, ShieldCheck
+  Settings, Hotel, LogOut, ShieldCheck, Layers
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -13,6 +13,7 @@ const navItems = [
   { href: "/dashboard", label: "Trang Chủ", icon: LayoutDashboard },
   { href: "/customers", label: "Khách Hàng", icon: Users },
   { href: "/rooms", label: "Phòng", icon: BedDouble },
+  { href: "/room-types", label: "Loại Phòng", icon: Layers },
   { href: "/bookings", label: "Đặt Phòng", icon: CalendarCheck },
   { href: "/services", label: "Dịch Vụ", icon: Wrench },
   { href: "/serviceusage", label: "Yêu Cầu Dịch Vụ", icon: FileText },
