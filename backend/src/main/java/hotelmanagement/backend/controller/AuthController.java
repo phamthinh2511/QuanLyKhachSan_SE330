@@ -24,7 +24,7 @@ public class AuthController {
     private JwtService jwtService;
 
     @PostMapping("/login")
-    public ApiResponse<String> login(@RequestBody LoginRequest request) {
+    public ApiResponse<String> login(@jakarta.validation.Valid @RequestBody LoginRequest request) {
 
         try {
             authenticationManager.authenticate(

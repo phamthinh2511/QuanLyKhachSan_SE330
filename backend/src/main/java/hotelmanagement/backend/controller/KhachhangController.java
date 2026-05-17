@@ -32,7 +32,7 @@ public class KhachhangController {
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<KhachhangResponseDto> create(@RequestBody KhachhangRequestDto dto) {
+    public ResponseEntity<KhachhangResponseDto> create(@jakarta.validation.Valid @RequestBody KhachhangRequestDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(khachhangService.create(dto));
     }
 
@@ -40,6 +40,7 @@ public class KhachhangController {
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
     public ResponseEntity<KhachhangResponseDto> update(
             @PathVariable Integer id,
+            @jakarta.validation.Valid
             @RequestBody KhachhangRequestDto dto) {
         return ResponseEntity.ok(khachhangService.update(id, dto));
     }
