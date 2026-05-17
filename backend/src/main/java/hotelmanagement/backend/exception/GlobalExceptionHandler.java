@@ -30,6 +30,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception ex) {
+        ex.printStackTrace();
         ApiResponse<Void> response = ApiResponse.<Void>builder()
                 .code(500)
                 .message("Lỗi server: " + ex.getMessage())
