@@ -18,7 +18,6 @@ public class Phieuthuephong {
     @Column(name = "MaPhieuThue", nullable = false)
     private Integer id;
 
-    @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "MaDatPhong", nullable = false)
     private Datphong maDatPhong;
@@ -46,5 +45,7 @@ public class Phieuthuephong {
     @Column(name = "TrangThai", nullable = false, length = 50)
     private String trangThai;
 
+    @Column(name = "SoKhach")
+    private Integer soKhach;
 
 }
