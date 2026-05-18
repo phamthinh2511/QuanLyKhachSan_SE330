@@ -1,0 +1,8 @@
+$kind: http-request
+name: http://localhost:8080/api/shops?page=0&size=2
+url: http://localhost:8080/api/shops?page=0&size=2
+method: GET
+queryParams:
+  page: "0"
+  size: "2"
+order: 1778466101944

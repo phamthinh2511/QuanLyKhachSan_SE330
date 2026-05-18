@@ -40,5 +40,8 @@ public class Datphong {
     @Column(name = "TrangThai", nullable = false, length = 50)
     private String trangThai;
 
+    @Column(name = "SoKhach")
+    private Integer soKhach;
+
 
 }
