@@ -29,7 +29,15 @@ export default function BookingStatCards({ bookings, overrideStats }: Props) {
   // 2. Khách đang ở (Ưu tiên lấy từ page.tsx truyền xuống)
   const checkedIn = overrideStats
     ? overrideStats.dangO
-    : bookings.filter((b) => b.status === "Đã nhận phòng").length;
+    : bookings.filter((b) => {
+            const status = b.status ? b.status.trim() : "";
+            return (
+              status === "Đã nhận phòng tại quầy" ||
+              status === "Đã nhận phòng đặt trước" ||
+              status === "Đã nhận phòng" ||
+              status === "Đang sử dụng"
+            );
+          }).length;
 
   // 3. Sắp tới trong tháng (Ưu tiên lấy từ page.tsx truyền xuống)
   const upcoming = overrideStats

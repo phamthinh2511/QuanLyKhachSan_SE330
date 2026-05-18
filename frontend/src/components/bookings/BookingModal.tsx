@@ -367,7 +367,7 @@ export default function BookingModal({ booking, customers = [], rooms = [], onSa
 
   // LOGIC 2: Nếu chọn Thuê trực tiếp tại quầy thì khóa ngày và ép về Hôm nay
   useEffect(() => {
-    if (form.status === "Đã nhận phòng") { // ĐỒNG BỘ: Đổi từ "Checked-in" sang tiếng Việt
+    if (form.status === "Đã nhận phòng tại quầy") { // ĐỒNG BỘ: Đổi từ "Checked-in" sang tiếng Việt
       setForm((prev) => ({
         ...prev,
         bookingDate: todayStr,
@@ -435,7 +435,7 @@ export default function BookingModal({ booking, customers = [], rooms = [], onSa
       roomPrice: form.roomPrice,
       guests: form.guests,
       amount: form.amount,
-      status: form.status // Gửi chuỗi tiếng Việt sạch xuống page.tsx
+      status: form.status.trim() // Gửi chuỗi tiếng Việt sạch xuống page.tsx
     });
   };
 
@@ -465,9 +465,12 @@ export default function BookingModal({ booking, customers = [], rooms = [], onSa
               className={inputClass}
             >
               <option value="Chưa nhận">Đặt phòng trước (Booked)</option>
-              <option value="Đã nhận phòng">Thuê trực tiếp tại quầy (Checked-in)</option>
-              <option value="Đã trả phòng">Đã trả phòng (Checked-out)</option>
-              <option value="Đã hủy">Đã hủy (Cancelled)</option>
+                            {/* 👉 ĐÃ SỬA: Xóa bỏ hoàn toàn khoảng trắng ở cuối value */}
+                            <option value="Đã nhận phòng tại quầy">Thuê trực tiếp tại quầy (Checked-in)</option>
+                            <option value="Đã nhận phòng đặt trước">Nhận phòng đặt trước</option>
+                            <option value="Đã trả phòng">Đã trả phòng (Checked-out)</option>
+                            <option value="Đã hủy">Đã hủy (Cancelled)</option>
+
             </select>
           </div>
 
@@ -517,7 +520,7 @@ export default function BookingModal({ booking, customers = [], rooms = [], onSa
             <input
               type="date"
               value={form.bookingDate}
-              disabled={form.status === "Đã nhận phòng"}
+              disabled={form.status === "Đã nhận phòng tại quầy"}
               onChange={(e) => setForm({ ...form, bookingDate: e.target.value })}
               className={`${inputClass} ${form.status === "Đã nhận phòng" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : ""}`}
               required
@@ -532,7 +535,7 @@ export default function BookingModal({ booking, customers = [], rooms = [], onSa
                 value={form.checkIn}
                 disabled={form.status === "Đã nhận phòng"}
                 onChange={(e) => setForm({ ...form, checkIn: e.target.value })}
-                className={`${inputClass} ${form.status === "Đã nhận phòng" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : ""}`}
+                className={`${inputClass} ${form.status === "Đã nhận phòng tại quầy" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : ""}`}
                 required
               />
             </div>
