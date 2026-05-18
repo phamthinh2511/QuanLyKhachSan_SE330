@@ -37,7 +37,7 @@ public class TaikhoanController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ApiResponse<TaikhoanResponseDto> create(@RequestBody TaikhoanRequestDto dto) {
+    public ApiResponse<TaikhoanResponseDto> create(@jakarta.validation.Valid @RequestBody TaikhoanRequestDto dto) {
         return ApiResponse.<TaikhoanResponseDto>builder()
                 .code(201)
                 .message("Tạo tài khoản thành công")
@@ -58,6 +58,7 @@ public class TaikhoanController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Void> changePassword(
             Principal principal,
+            @jakarta.validation.Valid
             @RequestBody ChangePasswordRequestDto dto) {
 
 

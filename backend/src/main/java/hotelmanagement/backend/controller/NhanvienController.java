@@ -35,7 +35,7 @@ public class NhanvienController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ApiResponse<NhanvienResponseDto> create(@RequestBody NhanvienRequestDto dto) {
+    public ApiResponse<NhanvienResponseDto> create(@jakarta.validation.Valid @RequestBody NhanvienRequestDto dto) {
         return ApiResponse.<NhanvienResponseDto>builder()
                 .code(201)
                 .message("Tạo nhân viên thành công")
@@ -47,6 +47,7 @@ public class NhanvienController {
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<NhanvienResponseDto> update(
             @PathVariable Integer id,
+            @jakarta.validation.Valid
             @RequestBody NhanvienRequestDto dto) {
         return ApiResponse.<NhanvienResponseDto>builder()
                 .message("Cập nhật thông tin nhân viên thành công")
