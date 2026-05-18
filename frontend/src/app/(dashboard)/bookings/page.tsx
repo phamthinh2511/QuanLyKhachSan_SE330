@@ -78,7 +78,15 @@ export default function BookingsPage() {
         const currentYear = todayObj.getFullYear();
 
         // A. Số lượng khách đang lưu trú thực tế tại khách sạn
-        const dangOActive = bookings.filter(b => b.status === "Đã nhận phòng").length;
+        const dangOActive = bookings.filter((b) => {
+              const status = b.status ? b.status.trim() : "";
+              return (
+                status === "Đã nhận phòng tại quầy" ||
+                status === "Đã nhận phòng đặt trước" ||
+                status === "Đã nhận phòng" ||
+                status === "Đang sử dụng"
+              );
+            }).length;
 
         // B. Số lượng đơn đặt trước sẽ check-in trong tháng hiện tại này
         const sapToiActive = bookings.filter(b => {
@@ -282,8 +290,9 @@ export default function BookingsPage() {
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
                 <option value="Tất cả">Tất cả trạng thái</option>
-                <option value="Chưa nhận">Chưa nhận (Đang đặt trước)</option>
-                <option value="Đã nhận phòng">Đã nhận phòng (Đang ở)</option>
+                <option value="Chưa nhận">Chưa nhận</option>
+                <option value="Đã nhận phòng tại quầy">Đã nhận phòng tại quầy</option>
+                <option value="Đã nhận phòng đặt trước">Đã nhận phòng đặt trước</option>
                 <option value="Đã trả phòng">Đã trả phòng</option>
                 <option value="Đã hủy">Đã hủy</option>
               </select>
