@@ -9,7 +9,9 @@ import {
   getAllRooms,
   deleteBooking,
   updateBooking,
-  BookingRequestPayload
+  BookingRequestPayload,
+  CustomerResponse,
+  RoomResponse
 } from "@/lib/api/bookings";
 import { Plus } from "lucide-react";
 import { Booking } from "@/types/booking";
@@ -206,93 +208,6 @@ export default function BookingsPage() {
         setModalOpen(false);
         setEditing(null);
       };
-//   const handleSave = async (formData: any) => {
-//     try {
-//       const bookingPayload: BookingRequestPayload = {
-//         role: "NHAN_VIEN",
-//         loaiHinh: formData.bookingType,
-//         maKhachHangId: parseInt(formData.customerId) || 1,
-//         maPhongId: parseInt(formData.roomId) || 1,
-//         maNhanVienId: 1,
-//         ngayNhan: formData.checkIn,
-//         ngayTra: formData.checkOut,
-//         donGia: parseFloat(formData.amount) || parseFloat(formData.roomPrice) || 500000.0
-//       };
-//
-//       const res = await submitBookingForm(bookingPayload);
-//
-//       if (res.code === 200) {
-//         alert(res.message || "Xử lý yêu cầu phòng thành công!");
-//       } else {
-//         alert("Thao tác thành công!");
-//       }
-//
-//       await fetchData();
-//     } catch (error: any) {
-//       console.error("Lỗi xử lý gửi đơn phòng:", error);
-//       await fetchData();
-//     }
-//     setModalOpen(false);
-//     setEditing(null);
-//   };
-        const handleSave = async (data: any) => {
-            try {
-              let customerId = data.customerId;
-
-              // Nếu khách hàng chưa có trong database, hãy thêm vào database luôn
-              if (!customerId) {
-                const newCustomer = await createCustomer({
-                  name: data.customerName,
-                  phone: data.customerPhone,
-                  gender: data.customerGender,
-                  birthday: data.customerBirthday,
-                  address: data.customerAddress,
-                  email: data.customerEmail,
-                  idCard: data.customerIdCard,
-                  status: data.customerStatus || "Thường"
-                });
-                customerId = newCustomer.id;
-                console.log("Đã tự động thêm khách hàng mới vào Database, ID:", customerId);
-              }
-
-              // Map dữ liệu từ Form Modal sang BookingRequest của Backend
-              const bookingRequest = {
-                maKhachHang: customerId,
-                ngayNhan: data.checkIn,
-                ngayTra: data.checkOut,
-                dsMaPhong: [parseInt(data.roomNumber)] // Lấy ID phòng từ form
-              };
-
-              if (editing) {
-                // Gửi API Cập nhật đặt phòng
-                const response = await apiClient<any>(`/api/bookings/update/${editing.id}`, {
-                  method: "PUT",
-                  body: JSON.stringify(bookingRequest),
-                });
-                if (response) {
-                  alert("Cập nhật đặt phòng thành công!");
-                  await fetchData(); // Tải lại dữ liệu mới nhất
-                }
-              } else {
-                // Gửi API Tạo mới đặt phòng
-                const response = await apiClient<any>("/api/bookings/create", {
-                  method: "POST",
-                  body: JSON.stringify(bookingRequest),
-                });
-
-                if (response) {
-                  alert("Thêm mới đặt phòng thành công vào Database!");
-                  await fetchData(); // Tải lại dữ liệu mới nhất
-                }
-              }
-            } catch (error: any) {
-              console.error("Lỗi khi lưu dữ liệu:", error);
-              alert("Lỗi: " + (error.message || "Không thể kết nối Backend"));
-            }
-            setModalOpen(false);
-            setEditing(null);
-          };
-
   const handleEdit = (booking: Booking) => {
     setEditing(booking);
     setModalOpen(true);
@@ -365,12 +280,9 @@ export default function BookingsPage() {
         </>
       )}
 
-      {/* SỬA ĐỔI CHÍNH XÁC CÁC BIẾN TRUYỀN VÀO ĐÂY */}
       {modalOpen && (
         <BookingModal
           booking={editing}
-          customers={customers}
-          rooms={rooms}
           onSave={handleSave}
           onClose={() => { setModalOpen(false); setEditing(null); }}
         />

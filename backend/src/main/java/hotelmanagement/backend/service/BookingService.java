@@ -285,13 +285,15 @@ public List<DatPhongResponse> getAllBookings() {
         });
     }
 
-    @Transactional
-    public void deleteBooking(Integer id) {
-        Datphong dp = datphongRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt phòng có ID: " + id));
-        List<CtDatphong> details = ctDatphongRepository.findByMaDatPhong(dp);
-        ctDatphongRepository.deleteAll(details);
-        datphongRepository.delete(dp);
+    public List<Phong> getAvailableRooms(LocalDate checkIn, LocalDate checkOut) {
+        List<Integer> bookedRoomIds = datphongRepository.findBookedRoomIds(checkIn, checkOut);
+        List<Phong> allRooms = phongRepository.findAll();
+        if (bookedRoomIds.isEmpty()) {
+            return allRooms;
+        }
+        return allRooms.stream()
+                .filter(phong -> !bookedRoomIds.contains(phong.getId()))
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -299,7 +301,7 @@ public List<DatPhongResponse> getAllBookings() {
         Datphong dp = datphongRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt phòng có ID: " + id));
         
-        Khachhang kh = khachhangRepository.findById(request.getMaKhachHang())
+        Khachhang kh = khachhangRepository.findById(request.getMaKhachHangId())
                 .orElseThrow(() -> new RuntimeException("Khách hàng không tồn tại!"));
         
         // 1. Xóa chi tiết cũ trước để tránh xung đột phòng trống khi tính toán ngày mới
@@ -311,27 +313,30 @@ public List<DatPhongResponse> getAllBookings() {
         List<Phong> availableRooms = getAvailableRooms(request.getNgayNhan(), request.getNgayTra());
         List<Integer> availableRoomIds = availableRooms.stream().map(Phong::getId).collect(Collectors.toList());
         
-        for(Integer roomId : request.getDsMaPhong()) {
-            if(!availableRoomIds.contains(roomId)){
-                throw new RuntimeException("Phòng " + roomId + " đã có người đặt trong thời gian này!");
-            }
+        Integer roomId = request.getMaPhongId();
+        if (!availableRoomIds.contains(roomId)) {
+            throw new RuntimeException("Phòng " + roomId + " đã có người đặt trong thời gian này!");
         }
         
         // 3. Cập nhật thông tin đặt phòng
         dp.setMaKhachHang(kh);
         dp.setNgayNhan(request.getNgayNhan());
         dp.setNgayTra(request.getNgayTra());
+        if (request.getSoKhach() != null) {
+            dp.setSoKhach(request.getSoKhach());
+        }
+        if (request.getTrangThai() != null) {
+            dp.setTrangThai(request.getTrangThai());
+        }
         Datphong savedDp = datphongRepository.save(dp);
         
         // 4. Lưu lại chi tiết đặt phòng mới
-        for(Integer roomId : request.getDsMaPhong()){
-            Phong phong = phongRepository.findById(roomId).get();
-            CtDatphong ct = new CtDatphong();
-            ct.setMaDatPhong(savedDp);
-            ct.setMaPhong(phong);
-            ct.setDonGia(phong.getMaLoaiPhong().getDonGia());
-            ctDatphongRepository.save(ct);
-        }
+        Phong phong = phongRepository.findById(roomId).get();
+        CtDatphong ct = new CtDatphong();
+        ct.setMaDatPhong(savedDp);
+        ct.setMaPhong(phong);
+        ct.setDonGia(request.getDonGia() != null ? request.getDonGia() : (phong.getMaLoaiPhong() != null ? phong.getMaLoaiPhong().getDonGia() : 500000.0));
+        ctDatphongRepository.save(ct);
         
         return savedDp;
     }

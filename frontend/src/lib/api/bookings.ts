@@ -11,6 +11,7 @@ export interface BookingRequestPayload {
   loaiHinh: "DAT_TRUOC" | "THUE_TRUC_TIEP";
   role?: string;
   trangThai?: string;
+  soKhach?: number;
 }
 
 export interface ApiResponse<T> {

@@ -501,14 +501,13 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
     }));
   };
 
-  // LOGIC 5: Đóng gói dữ liệu khi bấm nút Lưu
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     // ĐỒNG BỘ: Phân tách hình thức dựa trên trạng thái tiếng Việt mới chọn
-    const bookingType = form.status === "Đã nhận phòng" ? "THUE_TRUC_TIEP" : "DAT_TRUOC";
-    const selectedCustomer = customers.find((c) => String(c.id) === form.customerId);
-    const selectedRoom = rooms.find((r) => String(r.id) === form.roomId);
+    const bookingType = form.status === "Checked-in" ? "THUE_TRUC_TIEP" : "DAT_TRUOC";
+    const selectedCustomer = customers.find((c) => c.id === form.customerId);
+    const selectedRoom = rooms.find((r) => r.roomNumber === form.roomNumber);
 
     if (!selectedCustomer) {
       alert("Vui lòng chọn khách hàng!");
@@ -522,21 +521,19 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
       alert("Vui lòng chọn ngày check-out!");
       return;
     }
-    const phongSucChua = selectedRoom.maLoaiPhong?.sucChuaToiDa || selectedRoom.sucChua || 0;
-        if (phongSucChua > 0 && form.guests > phongSucChua) {
-          alert(`Thao tác thất bại: Phòng này chỉ chứa tối đa ${phongSucChua} người, đơn của bạn có ${form.guests} khách!`);
-          return;
-        }
+    const phongSucChua = selectedRoom.capacity || 0;
+    if (phongSucChua > 0 && form.guests > phongSucChua) {
+      alert(`Thao tác thất bại: Phòng này chỉ chứa tối đa ${phongSucChua} người, đơn của bạn có ${form.guests} khách!`);
+      return;
+    }
     onSave({
       bookingType,
-      customerId: form.customerId,
+      customerId: String(form.customerId),
       customerName: selectedCustomer.name,
-      roomId: form.roomId,
-      roomNumber: String(selectedRoom.id),
+      roomId: String(selectedRoom.id),
+      roomNumber: selectedRoom.roomNumber,
       checkIn: form.checkIn,
       checkOut: form.checkOut,
-      bookingDate: form.bookingDate,
-      roomPrice: form.roomPrice,
       guests: form.guests,
       amount: form.amount,
       status: form.status.trim() // Gửi chuỗi tiếng Việt sạch xuống page.tsx

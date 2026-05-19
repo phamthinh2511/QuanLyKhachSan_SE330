@@ -13,6 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/bookings")
 @CrossOrigin(origins = "*")
@@ -39,7 +42,7 @@ public class BookingController {
         }
     }
     @GetMapping("/all")
-    public ResponseEntity<java.util.List<Datphong>> getAllBookings() {
+    public ResponseEntity<java.util.List<DatPhongResponse>> getAllBookings() {
         // Bạn có thể gọi trực tiếp Repository hoặc qua Service nếu đã viết hàm findAll
         return ResponseEntity.ok(bookingService.getAllBookings());
     }
@@ -84,29 +87,6 @@ public class BookingController {
             response.put("message", "Lỗi máy chủ khi xử lý cập nhật đơn phòng.");
             return ResponseEntity.internalServerError().body(response);
         }
-    }
-
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteBooking(@PathVariable Integer id) {
-        try {
-            bookingService.deleteBooking(id);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @PutMapping("/update/{id}")
-    public ApiResponse<Datphong> updateBooking(@PathVariable Integer id, @RequestBody BookingRequest request) {
-        ApiResponse<Datphong> response = new ApiResponse<>();
-        try {
-            Datphong result = bookingService.updateBooking(id, request);
-            response.setResult(result);
-        } catch (RuntimeException e) {
-            response.setCode(400);
-            response.setMessage(e.getMessage());
-        }
-        return response;
     }
 
 }
