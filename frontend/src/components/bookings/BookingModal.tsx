@@ -792,7 +792,7 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
                       .filter((r) => r.status === "Trống" || r.roomNumber === booking?.roomNumber)
                       .map((r) => (
                         <option key={r.id} value={r.roomNumber}>
-                          Phòng {r.roomNumber} — {r.type} (${r.pricePerNight}/đêm)
+                          Phòng {r.roomNumber} — {r.type} ({r.pricePerNight.toLocaleString("vi-VN")} đ/đêm)
                         </option>
                       ))}
                   </select>
@@ -856,14 +856,11 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
                     <input
                       type="text"
                       value={new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
-                        form.amount * 25000 // Giả định tỷ giá đô sang VND hoặc tính theo VND
+                        form.amount
                       )}
                       readOnly
                       className={`${inputClass} bg-slate-100 text-slate-500 cursor-not-allowed font-semibold`}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium">
-                      ({form.amount} USD)
-                    </span>
                   </div>
                 </div>
               </div>
