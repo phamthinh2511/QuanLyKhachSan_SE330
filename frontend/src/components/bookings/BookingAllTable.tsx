@@ -56,10 +56,18 @@ export default function BookingAllTable({ bookings, onEdit, onDelete }: Props) {
                       className="flex items-center gap-1.5 border border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600 px-3 py-1.5 rounded-lg text-xs font-medium transition">
                       <Pencil className="w-3 h-3" /> Sửa
                     </button>
-                    <button onClick={() => onDelete(b.id)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <button
+                                              onClick={() => {
+                                                const isConfirmed = window.confirm(`Bạn có chắc chắn muốn xóa đơn đặt phòng ${b.bookingCode} của khách ${b.customerName} không?`);
+                                                if (isConfirmed) {
+                                                  onDelete(b.id);
+                                                }
+                                              }}
+                                              title="Xóa đơn hàng"
+                                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                                            >
+                                              <Trash2 className="w-4 h-4" />
+                                            </button>
                   </div>
                 </td>
               </tr>
