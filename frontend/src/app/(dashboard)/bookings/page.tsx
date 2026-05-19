@@ -9,6 +9,7 @@ import BookingStatCards from "@/components/bookings/BookingStatCards";
 import BookingTodayTable from "@/components/bookings/BookingTodayTable";
 import BookingAllTable from "@/components/bookings/BookingAllTable";
 import BookingModal from "@/components/bookings/BookingModal";
+import { createCustomer } from "@/lib/api/customers";
 
 const today = new Date().toISOString().split("T")[0];
 const PAGE_SIZE_ALL = 50;
@@ -95,12 +96,30 @@ export default function BookingsPage() {
                 // Viết API Update ở Backend trước khi dùng ở đây
                 alert("Chức năng cập nhật đang được phát triển");
               } else {
+                let customerId = data.customerId;
+
+                // Nếu khách hàng chưa có trong database, hãy thêm vào database luôn
+                if (!customerId) {
+                  const newCustomer = await createCustomer({
+                    name: data.customerName,
+                    phone: data.customerPhone,
+                    gender: data.customerGender,
+                    birthday: data.customerBirthday,
+                    address: data.customerAddress,
+                    email: data.customerEmail,
+                    idCard: data.customerIdCard,
+                    status: data.customerStatus || "Thường"
+                  });
+                  customerId = newCustomer.id;
+                  console.log("Đã tự động thêm khách hàng mới vào Database, ID:", customerId);
+                }
+
                 // Map dữ liệu từ Form Modal sang BookingRequest của Backend
                 const bookingRequest = {
-                  maKhachHang: data.customerId || 1, // Giả sử ID khách hàng là 1 nếu form chưa có
+                  maKhachHang: customerId,
                   ngayNhan: data.checkIn,
                   ngayTra: data.checkOut,
-                  dsMaPhong: [parseInt(data.roomNumber) || 101] // Lấy ID phòng từ form
+                  dsMaPhong: [parseInt(data.roomNumber)] // Lấy ID phòng từ form
                 };
 
                 const response = await apiClient<any>("/api/bookings/create", {
