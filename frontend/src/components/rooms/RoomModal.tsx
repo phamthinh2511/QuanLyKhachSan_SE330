@@ -11,7 +11,8 @@ interface Props {
   onClose: () => void;
 }
 
-const emptyForm: Omit<Room, "id"> = {
+const emptyForm: Room = {
+  id: 0,
   roomNumber: "", 
   type: "", 
   floor: 1,
@@ -23,11 +24,11 @@ const emptyForm: Omit<Room, "id"> = {
 };
 
 export default function RoomModal({ room, onSave, onClose }: Props) {
-  const [form, setForm] = useState<Omit<Room, "id">>(emptyForm);
+  const [form, setForm] = useState<Room>(emptyForm);
   const { roomTypes, loading: loadingTypes } = useRoomTypes();
 
   useEffect(() => {
-    setForm(room ? { ...room } : emptyForm);
+    setForm(room ? { ...room } : { ...emptyForm });
   }, [room]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -36,7 +37,11 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
         alert("Vui lòng chọn loại phòng.");
         return;
     }
-    onSave({ ...form, id: room?.id ?? 0 });
+    if (!room && (!form.id || form.id <= 0)) {
+        alert("Vui lòng nhập Mã phòng hợp lệ (số nguyên dương).");
+        return;
+    }
+    onSave({ ...form });
   };
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -77,10 +82,20 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Số phòng</label>
-              <input type="text" value={form.roomNumber}
-                onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
-                className={inputClass} required disabled={!!room} />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mã phòng (ID)</label>
+              <input
+                type="number"
+                min={1}
+                value={form.id || ""}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  setForm({ ...form, id: isNaN(val) ? 0 : val, roomNumber: e.target.value });
+                }}
+                className={inputClass}
+                required
+                disabled={!!room}
+                placeholder="VD: 101"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Tầng</label>

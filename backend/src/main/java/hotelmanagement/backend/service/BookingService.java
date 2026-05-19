@@ -285,156 +285,55 @@ public List<DatPhongResponse> getAllBookings() {
         });
     }
 
-
-@Transactional
-public void updateBooking(Integer id, BookingRequest request) {
-    // ĐẢM BẢO SỬA ĐÚNG TRÊN ĐƠN GỐC - KHÔNG SINH ĐƠN MỚI
-    String loaiHinh = request.getLoaiHinh();
-    Khachhang khach = khachhangRepository.findById(request.getMaKhachHangId())
-            .orElseThrow(() -> new IllegalStateException("Không tìm thấy thông tin khách hàng!"));
-    Phong phongMoi = phongRepository.findById(request.getMaPhongId())
-            .orElseThrow(() -> new IllegalStateException("Không tìm thấy thông tin phòng mới!"));
-
-    // === PHÂN TÁCH LUỒNG UPDATE ĐỂ SỬA NGAY TRÊN BẢNG TƯƠNG ỨNG ===
-
-    if ("THUE_TRUC_TIEP".equals(loaiHinh) || "Đang nhận phòng tại quầy".equals(request.getTrangThai())) {
-        // ------------------ LUỒNG CHỈNH SỬA CHO PHIẾU THUÊ TẠI QUẦY ------------------
-        Phieuthuephong pt = phieuthuephongRepository.findById(id)
-                .orElseThrow(() -> new IllegalStateException("Không tìm thấy phiếu thuê tại quầy cần sửa có ID: " + id));
-
-        // 1. Hoàn tác giải phóng phòng cũ của phiếu thuê về trống
-        List<CtPhieuthuephong> ctCuList = ctPhieuthuephongRepository.findByMaPhieuThue(pt);
-        if (ctCuList != null && !ctCuList.isEmpty()) {
-            for (CtPhieuthuephong ct : ctCuList) {
-                if (ct.getMaPhong() != null) {
-                    ct.getMaPhong().setTrangThai("Trống");
-                    phongRepository.save(ct.getMaPhong());
-                }
-            }
-            ctPhieuthuephongRepository.deleteAll(ctCuList);
-        }
-
-        // 2. Cập nhật thuộc tính của chính Phiếu thuê đó
-        pt.setMaKhachHang(khach);
-        pt.setNgayTraPhong(request.getNgayTra());
-        if (request.getSoKhach() != null) {
-            pt.setSoKhach(request.getSoKhach());
-        }
-        if (request.getTrangThai() != null) {
-            pt.setTrangThai(request.getTrangThai());
-        }
-        phieuthuephongRepository.save(pt);
-
-        // Xử lý nếu chuyển trạng thái kết thúc phòng
-        if ("Đã trả phòng".equals(request.getTrangThai()) || "Đã hủy".equals(request.getTrangThai())) {
-            phongMoi.setTrangThai("Trống");
-            phongRepository.save(phongMoi);
-            return;
-        }
-
-        // 3. Ghép phòng mới vào chi tiết phiếu thuê
-        CtPhieuthuephong ctMoi = new CtPhieuthuephong();
-        ctMoi.setMaPhieuThue(pt);
-        ctMoi.setMaPhong(phongMoi);
-        ctMoi.setDonGia(request.getDonGia());
-        ctPhieuthuephongRepository.save(ctMoi);
-
-        phongMoi.setTrangThai("Đang sử dụng");
-        phongRepository.save(phongMoi);
-
-    } else {
-        // ------------------ LUỒNG CHỈNH SỬA CHO ĐƠN ĐẶT TRƯỚC ------------------
+    @Transactional
+    public void deleteBooking(Integer id) {
         Datphong dp = datphongRepository.findById(id)
-                .orElseThrow(() -> new IllegalStateException("Không tìm thấy phiếu đặt phòng cần sửa có ID: " + id));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt phòng có ID: " + id));
+        List<CtDatphong> details = ctDatphongRepository.findByMaDatPhong(dp);
+        ctDatphongRepository.deleteAll(details);
+        datphongRepository.delete(dp);
+    }
 
-        String trangThaiMoi = request.getTrangThai();
-
-        // 1. Xử lý đóng phòng nếu hủy hoặc trả phòng sớm
-        if ("Đã trả phòng".equals(trangThaiMoi) || "Đã hủy".equals(trangThaiMoi)) {
-            List<CtDatphong> chiTiets = ctDatphongRepository.findByMaDatPhong(dp);
-            if (chiTiets != null && !chiTiets.isEmpty()) {
-                for (CtDatphong ct : chiTiets) {
-                    if ("Đã hủy".equals(trangThaiMoi)) {
-                        ct.setDonGia(0.0);
-                        ctDatphongRepository.save(ct);
-                    }
-                    if (ct.getMaPhong() != null) {
-                        ct.getMaPhong().setTrangThai("Trống");
-                        phongRepository.save(ct.getMaPhong());
-                    }
-                }
+    @Transactional
+    public Datphong updateBooking(Integer id, BookingRequest request) {
+        Datphong dp = datphongRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt phòng có ID: " + id));
+        
+        Khachhang kh = khachhangRepository.findById(request.getMaKhachHang())
+                .orElseThrow(() -> new RuntimeException("Khách hàng không tồn tại!"));
+        
+        // 1. Xóa chi tiết cũ trước để tránh xung đột phòng trống khi tính toán ngày mới
+        List<CtDatphong> oldDetails = ctDatphongRepository.findByMaDatPhong(dp);
+        ctDatphongRepository.deleteAll(oldDetails);
+        ctDatphongRepository.flush(); // Đồng bộ ngay với DB
+        
+        // 2. Kiểm tra tính khả dụng của phòng trống trong khoảng thời gian mới
+        List<Phong> availableRooms = getAvailableRooms(request.getNgayNhan(), request.getNgayTra());
+        List<Integer> availableRoomIds = availableRooms.stream().map(Phong::getId).collect(Collectors.toList());
+        
+        for(Integer roomId : request.getDsMaPhong()) {
+            if(!availableRoomIds.contains(roomId)){
+                throw new RuntimeException("Phòng " + roomId + " đã có người đặt trong thời gian này!");
             }
-            dp.setTrangThai(trangThaiMoi);
-            if (request.getSoKhach() != null) {
-                dp.setSoKhach(request.getSoKhach());
-            }
-            datphongRepository.save(dp);
-            return;
         }
-
-        // 2. Thu hồi phòng cũ của Đơn đặt trước
-        List<CtDatphong> chiTietsCu = ctDatphongRepository.findByMaDatPhong(dp);
-        if (chiTietsCu != null && !chiTietsCu.isEmpty()) {
-            for (CtDatphong ct : chiTietsCu) {
-                if (ct.getMaPhong() != null) {
-                    ct.getMaPhong().setTrangThai("Trống");
-                    phongRepository.save(ct.getMaPhong());
-                }
-            }
-            ctDatphongRepository.deleteAll(chiTietsCu);
-        }
-
-        // 3. Lưu đè trực tiếp lên chính bản ghi Đặt phòng cũ
-        dp.setMaKhachHang(khach);
+        
+        // 3. Cập nhật thông tin đặt phòng
+        dp.setMaKhachHang(kh);
         dp.setNgayNhan(request.getNgayNhan());
         dp.setNgayTra(request.getNgayTra());
-//        if (trangThaiMoi != null) {
-//            dp.setTrangThai(trangThaiMoi);
-//        }
-//        if (request.getSoKhach() != null) {
-//            dp.setSoKhach(request.getSoKhach());
-//        }
-//        datphongRepository.save(dp);
-//
-//        // 4. Tạo chi tiết đặt phòng mới
-//        CtDatphong ctMoi = new CtDatphong();
-//        ctMoi.setMaDatPhong(dp);
-//        ctMoi.setMaPhong(phongMoi);
-//        ctMoi.setDonGia(request.getDonGia());
-//        ctDatphongRepository.save(ctMoi);
-//
-//        // Cập nhật trạng thái chuẩn cho phòng
-//        if ("Đã nhận phòng".equals(trangThaiMoi)) {
-//            phongMoi.setTrangThai("Đang sử dụng");
-//        } else {
-//            phongMoi.setTrangThai("Đã đặt");
-//        }
-//        phongRepository.save(phongMoi);
-//        dp.setMaKhachHang(khach);
-//        dp.setNgayNhan(ngayNhanMoi);
-//        dp.setNgayTra(ngayTraMoi);
-        if (request.getSoKhach() != null) dp.setSoKhach(request.getSoKhach());
-
-        // CHUYỂN ĐỔI THÔNG MINH: Nếu chọn "Nhận phòng đặt trước", lưu xuống DB là "Đã nhận phòng"
-        if ("Nhận phòng đặt trước".equals(trangThaiMoi) || "Đã nhận phòng đặt trước".equals(trangThaiMoi)) {
-            dp.setTrangThai("Đã nhận phòng đặt trước");
-            phongMoi.setTrangThai("Đang sử dụng"); // Ép phòng sang bận luôn
-        } else {
-            dp.setTrangThai(trangThaiMoi != null ? trangThaiMoi : "Chưa nhận");
-            phongMoi.setTrangThai("Đã đặt");
+        Datphong savedDp = datphongRepository.save(dp);
+        
+        // 4. Lưu lại chi tiết đặt phòng mới
+        for(Integer roomId : request.getDsMaPhong()){
+            Phong phong = phongRepository.findById(roomId).get();
+            CtDatphong ct = new CtDatphong();
+            ct.setMaDatPhong(savedDp);
+            ct.setMaPhong(phong);
+            ct.setDonGia(phong.getMaLoaiPhong().getDonGia());
+            ctDatphongRepository.save(ct);
         }
-        datphongRepository.save(dp);
-
-        // Tạo chi tiết đặt phòng mới gán phòng bận
-        CtDatphong ctMoi = new CtDatphong();
-        ctMoi.setMaDatPhong(dp);
-        ctMoi.setMaPhong(phongMoi);
-        ctMoi.setDonGia(request.getDonGia());
-        ctDatphongRepository.save(ctMoi);
-
-        phongRepository.save(phongMoi);
+        
+        return savedDp;
     }
-}
-
 
 }

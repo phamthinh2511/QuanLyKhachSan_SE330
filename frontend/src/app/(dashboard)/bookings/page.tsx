@@ -16,7 +16,8 @@ import { Booking } from "@/types/booking";
 import BookingStatCards from "@/components/bookings/BookingStatCards";
 import BookingTodayTable from "@/components/bookings/BookingTodayTable";
 import BookingAllTable from "@/components/bookings/BookingAllTable";
-import BookingModal, { CustomerResponse, RoomResponse } from "@/components/bookings/BookingModal";
+import BookingModal from "@/components/bookings/BookingModal";
+import { createCustomer } from "@/lib/api/customers";
 
 const today = new Date().toISOString().split("T")[0];
 const PAGE_SIZE_ALL = 50;
@@ -234,6 +235,63 @@ export default function BookingsPage() {
 //     setModalOpen(false);
 //     setEditing(null);
 //   };
+        const handleSave = async (data: any) => {
+            try {
+              let customerId = data.customerId;
+
+              // Nếu khách hàng chưa có trong database, hãy thêm vào database luôn
+              if (!customerId) {
+                const newCustomer = await createCustomer({
+                  name: data.customerName,
+                  phone: data.customerPhone,
+                  gender: data.customerGender,
+                  birthday: data.customerBirthday,
+                  address: data.customerAddress,
+                  email: data.customerEmail,
+                  idCard: data.customerIdCard,
+                  status: data.customerStatus || "Thường"
+                });
+                customerId = newCustomer.id;
+                console.log("Đã tự động thêm khách hàng mới vào Database, ID:", customerId);
+              }
+
+              // Map dữ liệu từ Form Modal sang BookingRequest của Backend
+              const bookingRequest = {
+                maKhachHang: customerId,
+                ngayNhan: data.checkIn,
+                ngayTra: data.checkOut,
+                dsMaPhong: [parseInt(data.roomNumber)] // Lấy ID phòng từ form
+              };
+
+              if (editing) {
+                // Gửi API Cập nhật đặt phòng
+                const response = await apiClient<any>(`/api/bookings/update/${editing.id}`, {
+                  method: "PUT",
+                  body: JSON.stringify(bookingRequest),
+                });
+                if (response) {
+                  alert("Cập nhật đặt phòng thành công!");
+                  await fetchData(); // Tải lại dữ liệu mới nhất
+                }
+              } else {
+                // Gửi API Tạo mới đặt phòng
+                const response = await apiClient<any>("/api/bookings/create", {
+                  method: "POST",
+                  body: JSON.stringify(bookingRequest),
+                });
+
+                if (response) {
+                  alert("Thêm mới đặt phòng thành công vào Database!");
+                  await fetchData(); // Tải lại dữ liệu mới nhất
+                }
+              }
+            } catch (error: any) {
+              console.error("Lỗi khi lưu dữ liệu:", error);
+              alert("Lỗi: " + (error.message || "Không thể kết nối Backend"));
+            }
+            setModalOpen(false);
+            setEditing(null);
+          };
 
   const handleEdit = (booking: Booking) => {
     setEditing(booking);
