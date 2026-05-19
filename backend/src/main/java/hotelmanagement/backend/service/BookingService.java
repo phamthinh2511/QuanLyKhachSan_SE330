@@ -116,6 +116,55 @@ public class BookingService {
         return datphongRepository.findAll();
     }
 
+    @Transactional
+    public void deleteBooking(Integer id) {
+        Datphong dp = datphongRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt phòng có ID: " + id));
+        List<CtDatphong> details = ctDatphongRepository.findByMaDatPhong(dp);
+        ctDatphongRepository.deleteAll(details);
+        datphongRepository.delete(dp);
+    }
 
+    @Transactional
+    public Datphong updateBooking(Integer id, BookingRequest request) {
+        Datphong dp = datphongRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt phòng có ID: " + id));
+        
+        Khachhang kh = khachhangRepository.findById(request.getMaKhachHang())
+                .orElseThrow(() -> new RuntimeException("Khách hàng không tồn tại!"));
+        
+        // 1. Xóa chi tiết cũ trước để tránh xung đột phòng trống khi tính toán ngày mới
+        List<CtDatphong> oldDetails = ctDatphongRepository.findByMaDatPhong(dp);
+        ctDatphongRepository.deleteAll(oldDetails);
+        ctDatphongRepository.flush(); // Đồng bộ ngay với DB
+        
+        // 2. Kiểm tra tính khả dụng của phòng trống trong khoảng thời gian mới
+        List<Phong> availableRooms = getAvailableRooms(request.getNgayNhan(), request.getNgayTra());
+        List<Integer> availableRoomIds = availableRooms.stream().map(Phong::getId).collect(Collectors.toList());
+        
+        for(Integer roomId : request.getDsMaPhong()) {
+            if(!availableRoomIds.contains(roomId)){
+                throw new RuntimeException("Phòng " + roomId + " đã có người đặt trong thời gian này!");
+            }
+        }
+        
+        // 3. Cập nhật thông tin đặt phòng
+        dp.setMaKhachHang(kh);
+        dp.setNgayNhan(request.getNgayNhan());
+        dp.setNgayTra(request.getNgayTra());
+        Datphong savedDp = datphongRepository.save(dp);
+        
+        // 4. Lưu lại chi tiết đặt phòng mới
+        for(Integer roomId : request.getDsMaPhong()){
+            Phong phong = phongRepository.findById(roomId).get();
+            CtDatphong ct = new CtDatphong();
+            ct.setMaDatPhong(savedDp);
+            ct.setMaPhong(phong);
+            ct.setDonGia(phong.getMaLoaiPhong().getDonGia());
+            ctDatphongRepository.save(ct);
+        }
+        
+        return savedDp;
+    }
 
 }

@@ -92,36 +92,44 @@ export default function BookingsPage() {
 //   };
         const handleSave = async (data: any) => {
             try {
+              let customerId = data.customerId;
+
+              // Nếu khách hàng chưa có trong database, hãy thêm vào database luôn
+              if (!customerId) {
+                const newCustomer = await createCustomer({
+                  name: data.customerName,
+                  phone: data.customerPhone,
+                  gender: data.customerGender,
+                  birthday: data.customerBirthday,
+                  address: data.customerAddress,
+                  email: data.customerEmail,
+                  idCard: data.customerIdCard,
+                  status: data.customerStatus || "Thường"
+                });
+                customerId = newCustomer.id;
+                console.log("Đã tự động thêm khách hàng mới vào Database, ID:", customerId);
+              }
+
+              // Map dữ liệu từ Form Modal sang BookingRequest của Backend
+              const bookingRequest = {
+                maKhachHang: customerId,
+                ngayNhan: data.checkIn,
+                ngayTra: data.checkOut,
+                dsMaPhong: [parseInt(data.roomNumber)] // Lấy ID phòng từ form
+              };
+
               if (editing) {
-                // Viết API Update ở Backend trước khi dùng ở đây
-                alert("Chức năng cập nhật đang được phát triển");
-              } else {
-                let customerId = data.customerId;
-
-                // Nếu khách hàng chưa có trong database, hãy thêm vào database luôn
-                if (!customerId) {
-                  const newCustomer = await createCustomer({
-                    name: data.customerName,
-                    phone: data.customerPhone,
-                    gender: data.customerGender,
-                    birthday: data.customerBirthday,
-                    address: data.customerAddress,
-                    email: data.customerEmail,
-                    idCard: data.customerIdCard,
-                    status: data.customerStatus || "Thường"
-                  });
-                  customerId = newCustomer.id;
-                  console.log("Đã tự động thêm khách hàng mới vào Database, ID:", customerId);
+                // Gửi API Cập nhật đặt phòng
+                const response = await apiClient<any>(`/api/bookings/update/${editing.id}`, {
+                  method: "PUT",
+                  body: JSON.stringify(bookingRequest),
+                });
+                if (response) {
+                  alert("Cập nhật đặt phòng thành công!");
+                  await fetchData(); // Tải lại dữ liệu mới nhất
                 }
-
-                // Map dữ liệu từ Form Modal sang BookingRequest của Backend
-                const bookingRequest = {
-                  maKhachHang: customerId,
-                  ngayNhan: data.checkIn,
-                  ngayTra: data.checkOut,
-                  dsMaPhong: [parseInt(data.roomNumber)] // Lấy ID phòng từ form
-                };
-
+              } else {
+                // Gửi API Tạo mới đặt phòng
                 const response = await apiClient<any>("/api/bookings/create", {
                   method: "POST",
                   body: JSON.stringify(bookingRequest),
@@ -129,7 +137,7 @@ export default function BookingsPage() {
 
                 if (response) {
                   alert("Thêm mới đặt phòng thành công vào Database!");
-                  await fetchData(); // Tải lại dữ liệu mới nhất từ Neon DB
+                  await fetchData(); // Tải lại dữ liệu mới nhất
                 }
               }
             } catch (error: any) {
