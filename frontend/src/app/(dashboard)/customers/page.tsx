@@ -61,6 +61,7 @@ export default function CustomersPage() {
       setEditing(null);
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Có lỗi xảy ra", "error");
+      throw err;
     }
   };
 
@@ -170,6 +171,7 @@ return (
 
       {modalOpen && (
         <CustomerModal
+          key={editing?.id ?? "new"}
           customer={editing}
           onSave={handleSave}
           onClose={() => { setModalOpen(false); setEditing(null); }}

@@ -263,9 +263,14 @@ export default function BookingsPage() {
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
                 <option value="Tất cả">Tất cả trạng thái</option>
+                <option value="Đã đặt">Đã đặt</option>
                 <option value="Chưa nhận">Chưa nhận</option>
+                <option value="Checked-in">Checked-in</option>
+                <option value="Đang sử dụng">Đang sử dụng</option>
+                <option value="Đã nhận phòng">Đã nhận phòng</option>
                 <option value="Đã nhận phòng tại quầy">Đã nhận phòng tại quầy</option>
                 <option value="Đã nhận phòng đặt trước">Đã nhận phòng đặt trước</option>
+                <option value="Checked-out">Checked-out</option>
                 <option value="Đã trả phòng">Đã trả phòng</option>
                 <option value="Đã hủy">Đã hủy</option>
               </select>

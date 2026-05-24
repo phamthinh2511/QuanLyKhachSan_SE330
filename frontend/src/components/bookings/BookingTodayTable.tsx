@@ -9,10 +9,16 @@ interface Props {
 }
 
 const statusStyle: Record<string, string> = {
-  "Checked-in":  "bg-green-100 text-green-700",
-  "Checked-out": "bg-gray-100 text-gray-500",
-  "Đã đặt":      "bg-blue-100 text-blue-700",
-  "Đã hủy":   "bg-red-100 text-red-500",
+  "Checked-in":               "bg-emerald-100 text-emerald-700",
+  "Checked-out":              "bg-gray-100 text-gray-500",
+  "Đã đặt":                   "bg-blue-100 text-blue-700",
+  "Đã hủy":                   "bg-red-100 text-red-500",
+  "Chưa nhận":                "bg-violet-100 text-violet-700",
+  "Đã nhận phòng tại quầy":   "bg-emerald-100 text-emerald-700",
+  "Đã nhận phòng đặt trước": "bg-emerald-100 text-emerald-700",
+  "Đã nhận phòng":            "bg-emerald-100 text-emerald-700",
+  "Đang sử dụng":             "bg-emerald-100 text-emerald-700",
+  "Đã trả phòng":             "bg-gray-100 text-gray-500",
 };
 
 export default function BookingTodayTable({ bookings, onEdit, onDelete }: Props) {

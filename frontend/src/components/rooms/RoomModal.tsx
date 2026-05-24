@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Room, RoomStatus } from "@/types/room";
 import { useRoomTypes } from "@/hooks/useRoomTypes";
+import { ApiError } from "@/lib/api/client";
 
 interface Props {
   room: Room | null;
-  onSave: (data: Room) => void;
+  onSave: (data: Room) => Promise<void> | void;
   onClose: () => void;
 }
 
@@ -25,23 +26,57 @@ const emptyForm: Room = {
 
 export default function RoomModal({ room, onSave, onClose }: Props) {
   const [form, setForm] = useState<Room>(emptyForm);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const { roomTypes, loading: loadingTypes } = useRoomTypes();
 
   useEffect(() => {
     setForm(room ? { ...room } : { ...emptyForm });
+    setErrors({});
   }, [room]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!room) {
+      if (!form.id || form.id <= 0) {
+        newErrors.id = "Mã phòng phải là số nguyên dương lớn hơn 0";
+      }
+    }
+
+    if (!form.floor || form.floor <= 0) {
+      newErrors.floor = "Tầng phải là số nguyên dương lớn hơn 0";
+    }
+
+    if (!form.loaiPhongId) {
+      newErrors.loaiPhongId = "Vui lòng chọn loại phòng";
+    }
+
+    if (!form.capacity || form.capacity <= 0) {
+      newErrors.capacity = "Sức chứa phải là số nguyên dương lớn hơn 0";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.loaiPhongId && roomTypes.length > 0) {
-        alert("Vui lòng chọn loại phòng.");
-        return;
+    setErrors({});
+    if (!validate()) return;
+    try {
+      await onSave({ ...form });
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        const errMsg = String(err.message).toLowerCase();
+        if (errMsg.includes("đã tồn tại") || errMsg.includes("already exists") || errMsg.includes("duplicate") || errMsg.includes("trùng")) {
+          setErrors({ id: "Mã phòng đã tồn tại trên hệ thống!" });
+        } else {
+          setErrors({ submit: err.message });
+        }
+      } else if (err instanceof Error) {
+        setErrors({ submit: err.message });
+      }
     }
-    if (!room && (!form.id || form.id <= 0)) {
-        alert("Vui lòng nhập Mã phòng hợp lệ (số nguyên dương).");
-        return;
-    }
-    onSave({ ...form });
   };
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -65,6 +100,15 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
     }
   };
 
+  const getInputClass = (fieldName: string) => {
+    const hasError = !!errors[fieldName];
+    return `w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all ${
+      hasError
+        ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+        : "border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+    }`;
+  };
+
   const inputClass = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
 
   return (
@@ -79,29 +123,34 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Mã phòng (ID)</label>
               <input
                 type="number"
-                min={1}
                 value={form.id || ""}
                 onChange={(e) => {
-                  const val = parseInt(e.target.value, 10);
-                  setForm({ ...form, id: isNaN(val) ? 0 : val, roomNumber: e.target.value });
+                  const cleanedValue = e.target.value.replace(/^0+/, "");
+                  const val = parseInt(cleanedValue, 10);
+                  setForm({ ...form, id: isNaN(val) ? 0 : val, roomNumber: cleanedValue });
                 }}
-                className={inputClass}
-                required
+                className={getInputClass("id")}
                 disabled={!!room}
                 placeholder="VD: 101"
               />
+              {errors.id && <p className="text-red-500 text-xs mt-1">{errors.id}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Tầng</label>
-              <input type="number" min={1} value={form.floor}
-                onChange={(e) => setForm({ ...form, floor: +e.target.value })}
-                className={inputClass} required />
+              <input type="number" value={form.floor || ""}
+                onChange={(e) => {
+                  const cleanedValue = e.target.value.replace(/^0+/, "");
+                  const val = parseInt(cleanedValue, 10);
+                  setForm({ ...form, floor: isNaN(val) ? 0 : val });
+                }}
+                className={getInputClass("floor")} />
+              {errors.floor && <p className="text-red-500 text-xs mt-1">{errors.floor}</p>}
             </div>
           </div>
 
@@ -110,18 +159,24 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
               <label className="block text-sm font-medium text-gray-700 mb-1">Loại phòng</label>
               <select value={form.loaiPhongId || ""}
                 onChange={handleTypeChange}
-                className={inputClass} required disabled={loadingTypes}>
+                className={getInputClass("loaiPhongId")} disabled={loadingTypes}>
                 <option value="" disabled>-- Chọn loại phòng --</option>
                 {roomTypes.map((rt) => (
                   <option key={rt.id} value={rt.id}>{rt.tenLoaiPhong}</option>
                 ))}
               </select>
+              {errors.loaiPhongId && <p className="text-red-500 text-xs mt-1">{errors.loaiPhongId}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Sức chứa (khách)</label>
-              <input type="number" min={1} value={form.capacity}
-                onChange={(e) => setForm({ ...form, capacity: +e.target.value })}
-                className={inputClass} required />
+              <input type="number" value={form.capacity || ""}
+                onChange={(e) => {
+                  const cleanedValue = e.target.value.replace(/^0+/, "");
+                  const val = parseInt(cleanedValue, 10);
+                  setForm({ ...form, capacity: isNaN(val) ? 0 : val });
+                }}
+                className={getInputClass("capacity")} />
+              {errors.capacity && <p className="text-red-500 text-xs mt-1">{errors.capacity}</p>}
             </div>
           </div>
 
@@ -151,6 +206,10 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               className={inputClass + " resize-none"} disabled />
           </div>
+
+          {errors.submit && (
+            <p className="text-red-500 text-sm text-center bg-red-50 border border-red-200 rounded-xl py-2">{errors.submit}</p>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose}

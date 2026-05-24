@@ -296,8 +296,10 @@ import { X, User, CalendarDays, Sparkles, Key, Check } from "lucide-react";
 import { Booking, BookingStatus } from "@/types/booking";
 import { getCustomers } from "@/lib/api/customers";
 import { getRooms } from "@/lib/api/rooms";
+import { getAllBookings } from "@/lib/api/bookings";
 import { Customer } from "@/types/customer";
 import { Room } from "@/types/room";
+import { ApiError } from "@/lib/api/client";
 
 interface Props {
   booking: Booking | null;
@@ -346,10 +348,12 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
   const [form, setForm] = useState<ExtendedForm>(emptyForm);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [isAutoFilled, setIsAutoFilled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const filteredCustomers = searchQuery.trim() === ""
     ? customers
@@ -360,17 +364,33 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
         (c.email && c.email.toLowerCase().includes(searchQuery.toLowerCase()))
       );
 
-  // Fetch customers and rooms on load
+  // Fetch customers, rooms and bookings on load
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
-        const [custData, roomData] = await Promise.all([
+        const [custData, roomData, bookingsData] = await Promise.all([
           getCustomers(),
           getRooms(),
+          getAllBookings().catch(() => []),
         ]);
         setCustomers(custData);
         setRooms(roomData);
+
+        const rawList = Array.isArray(bookingsData) ? bookingsData : [];
+        const mappedBookings = rawList.map((b: any) => ({
+          id: b.id,
+          bookingCode: b.bookingCode || `BK-${b.id}`,
+          customerName: b.customerName || "Khách vãng lai",
+          roomNumber: b.roomNumber || "Chưa gán",
+          checkIn: b.checkIn ? String(b.checkIn) : "",
+          checkOut: b.checkOut ? String(b.checkOut) : "",
+          bookingDate: b.bookingDate || "",
+          status: b.status || "Chưa nhận",
+          amount: b.thanhTien || b.tongTien || b.tongGia || b.amount || 0,
+          guests: b.guests || b.soKhach || 1
+        }));
+        setAllBookings(mappedBookings);
       } catch (err) {
         console.error("Lỗi khi tải dữ liệu trong Modal:", err);
       } finally {
@@ -408,6 +428,7 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
       setForm(emptyForm);
       setIsAutoFilled(false);
     }
+    setErrors({});
   }, [booking, customers]);
 
   // Calculate booking amount dynamically
@@ -421,6 +442,132 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
     );
     setForm((prev) => ({ ...prev, amount: room.pricePerNight * nights }));
   }, [form.roomNumber, form.checkIn, form.checkOut, rooms]);
+
+  // Get today's date in local time YYYY-MM-DD
+  const todayObj = new Date();
+  const year = todayObj.getFullYear();
+  const month = String(todayObj.getMonth() + 1).padStart(2, '0');
+  const day = String(todayObj.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${day}`;
+
+  const getOverlappingBooking = (
+    roomNumber: string,
+    checkIn: string,
+    checkOut: string,
+    excludeId?: number | null
+  ) => {
+    if (!roomNumber) return null;
+    return allBookings.find((b) => {
+      if (b.status === "Đã hủy") return false;
+      if (excludeId && b.id === excludeId) return false;
+      if (b.roomNumber !== roomNumber) return false;
+
+      const start1 = checkIn;
+      const end1 = checkOut;
+      const start2 = b.checkIn;
+      const end2 = b.checkOut;
+
+      if (!start1 && end1) {
+        return end1 > start2 && end1 <= end2;
+      }
+      if (start1 && !end1) {
+        return start1 >= start2 && start1 < end2;
+      }
+      return start1 < end2 && end1 > start2;
+    });
+  };
+
+  const isRoomBusyInPeriod = (roomNum: string, start: string, end: string) => {
+    if (!start && !end) return false;
+    return allBookings.some((b) => {
+      if (b.status === "Đã hủy") return false;
+      if (booking && b.id === booking.id) return false;
+      if (b.roomNumber !== roomNum) return false;
+
+      if (start && end) {
+        return start < b.checkOut && end > b.checkIn;
+      } else if (start) {
+        return start >= b.checkIn && start < b.checkOut;
+      } else {
+        return end > b.checkIn && end <= b.checkOut;
+      }
+    });
+  };
+
+  const handleCheckInChange = (val: string) => {
+    if (!val) {
+      setForm((prev) => ({ ...prev, checkIn: "" }));
+      setErrors((prev) => ({ ...prev, checkIn: "Ngày check-in không được để trống!" }));
+      return;
+    }
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.checkIn;
+      return next;
+    });
+    if (!booking && val < todayStr) {
+      setErrors((prev) => ({ ...prev, checkIn: "Ngày check-in không được trước hôm nay!" }));
+    } else if (form.roomNumber) {
+      const overlap = getOverlappingBooking(form.roomNumber, val, form.checkOut, booking?.id);
+      if (overlap) {
+        setErrors((prev) => ({
+          ...prev,
+          checkIn: `Trùng lịch đặt của phòng ${form.roomNumber} (${overlap.checkIn} đến ${overlap.checkOut})!`,
+        }));
+      }
+    }
+    setForm((prev) => ({ ...prev, checkIn: val }));
+  };
+
+  const handleCheckOutChange = (val: string) => {
+    if (!val) {
+      setForm((prev) => ({ ...prev, checkOut: "" }));
+      setErrors((prev) => ({ ...prev, checkOut: "Ngày check-out không được để trống!" }));
+      return;
+    }
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.checkOut;
+      return next;
+    });
+    if (!booking && val < todayStr) {
+      setErrors((prev) => ({ ...prev, checkOut: "Ngày check-out không được trước hôm nay!" }));
+    } else if (form.checkIn && val < form.checkIn) {
+      setErrors((prev) => ({ ...prev, checkOut: "Ngày check-out không được trước ngày check-in!" }));
+    } else if (form.roomNumber) {
+      const overlap = getOverlappingBooking(form.roomNumber, form.checkIn, val, booking?.id);
+      if (overlap) {
+        setErrors((prev) => ({
+          ...prev,
+          checkOut: `Trùng lịch đặt của phòng ${form.roomNumber} (${overlap.checkIn} đến ${overlap.checkOut})!`,
+        }));
+      }
+    }
+    setForm((prev) => ({ ...prev, checkOut: val }));
+  };
+
+  const handleRoomChange = (roomNum: string) => {
+    if (!roomNum) {
+      setForm((prev) => ({ ...prev, roomNumber: "" }));
+      setErrors((prev) => ({ ...prev, roomNumber: "Vui lòng chọn phòng trống!" }));
+      return;
+    }
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.roomNumber;
+      return next;
+    });
+    if (form.checkIn || form.checkOut) {
+      const overlap = getOverlappingBooking(roomNum, form.checkIn, form.checkOut, booking?.id);
+      if (overlap) {
+        setErrors((prev) => ({
+          ...prev,
+          roomNumber: `Phòng này đã có lịch đặt từ ${overlap.checkIn} đến ${overlap.checkOut}!`,
+        }));
+      }
+    }
+    setForm((prev) => ({ ...prev, roomNumber: roomNum }));
+  };
 
   // Watch for phone, cccd/passport, email to auto-complete existing customer details
   const handleCustomerFieldChange = (field: keyof ExtendedForm, value: string) => {
@@ -501,43 +648,96 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const getInputClass = (fieldName: string) => {
+    const hasError = !!errors[fieldName];
+    return `w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 transition duration-150 ease-in-out bg-white placeholder-gray-400 text-gray-800 ${
+      hasError
+        ? "border-red-300 focus:ring-red-200 focus:border-red-500"
+        : "border-gray-200 focus:ring-blue-500/20 focus:border-blue-500 hover:border-gray-300"
+    }`;
+  };
 
-    // ĐỒNG BỘ: Phân tách hình thức dựa trên trạng thái tiếng Việt mới chọn
-    const bookingType = form.status === "Checked-in" ? "THUE_TRUC_TIEP" : "DAT_TRUOC";
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
     const selectedCustomer = customers.find((c) => c.id === form.customerId);
     const selectedRoom = rooms.find((r) => r.roomNumber === form.roomNumber);
 
-    if (!selectedCustomer) {
-      alert("Vui lòng chọn khách hàng!");
-      return;
+    if (!form.customerId || !selectedCustomer) {
+      newErrors.customerId = "Vui lòng tìm và chọn khách hàng thành viên!";
     }
-    if (!selectedRoom) {
-      alert("Vui lòng chọn phòng!");
-      return;
+
+    if (!form.roomNumber || !selectedRoom) {
+      newErrors.roomNumber = "Vui lòng chọn phòng trống!";
     }
+
+    if (!form.checkIn) {
+      newErrors.checkIn = "Vui lòng chọn ngày check-in!";
+    } else if (!booking && form.checkIn < todayStr) {
+      newErrors.checkIn = "Ngày check-in không được trước hôm nay!";
+    }
+
     if (!form.checkOut) {
-      alert("Vui lòng chọn ngày check-out!");
-      return;
+      newErrors.checkOut = "Vui lòng chọn ngày check-out!";
+    } else if (!booking && form.checkOut < todayStr) {
+      newErrors.checkOut = "Ngày check-out không được trước hôm nay!";
+    } else if (form.checkIn && form.checkOut < form.checkIn) {
+      newErrors.checkOut = "Ngày check-out không được trước ngày check-in!";
     }
-    const phongSucChua = selectedRoom.capacity || 0;
-    if (phongSucChua > 0 && form.guests > phongSucChua) {
-      alert(`Thao tác thất bại: Phòng này chỉ chứa tối đa ${phongSucChua} người, đơn của bạn có ${form.guests} khách!`);
-      return;
+
+    if (form.roomNumber && form.checkIn && form.checkOut) {
+      const overlap = getOverlappingBooking(form.roomNumber, form.checkIn, form.checkOut, booking?.id);
+      if (overlap) {
+        newErrors.roomNumber = `Phòng ${form.roomNumber} đã có lịch đặt từ ${overlap.checkIn} đến ${overlap.checkOut}!`;
+      }
     }
-    onSave({
-      bookingType,
-      customerId: String(form.customerId),
-      customerName: selectedCustomer.name,
-      roomId: String(selectedRoom.id),
-      roomNumber: selectedRoom.roomNumber,
-      checkIn: form.checkIn,
-      checkOut: form.checkOut,
-      guests: form.guests,
-      amount: form.amount,
-      status: form.status.trim() // Gửi chuỗi tiếng Việt sạch xuống page.tsx
-    });
+
+    if (selectedRoom) {
+      const phongSucChua = selectedRoom.capacity || 0;
+      if (phongSucChua > 0 && form.guests > phongSucChua) {
+        newErrors.guests = `Phòng này chỉ chứa tối đa ${phongSucChua} người!`;
+      }
+    }
+
+    if (form.guests <= 0) {
+      newErrors.guests = "Số khách phải lớn hơn 0!";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+    if (!validate()) return;
+
+    const bookingType = form.status === "Checked-in" ? "THUE_TRUC_TIEP" : "DAT_TRUOC";
+    const selectedCustomer = customers.find((c) => c.id === form.customerId)!;
+    const selectedRoom = rooms.find((r) => r.roomNumber === form.roomNumber)!;
+
+    try {
+      await onSave({
+        bookingType,
+        customerId: String(form.customerId),
+        customerName: selectedCustomer.name,
+        roomId: String(selectedRoom.id),
+        roomNumber: selectedRoom.roomNumber,
+        checkIn: form.checkIn,
+        checkOut: form.checkOut,
+        guests: form.guests,
+        amount: form.amount,
+        status: form.status.trim()
+      });
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        setErrors({ submit: err.message });
+      } else if (err instanceof Error) {
+        setErrors({ submit: err.message });
+      } else {
+        setErrors({ submit: "Đã xảy ra lỗi không xác định khi lưu đặt phòng!" });
+      }
+    }
   };
 
   const inputClass =
@@ -581,7 +781,11 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
 
                 {/* Searchable Combobox for selecting existing customers */}
                 <div className="relative z-20 max-w-[240px] w-full">
-                  <div className="flex items-center gap-1.5 border border-slate-200 rounded-xl px-2.5 py-1.5 bg-white text-xs text-slate-700 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition">
+                  <div className={`flex items-center gap-1.5 border rounded-xl px-2.5 py-1.5 bg-white text-xs text-slate-700 shadow-sm focus-within:ring-2 transition ${
+                    errors.customerId
+                      ? "border-red-300 focus-within:ring-red-200 focus-within:border-red-500"
+                      : "border-slate-200 focus-within:ring-blue-500 focus-within:border-transparent"
+                  }`}>
                     <input
                       type="text"
                       placeholder="Tìm khách hàng cũ (tên, SĐT...)"
@@ -604,6 +808,9 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
                       </button>
                     )}
                   </div>
+                  {errors.customerId && (
+                    <p className="text-red-500 text-[10px] mt-1 font-medium">{errors.customerId}</p>
+                  )}
 
                   {isDropdownOpen && (
                     <div className="absolute right-0 top-full mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto z-30 divide-y divide-slate-50 animate-fadeIn">
@@ -782,20 +989,30 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Chọn phòng trống</label>
                   <select
                     value={form.roomNumber}
-                    onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
-                    className={inputClass}
+                    onChange={(e) => handleRoomChange(e.target.value)}
+                    className={getInputClass("roomNumber")}
                     required
                   >
                     <option value="">Chọn phòng</option>
-                    {/* Include the current room if editing, plus all available rooms */}
                     {rooms
-                      .filter((r) => r.status === "Trống" || r.roomNumber === booking?.roomNumber)
-                      .map((r) => (
-                        <option key={r.id} value={r.roomNumber}>
-                          Phòng {r.roomNumber} — {r.type} ({r.pricePerNight.toLocaleString("vi-VN")} đ/đêm)
-                        </option>
-                      ))}
+                      .filter((r) => r.status !== "Bảo trì" || r.roomNumber === booking?.roomNumber)
+                      .map((r) => {
+                        const isBusy = isRoomBusyInPeriod(r.roomNumber, form.checkIn, form.checkOut);
+                        const shouldDisable = (form.checkIn || form.checkOut)
+                          ? isBusy
+                          : (r.status !== "Trống" && r.roomNumber !== booking?.roomNumber);
+
+                        return (
+                          <option key={r.id} value={r.roomNumber} disabled={shouldDisable}>
+                            Phòng {r.roomNumber} — {r.type} ({r.pricePerNight.toLocaleString("vi-VN")} đ/đêm)
+                            {isBusy ? " [Đã bận trong khoảng này]" : r.status !== "Trống" && r.status !== "Bảo trì" ? ` [Hiện tại ${r.status}]` : ""}
+                          </option>
+                        );
+                      })}
                   </select>
+                  {errors.roomNumber && (
+                    <p className="text-red-500 text-xs mt-1">{errors.roomNumber}</p>
+                  )}
                 </div>
 
                 <div>
@@ -820,20 +1037,28 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
                   <input
                     type="date"
                     value={form.checkIn}
-                    onChange={(e) => setForm({ ...form, checkIn: e.target.value })}
-                    className={inputClass}
+                    min={!booking ? todayStr : undefined}
+                    onChange={(e) => handleCheckInChange(e.target.value)}
+                    className={getInputClass("checkIn")}
                     required
                   />
+                  {errors.checkIn && (
+                    <p className="text-red-500 text-xs mt-1">{errors.checkIn}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Ngày check-out</label>
                   <input
                     type="date"
                     value={form.checkOut}
-                    onChange={(e) => setForm({ ...form, checkOut: e.target.value })}
-                    className={inputClass}
+                    min={form.checkIn || (!booking ? todayStr : undefined)}
+                    onChange={(e) => handleCheckOutChange(e.target.value)}
+                    className={getInputClass("checkOut")}
                     required
                   />
+                  {errors.checkOut && (
+                    <p className="text-red-500 text-xs mt-1">{errors.checkOut}</p>
+                  )}
                 </div>
               </div>
 
@@ -845,10 +1070,13 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
                     type="number"
                     min={1}
                     value={form.guests}
-                    onChange={(e) => setForm({ ...form, guests: parseInt(e.target.value) || 1 })}
-                    className={inputClass}
+                    onChange={(e) => setForm({ ...form, guests: parseInt(e.target.value) || 0 })}
+                    className={getInputClass("guests")}
                     required
                   />
+                  {errors.guests && (
+                    <p className="text-red-500 text-xs mt-1">{errors.guests}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tổng tiền thanh toán</label>
@@ -865,6 +1093,12 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
                 </div>
               </div>
             </div>
+
+            {errors.submit && (
+              <p className="text-red-500 text-sm text-center bg-red-50 border border-red-200 rounded-xl py-2 my-2 font-medium">
+                {errors.submit}
+              </p>
+            )}
 
             {/* Footer Buttons */}
             <div className="flex gap-3 pt-4 border-t border-slate-100">

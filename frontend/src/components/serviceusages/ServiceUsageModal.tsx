@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { ServiceUsage, ServiceUsageStatus } from "@/types/serviceUsage";
-import { mockBookings } from "@/lib/data/bookings";
+import { Booking } from "@/types/booking";
+import { getAllBookings } from "@/lib/api/bookings";
 import { mockServices } from "@/lib/data/services";
 
 interface Props {
@@ -22,6 +23,28 @@ const emptyForm: Omit<ServiceUsage, "id" | "usageCode"> = {
 
 export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
   const [form, setForm] = useState<Omit<ServiceUsage, "id" | "usageCode">>(emptyForm);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+
+  useEffect(() => {
+    getAllBookings()
+      .then((data) => {
+        const rawList = Array.isArray(data) ? data : [];
+        const mapped = rawList.map((b: any) => ({
+          id: b.id,
+          bookingCode: b.bookingCode || `BK-${b.id}`,
+          customerName: b.customerName || "Khách vãng lai",
+          roomNumber: b.roomNumber || "Chưa gán",
+          checkIn: b.checkIn ? String(b.checkIn) : "",
+          checkOut: b.checkOut ? String(b.checkOut) : "",
+          bookingDate: b.bookingDate || "",
+          status: b.status || "Chưa nhận",
+          amount: b.thanhTien || b.tongTien || b.tongGia || b.amount || 0,
+          guests: b.guests || b.soKhach || 1
+        }));
+        setBookings(mapped);
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
   useEffect(() => {
     if (usage) {
@@ -34,7 +57,7 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
 
   // Tự điền thông tin khi chọn booking
   const handleBookingChange = (code: string) => {
-    const booking = mockBookings.find((b) => b.bookingCode === code);
+    const booking = bookings.find((b) => b.bookingCode === code);
     setForm((prev) => ({
       ...prev,
       bookingCode: code,
@@ -89,7 +112,7 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
             <select value={form.bookingCode} onChange={(e) => handleBookingChange(e.target.value)}
               className={inputClass} required>
               <option value="">Chọn booking</option>
-              {mockBookings.map((b) => (
+              {bookings.map((b) => (
                 <option key={b.id} value={b.bookingCode}>
                   {b.bookingCode} — {b.customerName} (Phòng {b.roomNumber})
                 </option>

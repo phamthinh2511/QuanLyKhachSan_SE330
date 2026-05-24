@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus } from "lucide-react";
 import { Room, RoomStatus } from "@/types/room";
 import { useRooms } from "@/hooks/useRooms";
@@ -8,6 +8,18 @@ import RoomTable from "@/components/rooms/RoomTable";
 import RoomGrid from "@/components/rooms/RoomGrid";
 import RoomModal from "@/components/rooms/RoomModal";
 import { apiClient } from "@/lib/api/client";
+
+interface BookingItem {
+  id: number;
+  bookingCode: string;
+  customerName: string;
+  roomNumber: string;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+  amount: number;
+  status: string;
+}
 
 const PAGE_SIZE = 10;
 
@@ -28,21 +40,22 @@ export default function RoomsPage() {
     const localToday = new Date(today.getTime() - offset * 60 * 1000);
     return localToday.toISOString().split("T")[0];
   });
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<BookingItem[]>([]);
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
-      const res = await apiClient<any>("/api/bookings/all");
-      const list = res.result ? res.result : (Array.isArray(res) ? res : []);
+      const res = await apiClient<BookingItem[]>("/api/bookings/all");
+      const list = Array.isArray(res) ? res : [];
       setBookings(list);
     } catch (err) {
       console.error("Lỗi tải bookings:", err);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchBookings();
-  }, []);
+  }, [fetchBookings]);
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -58,21 +71,27 @@ export default function RoomsPage() {
     }
 
     const activeBooking = bookings.find((b) => {
-      if (b.trangThai === "CANCELLED" || b.trangThai === "DA_TRA_PHONG" || b.trangThai === "CHECKED_OUT") {
+      if (b.status === "Đã hủy" || b.status === "Đã trả phòng" || b.status === "CANCELLED" || b.status === "DA_TRA_PHONG" || b.status === "CHECKED_OUT") {
         return false;
       }
-      const roomIds = b.dsChiTietDatPhong?.map((ct: any) => ct.maPhong?.id) || [];
-      const hasRoom = roomIds.includes(room.id);
+      const hasRoom = b.roomNumber === String(room.id);
       if (!hasRoom) return false;
 
-      const checkIn = b.ngayNhan;
-      const checkOut = b.ngayTra;
-      return selectedDate >= checkIn && selectedDate < checkOut;
+      const checkIn = b.checkIn;
+      const checkOut = b.checkOut;
+      return checkIn && checkOut && selectedDate >= checkIn && selectedDate < checkOut;
     });
 
     let computedStatus: RoomStatus = "Trống";
     if (activeBooking) {
-      if (activeBooking.trangThai === "DA_NHAN_PHONG") {
+      const status = activeBooking.status;
+      if (
+        status === "Đang sử dụng" ||
+        status === "Đã nhận phòng" ||
+        status === "Đã nhận phòng tại quầy" ||
+        status === "Đã nhận phòng đặt trước" ||
+        status === "DA_NHAN_PHONG"
+      ) {
         computedStatus = "Đang sử dụng";
       } else {
         computedStatus = "Đã đặt";

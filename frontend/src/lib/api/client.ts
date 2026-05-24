@@ -6,6 +6,18 @@ interface FetchOptions extends RequestInit {
   params?: Record<string, string>;
 }
 
+export class ApiError extends Error {
+  status: number;
+  result?: Record<string, unknown>;
+
+  constructor(message: string, status: number, result?: Record<string, unknown>) {
+    super(message);
+    this.status = status;
+    this.result = result;
+    this.name = "ApiError";
+  }
+}
+
 export async function apiClient<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { params, ...fetchOptions } = options;
 
@@ -29,12 +41,12 @@ export async function apiClient<T>(endpoint: string, options: FetchOptions = {})
     if (response.status === 401) {
       clearAuth();
       window.location.href = "/login";
-      throw new Error("Phiên đăng nhập hết hạn");
+      throw new ApiError("Phiên đăng nhập hết hạn", 401);
     }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.message ?? `Lỗi ${response.status}`);
+      throw new ApiError(error.message ?? `Lỗi ${response.status}`, response.status, error.result);
     }
 
     // DELETE trả về 204 No Content
@@ -45,6 +57,9 @@ export async function apiClient<T>(endpoint: string, options: FetchOptions = {})
     return response.json();
   } catch (error) {
     if (error instanceof Error) {
+      if (error.name === "ApiError") {
+        throw error;
+      }
       if (
         error.name === "TypeError" ||
         error.message.includes("fetch") ||
