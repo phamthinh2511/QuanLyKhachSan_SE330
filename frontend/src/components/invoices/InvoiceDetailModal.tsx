@@ -97,10 +97,23 @@ export default function InvoiceDetailModal({ invoice, onClose }: Props) {
                 <td className="px-4 py-3 text-gray-700 border border-gray-200">Tiền phòng {invoice.roomNumber}</td>
                 <td className="px-4 py-3 text-right text-gray-700 border border-gray-200">{invoice.roomCost.toLocaleString()}</td>
               </tr>
-              <tr>
-                <td className="px-4 py-3 text-gray-700 border border-gray-200">Dịch vụ sử dụng</td>
-                <td className="px-4 py-3 text-right text-gray-700 border border-gray-200">{invoice.serviceCost.toLocaleString()}</td>
-              </tr>
+              {invoice.serviceUsages && invoice.serviceUsages.length > 0 ? (
+                invoice.serviceUsages.map((usage) => (
+                  <tr key={usage.id}>
+                    <td className="px-4 py-3 text-gray-700 border border-gray-200">
+                      Dịch vụ: {usage.serviceName} (SL: {usage.quantity}) - Ngày: {usage.date}
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-700 border border-gray-200">
+                      {usage.total.toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="px-4 py-3 text-gray-700 border border-gray-200">Dịch vụ sử dụng</td>
+                  <td className="px-4 py-3 text-right text-gray-700 border border-gray-200">{invoice.serviceCost.toLocaleString()}</td>
+                </tr>
+              )}
               <tr className="bg-blue-50">
                 <td className="px-4 py-3 font-bold text-gray-800 border border-gray-200">Tổng cộng</td>
                 <td className="px-4 py-3 text-right font-bold text-blue-600 text-lg border border-gray-200">{invoice.total.toLocaleString()}</td>

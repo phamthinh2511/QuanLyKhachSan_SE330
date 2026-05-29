@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Invoice, PaymentMethod } from "@/types/invoice";
-import { mockBookings } from "@/lib/data/bookings";
-import { mockServiceUsages } from "@/lib/data/serviceusages";
+import { Booking } from "@/types/booking";
+import { getAllBookings } from "@/lib/api/bookings";
+import { getServiceUsages } from "@/lib/api/service-usages";
+import { ServiceUsage } from "@/types/serviceUsage";
 
 interface Props {
   onSave: (data: Invoice) => void;
@@ -12,29 +14,61 @@ interface Props {
 }
 
 export default function InvoiceModal({ onSave, onClose }: Props) {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [serviceUsages, setServiceUsages] = useState<ServiceUsage[]>([]);
   const [bookingCode, setBookingCode] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("");
   const [roomCost, setRoomCost] = useState(0);
   const [serviceCost, setServiceCost] = useState(0);
   const [customerName, setCustomerName] = useState("");
   const [roomNumber, setRoomNumber] = useState("");
+  const [selectedUsages, setSelectedUsages] = useState<ServiceUsage[]>([]);
+
+  useEffect(() => {
+    getAllBookings()
+      .then((data) => {
+        const rawList = Array.isArray(data) ? data : [];
+        const mapped = rawList.map((b: any) => ({
+          id: b.id,
+          bookingCode: String(b.id),
+          customerName: b.customerName || "Khách vãng lai",
+          roomNumber: b.roomNumber || "Chưa gán",
+          checkIn: b.checkIn ? String(b.checkIn) : "",
+          checkOut: b.checkOut ? String(b.checkOut) : "",
+          bookingDate: b.bookingDate || "",
+          status: b.status || "Chưa nhận",
+          amount: b.thanhTien || b.tongTien || b.tongGia || b.amount || 0,
+          guests: b.guests || b.soKhach || 1
+        }));
+        setBookings(mapped);
+      })
+      .catch((err) => console.error(err));
+
+    getServiceUsages()
+      .then((data) => {
+        setServiceUsages(data || []);
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
   useEffect(() => {
     if (!bookingCode) {
       setRoomCost(0); setServiceCost(0);
       setCustomerName(""); setRoomNumber("");
+      setSelectedUsages([]);
       return;
     }
-    const booking = mockBookings.find((b) => b.bookingCode === bookingCode);
+    const booking = bookings.find((b) => b.bookingCode === bookingCode);
     if (!booking) return;
 
     setCustomerName(booking.customerName);
     setRoomNumber(booking.roomNumber);
     setRoomCost(booking.amount);
 
-    const services = mockServiceUsages.filter((u) => u.bookingCode === bookingCode);
+    const services = serviceUsages.filter((u) => u.bookingCode === bookingCode);
+    setSelectedUsages(services);
     setServiceCost(services.reduce((s, u) => s + u.total, 0));
-  }, [bookingCode]);
+  }, [bookingCode, bookings, serviceUsages]);
 
   const total = roomCost + serviceCost;
 
@@ -52,6 +86,7 @@ export default function InvoiceModal({ onSave, onClose }: Props) {
       paymentMethod,
       status: paymentMethod ? "Đã thanh toán" : "Chờ thanh toán",
       createdAt: new Date().toISOString().split("T")[0],
+      serviceUsages: selectedUsages,
     });
   };
 
@@ -77,7 +112,7 @@ export default function InvoiceModal({ onSave, onClose }: Props) {
             <select value={bookingCode} onChange={(e) => setBookingCode(e.target.value)}
               className={inputClass} required>
               <option value="">Chọn booking</option>
-              {mockBookings.map((b) => (
+              {bookings.map((b) => (
                 <option key={b.id} value={b.bookingCode}>
                   {b.bookingCode} — {b.customerName}
                 </option>
