@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { mockServiceUsages } from "@/lib/data/serviceusages";
+import { useServiceUsage } from "@/hooks/useServiceUsage";
 import { ServiceUsage, ServiceUsageStatus } from "@/types/serviceUsage";
 import ServiceUsageStatCards from "@/components/serviceusages/ServiceUsageStatCards";
 import ServiceUsageTodayTable from "@/components/serviceusages/ServiceUsageTodayTable";
@@ -13,7 +13,7 @@ const today = new Date().toISOString().split("T")[0];
 const PAGE_SIZE = 50;
 
 export default function ServiceUsagePage() {
-  const [usages, setUsages] = useState<ServiceUsage[]>(mockServiceUsages);
+  const { usages, loading, error, saveUsage, removeUsage } = useServiceUsage();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("Tất cả");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -26,10 +26,10 @@ export default function ServiceUsagePage() {
   // Tất cả — search + filter + load more
   const allFiltered = usages.filter((u) => {
     const matchSearch =
-      u.usageCode.toLowerCase().includes(search.toLowerCase()) ||
-      u.bookingCode.toLowerCase().includes(search.toLowerCase()) ||
-      u.customerName.toLowerCase().includes(search.toLowerCase()) ||
-      u.serviceName.toLowerCase().includes(search.toLowerCase());
+      (u.usageCode?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (u.bookingCode?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (u.customerName?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (u.serviceName?.toLowerCase() || "").includes(search.toLowerCase());
     const matchStatus = filterStatus === "Tất cả" || u.status === filterStatus;
     return matchSearch && matchStatus;
   });
@@ -40,16 +40,24 @@ export default function ServiceUsagePage() {
   const handleSearch = (val: string) => { setSearch(val); setVisibleCount(PAGE_SIZE); };
   const handleFilter = (val: string) => { setFilterStatus(val); setVisibleCount(PAGE_SIZE); };
 
-  const handleSave = (data: ServiceUsage) => {
-    if (editing) {
-      setUsages((prev) => prev.map((u) => (u.id === data.id ? data : u)));
-    } else {
-      const newId = usages.length > 0 ? Math.max(...usages.map((u) => u.id)) + 1 : 1;
-      const newCode = `SU-${String(newId).padStart(3, "0")}`;
-      setUsages((prev) => [...prev, { ...data, id: newId, usageCode: newCode }]);
+  const handleSave = async (data: ServiceUsage) => {
+    const payload = {
+      bookingCode: data.bookingCode,
+      roomNumber: data.roomNumber,
+      serviceName: data.serviceName,
+      quantity: data.quantity,
+      unitPrice: data.unitPrice,
+      total: data.total,
+      date: data.date,
+      status: data.status,
+    };
+    try {
+      await saveUsage(editing ? editing.id : null, payload);
+      setModalOpen(false);
+      setEditing(null);
+    } catch (err: any) {
+      alert(err.message || "Không thể lưu thông tin sử dụng dịch vụ");
     }
-    setModalOpen(false);
-    setEditing(null);
   };
 
   const handleEdit = (usage: ServiceUsage) => {
@@ -57,9 +65,13 @@ export default function ServiceUsagePage() {
     setModalOpen(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Bạn có chắc muốn xóa bản ghi này?")) {
-      setUsages((prev) => prev.filter((u) => u.id !== id));
+      try {
+        await removeUsage(id);
+      } catch (err: any) {
+        alert(err.message || "Không thể xóa bản ghi sử dụng dịch vụ");
+      }
     }
   };
 
@@ -74,67 +86,73 @@ export default function ServiceUsagePage() {
       {/* Stat Cards — tháng này */}
       <ServiceUsageStatCards usages={usages} />
 
-      {/* Hôm nay */}
-      <ServiceUsageTodayTable
-        usages={todayUsages}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-  
-      {/* Tất cả */}
-      <div className="space-y-4">
-        <div className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-3">
-          <div className="relative flex-1">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Tìm theo mã, booking, khách hàng, dịch vụ..."
-              value={search}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      {loading && usages.length === 0 ? (
+        <div className="p-12 text-center text-gray-400 text-sm">Đang đồng bộ dữ liệu sử dụng dịch vụ...</div>
+      ) : (
+        <>
+          {/* Hôm nay */}
+          <ServiceUsageTodayTable
+            usages={todayUsages}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+      
+          {/* Tất cả */}
+          <div className="space-y-4">
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-3">
+              <div className="relative flex-1">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Tìm theo mã, booking, khách hàng, dịch vụ..."
+                  value={search}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <button
+                onClick={() => { setEditing(null); setModalOpen(true); }}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
+              >
+                <Plus className="w-4 h-4" />
+                Ghi nhận dịch vụ
+              </button>
+              <select
+                value={filterStatus}
+                onChange={(e) => handleFilter(e.target.value)}
+                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option>Tất cả</option>
+                <option>Đã sử dụng</option>
+                <option>Chờ sử dụng</option>
+                <option>Đã hủy</option>
+              </select>
+            </div>
+
+            <ServiceUsageAllTable
+              usages={visibleAll}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
             />
-          </div>
-          <button
-          onClick={() => { setEditing(null); setModalOpen(true); }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
-        >
-          <Plus className="w-4 h-4" />
-          Ghi nhận dịch vụ
-        </button>
-          <select
-            value={filterStatus}
-            onChange={(e) => handleFilter(e.target.value)}
-            className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option>Tất cả</option>
-            <option>Đã sử dụng</option>
-            <option>Chờ sử dụng</option>
-            <option>Đã hủy</option>
-          </select>
-        </div>
 
-        <ServiceUsageAllTable
-          usages={visibleAll}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-
-        {hasMore && (
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-sm text-gray-400">
-              Đang hiển thị {visibleAll.length} / {allFiltered.length} bản ghi
-            </p>
-            <button
-              onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
-              className="px-6 py-2.5 border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 text-sm font-medium rounded-xl transition"
-            >
-              Xem thêm 50 bản ghi
-            </button>
+            {hasMore && (
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-sm text-gray-400">
+                  Đang hiển thị {visibleAll.length} / {allFiltered.length} bản ghi
+                </p>
+                <button
+                  onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+                  className="px-6 py-2.5 border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 text-sm font-medium rounded-xl transition"
+                >
+                  Xem thêm 50 bản ghi
+                </button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       {modalOpen && (
         <ServiceUsageModal
