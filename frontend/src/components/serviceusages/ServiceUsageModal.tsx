@@ -3,8 +3,11 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { ServiceUsage, ServiceUsageStatus } from "@/types/serviceUsage";
-import { mockBookings } from "@/lib/data/bookings";
-import { mockServices } from "@/lib/data/services";
+import { Booking } from "@/types/booking";
+import { getAllBookings } from "@/lib/api/bookings";
+import { getServices } from "@/lib/api/services";
+import { Service } from "@/types/service";
+import { mapBookingStatus } from "@/app/(dashboard)/bookings/page";
 
 interface Props {
   usage: ServiceUsage | null;
@@ -22,6 +25,37 @@ const emptyForm: Omit<ServiceUsage, "id" | "usageCode"> = {
 
 export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
   const [form, setForm] = useState<Omit<ServiceUsage, "id" | "usageCode">>(emptyForm);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+
+  useEffect(() => {
+    // Load Bookings
+    getAllBookings()
+      .then((data) => {
+        const rawList = Array.isArray(data) ? data : [];
+        const mapped = rawList.map((b: any) => ({
+          id: b.id,
+          bookingCode: String(b.id),
+          customerName: b.customerName || "Khách vãng lai",
+          roomNumber: b.roomNumber || "Chưa gán",
+          checkIn: b.checkIn ? String(b.checkIn) : "",
+          checkOut: b.checkOut ? String(b.checkOut) : "",
+          bookingDate: b.bookingDate || "",
+          status: mapBookingStatus(b.status),
+          amount: b.thanhTien || b.tongTien || b.tongGia || b.amount || 0,
+          guests: b.guests || b.soKhach || 1
+        }));
+        setBookings(mapped);
+      })
+      .catch((err) => console.error(err));
+
+    // Load Services
+    getServices()
+      .then((data) => {
+        setServices(data || []);
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
   useEffect(() => {
     if (usage) {
@@ -34,7 +68,7 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
 
   // Tự điền thông tin khi chọn booking
   const handleBookingChange = (code: string) => {
-    const booking = mockBookings.find((b) => b.bookingCode === code);
+    const booking = bookings.find((b) => b.bookingCode === code);
     setForm((prev) => ({
       ...prev,
       bookingCode: code,
@@ -45,7 +79,7 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
 
   // Tự điền giá khi chọn dịch vụ
   const handleServiceChange = (name: string) => {
-    const service = mockServices.find((s) => s.name === name);
+    const service = services.find((s) => s.name === name);
     const unitPrice = service?.price ?? 0;
     setForm((prev) => ({
       ...prev,
@@ -89,11 +123,13 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
             <select value={form.bookingCode} onChange={(e) => handleBookingChange(e.target.value)}
               className={inputClass} required>
               <option value="">Chọn booking</option>
-              {mockBookings.map((b) => (
-                <option key={b.id} value={b.bookingCode}>
-                  {b.bookingCode} — {b.customerName} (Phòng {b.roomNumber})
-                </option>
-              ))}
+              {bookings
+                .filter((b) => b.status === "Đang sử dụng" || b.status === "Đã đặt" || b.bookingCode === form.bookingCode)
+                .map((b) => (
+                  <option key={b.id} value={b.bookingCode}>
+                    {b.bookingCode} — {b.customerName} (Phòng {b.roomNumber})
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -117,9 +153,9 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
             <select value={form.serviceName} onChange={(e) => handleServiceChange(e.target.value)}
               className={inputClass} required>
               <option value="">Chọn dịch vụ</option>
-              {mockServices.map((s) => (
+              {services.map((s) => (
                 <option key={s.id} value={s.name}>
-                  {s.name} (${s.price})
+                  {s.name} ({s.price} VND)
                 </option>
               ))}
             </select>

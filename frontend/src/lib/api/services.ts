@@ -1,5 +1,4 @@
 import { Service } from "@/types/service";
-import { ServiceCategory } from "@/types/service";
 import { apiClient } from "./client";
 
 export interface DichvuApi{
@@ -9,23 +8,6 @@ export interface DichvuApi{
     giaDichVu: number    
 } 
 
-function guessCategory(tenDichVu: string): ServiceCategory{
-    const name = tenDichVu.toLowerCase();
-    if(name.includes("bữa sáng") || name.includes("bữa trưa") || name.includes("bữa tối") || name.includes("ăn") || name.includes("uống") || name.includes("breakfast") || name.includes("food") || name.includes("drink") || name.includes("room service")){
-        return "Ăn uống"; // Ăn uống
-    }
-    if(name.includes("giặt") || name.includes("thay ga") || name.includes("vệ sinh") || name.includes("dọn") || name.includes("lau") || name.includes("laundry") || name.includes("clean")){
-        return "Phòng"; // Phòng
-    }
-    if(name.includes("gym") || name.includes("spa") || name.includes("yoga") || name.includes("thiền") || name.includes("massage")){
-        return "Sức khoẻ"; // Sức khoẻ
-    }
-    if(name.includes("sân bay") || name.includes("taxi") || name.includes("đưa") || name.includes("đón") || name.includes("xe")){
-        return "Đưa đón"; // Sức khoẻ
-    }
-    return "Khác";
-}
-
 // DichvuApi -> Service
 function mapToService(d: DichvuApi): Service{
     return {
@@ -34,7 +16,6 @@ function mapToService(d: DichvuApi): Service{
     name:        d.tenDichVu,
     price:       d.giaDichVu,
     description: d.moTa,
-    category:    guessCategory(d.tenDichVu),
   };
 }
 
