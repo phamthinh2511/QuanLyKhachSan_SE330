@@ -1,14 +1,55 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { mockRooms } from "@/lib/data/rooms";
-import { mockBookings } from "@/lib/data/bookings";
+import { Room } from "@/types/room";
+import { Booking } from "@/types/booking";
+import { getRooms } from "@/lib/api/rooms";
+import { getAllBookings } from "@/lib/api/bookings";
 
 export default function RoomPerformance() {
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([getRooms(), getAllBookings()])
+      .then(([roomsData, bookingsData]) => {
+        setRooms(roomsData || []);
+        const rawList = Array.isArray(bookingsData) ? bookingsData : [];
+        const mappedBookings = rawList.map((b: any) => ({
+          id: b.id,
+          bookingCode: String(b.id),
+          customerName: b.customerName || "Khách vãng lai",
+          roomNumber: b.roomNumber || "Chưa gán",
+          checkIn: b.checkIn ? String(b.checkIn) : "",
+          checkOut: b.checkOut ? String(b.checkOut) : "",
+          bookingDate: b.bookingDate || "",
+          status: b.status || "Chưa nhận",
+          amount: b.thanhTien || b.tongTien || b.tongGia || b.amount || 0,
+          guests: b.guests || b.soKhach || 1
+        }));
+        setBookings(mappedBookings);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500 text-sm">Đang tải dữ liệu báo cáo...</div>
+      </div>
+    );
+  }
+
   // Bookings theo loại phòng
   const typeMap: Record<string, number> = {};
-  mockBookings.forEach((b) => {
-    const room = mockRooms.find((r) => r.roomNumber === b.roomNumber);
+  bookings.forEach((b) => {
+    const room = rooms.find((r) => r.roomNumber === b.roomNumber);
     if (!room) return;
     typeMap[room.type] = (typeMap[room.type] ?? 0) + 1;
   });
@@ -16,7 +57,7 @@ export default function RoomPerformance() {
 
   // Trạng thái phòng
   const statusMap: Record<string, number> = {};
-  mockRooms.forEach((r) => { statusMap[r.status] = (statusMap[r.status] ?? 0) + 1; });
+  rooms.forEach((r) => { statusMap[r.status] = (statusMap[r.status] ?? 0) + 1; });
   const statusData = Object.entries(statusMap).map(([name, value]) => ({ name, value }));
 
   const STATUS_COLORS: Record<string, string> = {

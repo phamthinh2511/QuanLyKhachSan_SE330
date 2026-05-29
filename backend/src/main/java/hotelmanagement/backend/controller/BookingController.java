@@ -89,4 +89,26 @@ public class BookingController {
         }
     }
 
+    @PostMapping("/check-out")
+    public ResponseEntity<?> handleCheckOut(@RequestBody Map<String, Integer> request) {
+        try {
+            Integer bookingId = request.get("bookingId");
+            bookingService.checkOut(bookingId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("code", 200);
+            response.put("message", "Trả phòng (Check-out) và tạo hóa đơn thành công!");
+            return ResponseEntity.ok(response);
+        } catch (IllegalStateException e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("code", 400);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("code", 550);
+            response.put("message", "Lỗi hệ thống khi thực hiện Check-out.");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
 }

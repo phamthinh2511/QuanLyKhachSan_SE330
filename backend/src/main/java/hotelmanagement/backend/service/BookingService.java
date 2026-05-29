@@ -30,6 +30,12 @@ public class BookingService {
     private PhieuthuephongRepository phieuthuephongRepository;
     @Autowired
     private CtPhieuthuephongRepository ctPhieuthuephongRepository;
+    @Autowired
+    private HoadonRepository hoadonRepository;
+    @Autowired
+    private CtHoadonRepository ctHoadonRepository;
+    @Autowired
+    private SudungdichvuRepository sudungdichvuRepository;
 @Transactional
 public void xuLyDatHoacThuePhong(BookingRequest request){
     Khachhang khach = khachhangRepository.findById(request.getMaKhachHangId())
@@ -193,7 +199,7 @@ public List<DatPhongResponse> getAllBookings() {
 
         listResponses.add(DatPhongResponse.builder()
                 .id(pt.getId())
-                .bookingCode("PT-" + pt.getId()) // Gán tiền tố PT để phân biệt Phiếu Thuê tại quầy
+                .bookingCode(String.valueOf(pt.getId())) // Sử dụng mã ID trong database làm mã booking
                 .customerName(pt.getMaKhachHang() != null ? pt.getMaKhachHang().getTenKhachHang() : "Ẩn danh")
                 .roomNumber(soPhong)
                 .checkIn(pt.getNgayNhanPhong())
@@ -225,7 +231,7 @@ public List<DatPhongResponse> getAllBookings() {
 
         return DatPhongResponse.builder()
                 .id(dp.getId())
-                .bookingCode("BK-" + dp.getId())
+                .bookingCode(String.valueOf(dp.getId())) // Sử dụng mã ID trong database làm mã booking
                 .customerName(dp.getMaKhachHang() != null ? dp.getMaKhachHang().getTenKhachHang() : "Ẩn danh")
                 .roomNumber(soPhong)
                 .checkIn(dp.getNgayNhan())
@@ -341,4 +347,102 @@ public List<DatPhongResponse> getAllBookings() {
         return savedDp;
     }
 
+    @Transactional
+    public void checkOut(Integer bookingId) {
+        // 1. Tìm phiếu thuê phòng đang hoạt động
+        Phieuthuephong pt = phieuthuephongRepository.findById(bookingId).orElse(null);
+        if (pt == null) {
+            Datphong dp = datphongRepository.findById(bookingId).orElse(null);
+            if (dp != null) {
+                List<Phieuthuephong> pts = phieuthuephongRepository.findByMaDatPhong(dp);
+                if (!pts.isEmpty()) {
+                    pt = pts.get(0);
+                }
+            }
+        }
+
+        if (pt == null) {
+            throw new IllegalStateException("Không tìm thấy Phiếu Thuê Phòng đang sử dụng hợp lệ!");
+        }
+
+        if ("Đã trả phòng".equals(pt.getTrangThai())) {
+            throw new IllegalStateException("Đơn này đã thực hiện trả phòng trước đó!");
+        }
+
+        // 2. Tính số ngày ở
+        long days = java.time.temporal.ChronoUnit.DAYS.between(pt.getNgayNhanPhong(), pt.getNgayTraPhong());
+        if (days <= 0) {
+            days = 1; // Tối thiểu tính 1 ngày
+        }
+
+        // 3. Tính tiền phòng
+        double roomFee = 0.0;
+        List<CtPhieuthuephong> ctPtList = ctPhieuthuephongRepository.findByMaPhieuThue(pt);
+        for (CtPhieuthuephong ct : ctPtList) {
+            double price = ct.getDonGia() != null ? ct.getDonGia() : 0.0;
+            roomFee += price * days;
+        }
+
+        // 4. Tính tiền dịch vụ
+        final Phieuthuephong finalPt = pt;
+        double serviceFee = 0.0;
+        List<Sudungdichvu> usages = sudungdichvuRepository.findAll().stream()
+                .filter(u -> u.getMaPhieuThue() != null && u.getMaPhieuThue().getId().equals(finalPt.getId()))
+                .collect(Collectors.toList());
+        for (Sudungdichvu usage : usages) {
+            serviceFee += usage.getThanhTien() != null ? usage.getThanhTien() : 0.0;
+        }
+
+        double totalAmount = roomFee + serviceFee;
+
+        // 5. Tạo Hóa đơn
+        Hoadon hoadon = new Hoadon();
+        hoadon.setMaPhieuThue(pt);
+        hoadon.setMaNhanVien(pt.getMaNhanVien()); // Lấy nhân viên từ phiếu thuê
+        hoadon.setNgayThanhToan(LocalDate.now());
+        hoadon.setTongTien(totalAmount);
+        Hoadon savedHoadon = hoadonRepository.save(hoadon);
+
+        // 6. Tạo chi tiết hóa đơn (Tiền phòng)
+        for (CtPhieuthuephong ct : ctPtList) {
+            CtHoadon ctH = new CtHoadon();
+            ctH.setMaHoaDon(savedHoadon);
+            ctH.setMaPhong(ct.getMaPhong());
+            ctH.setMaDichVu(null); // nullable cho tiền phòng
+            ctH.setLoaiChiPhi("Tiền phòng");
+            ctH.setSoLuong((int) days);
+            ctH.setDonGia(ct.getDonGia());
+            ctH.setThanhTien(ct.getDonGia() * days);
+            ctHoadonRepository.save(ctH);
+        }
+
+        // 7. Tạo chi tiết hóa đơn (Tiền dịch vụ)
+        for (Sudungdichvu usage : usages) {
+            CtHoadon ctH = new CtHoadon();
+            ctH.setMaHoaDon(savedHoadon);
+            ctH.setMaPhong(usage.getMaPhong());
+            ctH.setMaDichVu(usage.getMaDichVu());
+            ctH.setLoaiChiPhi("Tiền dịch vụ");
+            ctH.setSoLuong(usage.getSoLuong());
+            ctH.setDonGia(usage.getDonGia());
+            ctH.setThanhTien(usage.getThanhTien());
+            ctHoadonRepository.save(ctH);
+        }
+
+        // 8. Cập nhật trạng thái phiếu thuê & phòng
+        pt.setTrangThai("Đã trả phòng");
+        phieuthuephongRepository.save(pt);
+
+        for (CtPhieuthuephong ct : ctPtList) {
+            if (ct.getMaPhong() != null) {
+                ct.getMaPhong().setTrangThai("Trống");
+                phongRepository.save(ct.getMaPhong());
+            }
+        }
+
+        if (pt.getMaDatPhong() != null) {
+            pt.getMaDatPhong().setTrangThai("Đã trả phòng");
+            datphongRepository.save(pt.getMaDatPhong());
+        }
+    }
 }

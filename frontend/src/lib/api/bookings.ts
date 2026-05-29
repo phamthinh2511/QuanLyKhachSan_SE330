@@ -78,3 +78,15 @@ export async function updateBooking(id: number, payload: BookingRequestPayload):
     body: JSON.stringify(payload),
   });
 }
+export async function checkInBooking(bookingId: number): Promise<any> {
+  return apiClient<any>("/api/bookings/check-in", {
+    method: "POST",
+    body: JSON.stringify({ maDatPhong: bookingId, maNhanVien: 1 }),
+  });
+}
+export async function checkOutBooking(bookingId: number): Promise<ApiResponse<void>> {
+  return apiClient<ApiResponse<void>>("/api/bookings/check-out", {
+    method: "POST",
+    body: JSON.stringify({ bookingId }),
+  });
+}

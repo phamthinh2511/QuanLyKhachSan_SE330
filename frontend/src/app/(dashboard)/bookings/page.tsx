@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-// Hãy kiểm tra và đảm bảo file @/lib/api/bookings xuất đủ 5 thành phần này nhé
+// Hãy kiểm tra và đảm bảo file @/lib/api/bookings xuất đủ các thành phần này nhé
 import {
   getAllBookings,
   submitBookingForm,
@@ -9,12 +9,14 @@ import {
   getAllRooms,
   deleteBooking,
   updateBooking,
+  checkInBooking,
+  checkOutBooking,
   BookingRequestPayload,
   CustomerResponse,
   RoomResponse
 } from "@/lib/api/bookings";
 import { Plus } from "lucide-react";
-import { Booking } from "@/types/booking";
+import { Booking, BookingStatus } from "@/types/booking";
 import BookingStatCards from "@/components/bookings/BookingStatCards";
 import BookingTodayTable from "@/components/bookings/BookingTodayTable";
 import BookingAllTable from "@/components/bookings/BookingAllTable";
@@ -23,6 +25,30 @@ import { createCustomer } from "@/lib/api/customers";
 
 const today = new Date().toISOString().split("T")[0];
 const PAGE_SIZE_ALL = 50;
+
+export const mapBookingStatus = (status: string): BookingStatus => {
+  if (!status) return "Đã đặt";
+  const s = status.trim();
+  if (s === "Chưa nhận" || s === "Đã đặt trước" || s === "Đã đặt") {
+    return "Đã đặt";
+  }
+  if (
+    s === "Checked-in" ||
+    s === "Đã nhận phòng" ||
+    s === "Đã nhận phòng tại quầy" ||
+    s === "Đã nhận phòng đặt trước" ||
+    s === "Đang sử dụng"
+  ) {
+    return "Đang sử dụng";
+  }
+  if (s === "Checked-out" || s === "Đã trả phòng") {
+    return "Đã trả phòng";
+  }
+  if (s === "Đã hủy" || s === "CANCELLED") {
+    return "Đã hủy";
+  }
+  return s as BookingStatus;
+};
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -34,6 +60,61 @@ export default function BookingsPage() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE_ALL);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Booking | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    booking: Booking;
+  } | null>(null);
+
+  // Thao tác nhanh Check-in
+  const handleCheckIn = async (bookingId: number) => {
+    try {
+      setLoading(true);
+      await checkInBooking(bookingId);
+      alert("Nhận phòng (Check-in) thành công! Đã tạo phiếu thuê phòng.");
+      await fetchData();
+    } catch (error: any) {
+      alert(error.message || "Nhận phòng thất bại!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Thao tác nhanh Check-out
+  const handleCheckOut = async (bookingId: number) => {
+    try {
+      setLoading(true);
+      await checkOutBooking(bookingId);
+      alert("Trả phòng (Check-out) và kết xuất hóa đơn thành công!");
+      await fetchData();
+    } catch (error: any) {
+      alert(error.message || "Trả phòng thất bại!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelBooking = async (booking: Booking) => {
+    const isConfirmed = window.confirm(`Bạn có chắc chắn muốn hủy đơn đặt phòng ${booking.bookingCode} của khách ${booking.customerName} không?`);
+    if (isConfirmed) {
+      await handleDelete(booking.id);
+    }
+  };
+
+  const handleRowContextMenu = (e: React.MouseEvent, booking: Booking) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      booking,
+    });
+  };
+
+  useEffect(() => {
+    const closeMenu = () => setContextMenu(null);
+    window.addEventListener("click", closeMenu);
+    return () => window.removeEventListener("click", closeMenu);
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -53,13 +134,13 @@ export default function BookingsPage() {
 
       const mappedData = rawList.map((b: any) => ({
         id: b.id,
-        bookingCode: b.bookingCode || `BK-${b.id}`,
+        bookingCode: String(b.id),
         customerName: b.customerName || "Khách vãng lai",
         roomNumber: b.roomNumber || "Chưa gán",
         checkIn: b.checkIn ? String(b.checkIn) : today,
         checkOut: b.checkOut ? String(b.checkOut) : today,
         bookingDate: today,
-        status: b.status || "Chưa nhận",
+        status: mapBookingStatus(b.status),
         amount: b.thanhTien || b.tongTien || b.tongGia || b.amount || 0,
         guests: b.guests || b.soKhach || 1
       }));
@@ -81,19 +162,11 @@ export default function BookingsPage() {
         const currentYear = todayObj.getFullYear();
 
         // A. Số lượng khách đang lưu trú thực tế tại khách sạn
-        const dangOActive = bookings.filter((b) => {
-              const status = b.status ? b.status.trim() : "";
-              return (
-                status === "Đã nhận phòng tại quầy" ||
-                status === "Đã nhận phòng đặt trước" ||
-                status === "Đã nhận phòng" ||
-                status === "Đang sử dụng"
-              );
-            }).length;
+        const dangOActive = bookings.filter((b) => b.status === "Đang sử dụng").length;
 
         // B. Số lượng đơn đặt trước sẽ check-in trong tháng hiện tại này
         const sapToiActive = bookings.filter(b => {
-          if (b.status !== "Chưa nhận" || !b.checkIn) return false;
+          if (b.status !== "Đã đặt" || !b.checkIn) return false;
           const checkInDate = new Date(b.checkIn);
           return checkInDate.getMonth() === currentMonth && checkInDate.getFullYear() === currentYear;
         }).length;
@@ -246,6 +319,7 @@ export default function BookingsPage() {
                       bookings={todayBookings}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
+                      onRowContextMenu={handleRowContextMenu}
                     />
 
           <div className="space-y-4">
@@ -262,10 +336,9 @@ export default function BookingsPage() {
                 onChange={(e) => setFilter(e.target.value)}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
-                <option value="Tất cả">Tất cả trạng thái</option>
-                <option value="Chưa nhận">Chưa nhận</option>
-                <option value="Đã nhận phòng tại quầy">Đã nhận phòng tại quầy</option>
-                <option value="Đã nhận phòng đặt trước">Đã nhận phòng đặt trước</option>
+                <option value="Tất cả">Tất cả trạng thái (Filter tổng)</option>
+                <option value="Đã đặt">Đã đặt</option>
+                <option value="Đang sử dụng">Đang sử dụng</option>
                 <option value="Đã trả phòng">Đã trả phòng</option>
                 <option value="Đã hủy">Đã hủy</option>
               </select>
@@ -275,6 +348,7 @@ export default function BookingsPage() {
                           bookings={visibleAll}
                           onEdit={handleEdit}
                           onDelete={handleDelete}
+                          onRowContextMenu={handleRowContextMenu}
                         />
           </div>
         </>
@@ -286,6 +360,48 @@ export default function BookingsPage() {
           onSave={handleSave}
           onClose={() => { setModalOpen(false); setEditing(null); }}
         />
+      )}
+
+      {contextMenu && (
+        <div
+          className="fixed bg-white border border-gray-200 rounded-2xl shadow-xl py-2 z-50 min-w-[190px] overflow-hidden"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="px-4 py-1.5 border-b border-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+            Đơn: #{contextMenu.booking.bookingCode}
+          </div>
+          {contextMenu.booking.status === "Đã đặt" ? (
+            <div className="p-1 space-y-0.5">
+              <button
+                onClick={() => { handleCheckIn(contextMenu.booking.id); setContextMenu(null); }}
+                className="w-full text-left px-3 py-2 text-xs font-semibold text-green-700 hover:bg-green-50 rounded-lg transition flex items-center gap-2"
+              >
+                <span className="w-2 h-2 rounded-full bg-green-500" />
+                Check-in (Nhận phòng)
+              </button>
+              <button
+                onClick={() => { handleCancelBooking(contextMenu.booking); setContextMenu(null); }}
+                className="w-full text-left px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-lg transition flex items-center gap-2"
+              >
+                <span className="w-2 h-2 rounded-full bg-red-500" />
+                Hủy đặt trước
+              </button>
+            </div>
+          ) : contextMenu.booking.status === "Đang sử dụng" ? (
+            <div className="p-1">
+              <button
+                onClick={() => { handleCheckOut(contextMenu.booking.id); setContextMenu(null); }}
+                className="w-full text-left px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 rounded-lg transition flex items-center gap-2"
+              >
+                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                Check-out & Tạo hóa đơn
+              </button>
+            </div>
+          ) : (
+            <div className="px-4 py-3 text-xs text-gray-400 text-center italic">Không khả dụng nhanh</div>
+          )}
+        </div>
       )}
     </div>
   );
