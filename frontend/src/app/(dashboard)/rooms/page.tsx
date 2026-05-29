@@ -109,8 +109,7 @@ export default function RoomsPage() {
       if (b.status === "Đã hủy" || b.status === "Đã trả phòng") {
         return false;
       }
-      const roomIds = b.dsChiTietDatPhong?.map((ct: any) => ct.maPhong?.id) || [];
-      const hasRoom = roomIds.includes(room.id);
+      const hasRoom = b.roomNumber === String(room.id);
       if (!hasRoom) return false;
 
       const checkIn = b.checkIn;

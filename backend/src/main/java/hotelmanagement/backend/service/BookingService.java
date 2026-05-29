@@ -93,8 +93,12 @@ public void xuLyDatHoacThuePhong(BookingRequest request){
         ctPt.setDonGia(request.getDonGia());
         ctPhieuthuephongRepository.save(ctPt);
 
-        // 3. Đổi trạng thái phòng sang Đang sử dụng
-        phong.setTrangThai("Đang sử dụng");
+        // 3. Đổi trạng thái phòng phù hợp
+        if ("Đã trả phòng".equals(request.getTrangThai()) || "Đã hủy".equals(request.getTrangThai())) {
+            phong.setTrangThai("Trống");
+        } else {
+            phong.setTrangThai("Đang sử dụng");
+        }
         phongRepository.save(phong);
 
     } else {
@@ -124,8 +128,12 @@ public void xuLyDatHoacThuePhong(BookingRequest request){
         ctDp.setDonGia(request.getDonGia());
         ctDatphongRepository.save(ctDp);
 
-        // 3. Đổi trạng thái phòng sang Đã đặt
-        phong.setTrangThai("Đã đặt");
+        // 3. Đổi trạng thái phòng phù hợp
+        if ("Đã trả phòng".equals(request.getTrangThai()) || "Đã hủy".equals(request.getTrangThai())) {
+            phong.setTrangThai("Trống");
+        } else {
+            phong.setTrangThai("Đã đặt");
+        }
         phongRepository.save(phong);
     }
 }
@@ -325,10 +333,18 @@ public List<DatPhongResponse> getAllBookings() {
         Khachhang kh = khachhangRepository.findById(request.getMaKhachHangId())
                 .orElseThrow(() -> new RuntimeException("Khách hàng không tồn tại!"));
         
-        // 1. Xóa chi tiết cũ trước để tránh xung đột phòng trống khi tính toán ngày mới
+        // 1. Giải phóng các phòng cũ (đặt trạng thái về 'Trống') trước khi cập nhật
         List<CtDatphong> oldDetails = ctDatphongRepository.findByMaDatPhong(dp);
-        ctDatphongRepository.deleteAll(oldDetails);
-        ctDatphongRepository.flush(); // Đồng bộ ngay với DB
+        if (oldDetails != null) {
+            for (CtDatphong oldCt : oldDetails) {
+                if (oldCt.getMaPhong() != null) {
+                    oldCt.getMaPhong().setTrangThai("Trống");
+                    phongRepository.save(oldCt.getMaPhong());
+                }
+            }
+            ctDatphongRepository.deleteAll(oldDetails);
+            ctDatphongRepository.flush(); // Đồng bộ ngay với DB
+        }
         
         // 2. Kiểm tra tính khả dụng của phòng trống trong khoảng thời gian mới
         List<Phong> availableRooms = getAvailableRooms(request.getNgayNhan(), request.getNgayTra());
@@ -358,6 +374,22 @@ public List<DatPhongResponse> getAllBookings() {
         ct.setMaPhong(phong);
         ct.setDonGia(request.getDonGia() != null ? request.getDonGia() : (phong.getMaLoaiPhong() != null ? phong.getMaLoaiPhong().getDonGia() : 500000.0));
         ctDatphongRepository.save(ct);
+        
+        // 5. Cập nhật trạng thái của phòng mới dựa trên trạng thái của booking mới
+        String reqStatus = request.getTrangThai();
+        if (reqStatus != null) {
+            String cleanStatus = reqStatus.trim();
+            if ("Đã hủy".equals(cleanStatus) || "Đã trả phòng".equals(cleanStatus) || "Checked-out".equals(cleanStatus) || "CANCELLED".equals(cleanStatus)) {
+                phong.setTrangThai("Trống");
+            } else if ("Đang sử dụng".equals(cleanStatus) || "Checked-in".equals(cleanStatus) || "Đã nhận phòng tại quầy".equals(cleanStatus) || "Đã nhận phòng".equals(cleanStatus)) {
+                phong.setTrangThai("Đang sử dụng");
+            } else {
+                phong.setTrangThai("Đã đặt");
+            }
+        } else {
+            phong.setTrangThai("Đã đặt");
+        }
+        phongRepository.save(phong);
         
         return savedDp;
     }

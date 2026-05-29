@@ -486,6 +486,26 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
     }
   };
 
+  const handleCheckInChange = (val: string) => {
+    if (!val) {
+      setForm((prev) => ({ ...prev, checkIn: val }));
+      return;
+    }
+    const checkInDate = new Date(val);
+    const nextDay = new Date(checkInDate);
+    nextDay.setDate(checkInDate.getDate() + 1);
+
+    const offset = nextDay.getTimezoneOffset();
+    const localNextDay = new Date(nextDay.getTime() - offset * 60 * 1000);
+    const checkOutStr = localNextDay.toISOString().split("T")[0];
+
+    setForm((prev) => ({
+      ...prev,
+      checkIn: val,
+      checkOut: checkOutStr,
+    }));
+  };
+
   const resetCustomerForm = () => {
     setIsAutoFilled(false);
     setForm((prev) => ({
@@ -821,7 +841,7 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
                   <input
                     type="date"
                     value={form.checkIn}
-                    onChange={(e) => setForm({ ...form, checkIn: e.target.value })}
+                    onChange={(e) => handleCheckInChange(e.target.value)}
                     className={inputClass}
                     required
                   />
