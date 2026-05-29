@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { Service, ServiceCategory } from "@/types/service";
+import { Service } from "@/types/service";
 
 interface Props {
   service: Service | null;
@@ -11,7 +11,7 @@ interface Props {
 }
 
 const emptyForm: Omit<Service, "id" | "serviceCode"> = {
-  name: "", category: "Ăn uống", price: 0, description: "",
+  name: "", price: 0, description: "",
 };
 
 export default function ServiceModal({ service, onSave, onClose }: Props) {
@@ -49,42 +49,26 @@ export default function ServiceModal({ service, onSave, onClose }: Props) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Tên + Danh mục */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tên dịch vụ</label>
-              <input
-                type="text"
-                placeholder="vd. Breakfast Buffet"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className={inputClass}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Danh mục</label>
-              <select
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value as ServiceCategory })}
-                className={inputClass}
-              >
-                <option>Food & Beverage</option>
-                <option>Housekeeping</option>
-                <option>Wellness</option>
-                <option>Transportation</option>
-                <option>Other</option>
-              </select>
-            </div>
+          {/* Tên dịch vụ */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tên dịch vụ</label>
+            <input
+              type="text"
+              placeholder="vd. Breakfast Buffet"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className={inputClass}
+              required
+            />
           </div>
 
           {/* Giá */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Giá ($)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Giá (VNĐ)</label>
             <input
               type="number"
               min={0}
-              placeholder="25"
+              placeholder="25000"
               value={form.price}
               onChange={(e) => setForm({ ...form, price: +e.target.value })}
               className={inputClass}
