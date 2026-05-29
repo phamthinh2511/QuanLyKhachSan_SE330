@@ -6,6 +6,7 @@ interface Props {
   usages: ServiceUsage[];
   onEdit: (u: ServiceUsage) => void;
   onDelete: (id: number) => void;
+  onRowContextMenu?: (e: React.MouseEvent, usage: ServiceUsage) => void;
 }
 
 const statusStyle = {
@@ -16,7 +17,7 @@ const statusStyle = {
 
 const headers = ["ID", "Booking", "Khách hàng", "Phòng", "Dịch vụ", "SL", "Đơn giá", "Tổng", "Ngày", "Trạng thái", "Thao tác"];
 
-export default function ServiceUsageAllTable({ usages, onEdit, onDelete }: Props) {
+export default function ServiceUsageAllTable({ usages, onEdit, onDelete, onRowContextMenu }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-100">
@@ -40,7 +41,10 @@ export default function ServiceUsageAllTable({ usages, onEdit, onDelete }: Props
                 </td>
               </tr>
             ) : usages.map((u) => (
-              <tr key={u.id} className="hover:bg-gray-50 transition">
+              <tr key={u.id}
+                onContextMenu={(e) => onRowContextMenu && onRowContextMenu(e, u)}
+                className="hover:bg-gray-50 transition"
+              >
                 <td className="px-4 py-4 font-bold text-gray-700">{u.usageCode}</td>
                 <td className="px-4 py-4 text-gray-600">{u.bookingCode}</td>
                 <td className="px-4 py-4 text-gray-700 whitespace-nowrap">{u.customerName}</td>

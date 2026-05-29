@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useServiceUsage } from "@/hooks/useServiceUsage";
 import { ServiceUsage, ServiceUsageStatus } from "@/types/serviceUsage";
@@ -19,6 +19,44 @@ export default function ServiceUsagePage() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ServiceUsage | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    usage: ServiceUsage;
+  } | null>(null);
+
+  useEffect(() => {
+    const closeMenu = () => setContextMenu(null);
+    window.addEventListener("click", closeMenu);
+    return () => window.removeEventListener("click", closeMenu);
+  }, []);
+
+  const handleRowContextMenu = (e: React.MouseEvent, usage: ServiceUsage) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      usage,
+    });
+  };
+
+  const handleUpdateStatus = async (id: number, usage: ServiceUsage, newStatus: "Đã sử dụng" | "Đã hủy") => {
+    const payload = {
+      bookingCode: usage.bookingCode,
+      roomNumber: usage.roomNumber,
+      serviceName: usage.serviceName,
+      quantity: usage.quantity,
+      unitPrice: usage.unitPrice,
+      total: usage.total,
+      date: usage.date,
+      status: newStatus,
+    };
+    try {
+      await saveUsage(id, payload);
+    } catch (err: any) {
+      alert(err.message || "Không thể cập nhật trạng thái");
+    }
+  };
 
   // Hôm nay — không filter, không phân trang
   const todayUsages = usages.filter((u) => u.date === today);
@@ -95,6 +133,7 @@ export default function ServiceUsagePage() {
             usages={todayUsages}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onRowContextMenu={handleRowContextMenu}
           />
       
           {/* Tất cả */}
@@ -135,6 +174,7 @@ export default function ServiceUsagePage() {
               usages={visibleAll}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onRowContextMenu={handleRowContextMenu}
             />
 
             {hasMore && (
@@ -160,6 +200,38 @@ export default function ServiceUsagePage() {
           onSave={handleSave}
           onClose={() => { setModalOpen(false); setEditing(null); }}
         />
+      )}
+
+      {contextMenu && (
+        <div
+          className="fixed bg-white border border-gray-200 rounded-2xl shadow-xl py-2 z-50 min-w-[190px] overflow-hidden"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="px-4 py-1.5 border-b border-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+            Dịch vụ: {contextMenu.usage.usageCode}
+          </div>
+          {contextMenu.usage.status === "Chờ sử dụng" ? (
+            <div className="p-1 space-y-0.5">
+              <button
+                onClick={() => { handleUpdateStatus(contextMenu.usage.id, contextMenu.usage, "Đã sử dụng"); setContextMenu(null); }}
+                className="w-full text-left px-3 py-2 text-xs font-semibold text-green-700 hover:bg-green-50 rounded-lg transition flex items-center gap-2"
+              >
+                <span className="w-2 h-2 rounded-full bg-green-500" />
+                Đổi sang Đã sử dụng
+              </button>
+              <button
+                onClick={() => { handleUpdateStatus(contextMenu.usage.id, contextMenu.usage, "Đã hủy"); setContextMenu(null); }}
+                className="w-full text-left px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-lg transition flex items-center gap-2"
+              >
+                <span className="w-2 h-2 rounded-full bg-red-500" />
+                Đổi sang Đã hủy
+              </button>
+            </div>
+          ) : (
+            <div className="px-4 py-3 text-xs text-gray-400 text-center italic">Không khả dụng nhanh</div>
+          )}
+        </div>
       )}
     </div>
   );
