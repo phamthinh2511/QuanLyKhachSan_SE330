@@ -6,6 +6,7 @@ interface Props {
   bookings: Booking[];
   onEdit: (b: Booking) => void;
   onDelete: (id: number) => void;
+  onRowContextMenu?: (e: React.MouseEvent, booking: Booking) => void;
 }
 
 const statusStyle: Record<string, string> = {
@@ -15,7 +16,7 @@ const statusStyle: Record<string, string> = {
   "Đã hủy":   "bg-red-100 text-red-500",
 };
 
-export default function BookingTodayTable({ bookings, onEdit, onDelete }: Props) {
+export default function BookingTodayTable({ bookings, onEdit, onDelete, onRowContextMenu }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-100">
@@ -37,7 +38,8 @@ export default function BookingTodayTable({ bookings, onEdit, onDelete }: Props)
                 <td colSpan={9} className="px-6 py-8 text-center text-gray-400">Không có booking nào hôm nay.</td>
               </tr>
             ) : bookings.map((b) => (
-              <tr key={b.id} className="hover:bg-gray-50 transition">
+              <tr key={b.id} className="hover:bg-gray-50 transition"
+                onContextMenu={(e) => onRowContextMenu?.(e, b)}>
                 <td className="px-4 py-4 font-bold text-gray-700">{b.bookingCode}</td>
                 <td className="px-4 py-4 text-gray-700 whitespace-nowrap">{b.customerName}</td>
                 <td className="px-4 py-4 text-gray-600">{b.roomNumber}</td>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus } from "lucide-react";
 import { Room, RoomStatus } from "@/types/room";
 import { useRooms } from "@/hooks/useRooms";
@@ -8,6 +8,20 @@ import RoomTable from "@/components/rooms/RoomTable";
 import RoomGrid from "@/components/rooms/RoomGrid";
 import RoomModal from "@/components/rooms/RoomModal";
 import { apiClient } from "@/lib/api/client";
+import { mapBookingStatus } from "@/app/(dashboard)/bookings/page";
+
+interface BookingItem {
+  id: number;
+  bookingCode: string;
+  customerName: string;
+  roomNumber: string;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+  amount: number;
+  status: string;
+  dsChiTietDatPhong?: any[];
+}
 
 const PAGE_SIZE = 10;
 
@@ -22,27 +36,61 @@ export default function RoomsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
   const [toasts, setToasts] = useState<{ id: string; type: "success" | "error"; message: string }[]>([]);
-  const [selectedDate, setSelectedDate] = useState(() => {
+  const [startDate, setStartDate] = useState(() => {
     const today = new Date();
     const offset = today.getTimezoneOffset();
     const localToday = new Date(today.getTime() - offset * 60 * 1000);
     return localToday.toISOString().split("T")[0];
   });
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [endDate, setEndDate] = useState(() => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const offset = tomorrow.getTimezoneOffset();
+    const localTomorrow = new Date(tomorrow.getTime() - offset * 60 * 1000);
+    return localTomorrow.toISOString().split("T")[0];
+  });
+  const [bookings, setBookings] = useState<BookingItem[]>([]);
 
-  const fetchBookings = async () => {
-    try {
-      const res = await apiClient<any>("/api/bookings/all");
-      const list = res.result ? res.result : (Array.isArray(res) ? res : []);
-      setBookings(list);
-    } catch (err) {
-      console.error("Lỗi tải bookings:", err);
+  const handleStartDateChange = (val: string) => {
+    setStartDate(val);
+    if (val && endDate && val >= endDate) {
+      const nextDay = new Date(val);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const offset = nextDay.getTimezoneOffset();
+      const localNextDay = new Date(nextDay.getTime() - offset * 60 * 1000);
+      setEndDate(localNextDay.toISOString().split("T")[0]);
     }
   };
 
+  const handleEndDateChange = (val: string) => {
+    setEndDate(val);
+    if (val && startDate && val <= startDate) {
+      const prevDay = new Date(val);
+      prevDay.setDate(prevDay.getDate() - 1);
+      const offset = prevDay.getTimezoneOffset();
+      const localPrevDay = new Date(prevDay.getTime() - offset * 60 * 1000);
+      setStartDate(localPrevDay.toISOString().split("T")[0]);
+    }
+  };
+
+  const fetchBookings = useCallback(async () => {
+    try {
+      const res = await apiClient<BookingItem[]>("/api/bookings/all");
+      const list = Array.isArray(res) ? res : [];
+      const mapped = list.map((b) => ({
+        ...b,
+        status: mapBookingStatus(b.status)
+      }));
+      setBookings(mapped);
+    } catch (err) {
+      console.error("Lỗi tải bookings:", err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchBookings();
-  }, []);
+  }, [fetchBookings]);
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -58,21 +106,28 @@ export default function RoomsPage() {
     }
 
     const activeBooking = bookings.find((b) => {
-      if (b.trangThai === "CANCELLED" || b.trangThai === "DA_TRA_PHONG" || b.trangThai === "CHECKED_OUT") {
+      if (b.status === "Đã hủy" || b.status === "Đã trả phòng") {
         return false;
       }
       const roomIds = b.dsChiTietDatPhong?.map((ct: any) => ct.maPhong?.id) || [];
       const hasRoom = roomIds.includes(room.id);
       if (!hasRoom) return false;
 
-      const checkIn = b.ngayNhan;
-      const checkOut = b.ngayTra;
-      return selectedDate >= checkIn && selectedDate < checkOut;
+      const checkIn = b.checkIn;
+      const checkOut = b.checkOut;
+      
+      if (!checkIn || !checkOut) return false;
+
+      if (startDate === endDate) {
+        return startDate >= checkIn && startDate < checkOut;
+      } else {
+        return checkIn < endDate && startDate < checkOut;
+      }
     });
 
     let computedStatus: RoomStatus = "Trống";
     if (activeBooking) {
-      if (activeBooking.trangThai === "DA_NHAN_PHONG") {
+      if (activeBooking.status === "Đang sử dụng") {
         computedStatus = "Đang sử dụng";
       } else {
         computedStatus = "Đã đặt";
@@ -90,7 +145,7 @@ export default function RoomsPage() {
     const matchType   = filterType   === "Tất cả" || r.type   === filterType;
     const matchStatus = filterStatus === "Tất cả" || r.status === filterStatus;
     return matchSearch && matchType && matchStatus;
-  });
+  }).sort((a, b) => a.id - b.id);
 
   const visibleRooms = filtered.slice(0, visibleCount);
   const hasMore      = visibleCount < filtered.length;
@@ -152,15 +207,12 @@ export default function RoomsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
+      {/* Header */}
+      <div>
+        <div className="p-6 rounded-lg bg-white shadow-sm">
           <h1 className="text-2xl font-bold text-gray-800">Quản lý phòng</h1>
           <p className="text-gray-500 text-sm mt-0.5">Quản lý các phòng khách sạn và tình trạng phòng</p>
         </div>
-        <button onClick={() => { setEditing(null); setModalOpen(true); }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition">
-          <Plus className="w-4 h-4" /> Thêm phòng
-        </button>
       </div>
 
       {/* Search + Filter + View toggle */}
@@ -173,6 +225,10 @@ export default function RoomsPage() {
             value={search} onChange={(e) => handleSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
+        <button onClick={() => { setEditing(null); setModalOpen(true); }}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition shrink-0">
+          <Plus className="w-4 h-4" /> Thêm phòng
+        </button>
         <select value={filterType} onChange={(e) => handleFilterType(e.target.value)}
           className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option>Tất cả</option>
@@ -189,14 +245,27 @@ export default function RoomsPage() {
           <option>Đã đặt</option>
           <option>Bảo trì</option>
         </select>
-        <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2 bg-gray-50">
-          <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">Xem ngày:</span>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="text-sm text-gray-700 font-medium bg-transparent focus:outline-none"
-          />
+        <div className="flex items-center gap-4 border border-gray-200 rounded-xl px-3 py-2 bg-gray-50">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">Ngày đến:</span>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => handleStartDateChange(e.target.value)}
+              className="text-sm text-gray-700 font-medium bg-transparent focus:outline-none"
+            />
+          </div>
+          <div className="h-4 w-px bg-gray-300" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">Ngày đi:</span>
+            <input
+              type="date"
+              value={endDate}
+              min={startDate}
+              onChange={(e) => handleEndDateChange(e.target.value)}
+              className="text-sm text-gray-700 font-medium bg-transparent focus:outline-none"
+            />
+          </div>
         </div>
         <div className="flex border border-gray-200 rounded-xl overflow-hidden">
           <button onClick={() => setViewMode("list")}

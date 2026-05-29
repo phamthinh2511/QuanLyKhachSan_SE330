@@ -15,8 +15,6 @@ export default function RevenueAnalysis({ data, stats }: Props) {
     label, revenue: data.revenue[i], profit: data.profit[i],
   }));
 
-  const margin = stats.revenue > 0 ? Math.round((stats.profit / stats.revenue) * 100) : 0;
-
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -57,29 +55,6 @@ export default function RevenueAnalysis({ data, stats }: Props) {
                 stroke="#3b82f6" strokeWidth={2} fill="url(#revGrad)" />
             </AreaChart>
           </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Financial Summary */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-        <h3 className="font-semibold text-gray-800 mb-1">Tóm tắt tài chính</h3>
-        <p className="text-gray-400 text-xs mb-5">Tổng quan tài chính từ đầu năm đến nay</p>
-        <div className="grid grid-cols-3 gap-6">
-          <div>
-            <p className="text-gray-500 text-sm mb-1">Tổng doanh thu</p>
-            <p className="text-2xl font-bold text-blue-600">${stats.revenue.toLocaleString()}</p>
-            <p className="text-gray-400 text-xs mt-1">Từ tất cả các nguồn thu</p>
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm mb-1">Tổng chi phí</p>
-            <p className="text-2xl font-bold text-red-500">${stats.expenses.toLocaleString()}</p>
-            <p className="text-gray-400 text-xs mt-1">Chi phí vận hành</p>
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm mb-1">Lợi nhuận ròng</p>
-            <p className="text-2xl font-bold text-green-600">${stats.profit.toLocaleString()}</p>
-            <p className="text-gray-400 text-xs mt-1">Biên lợi nhuận: {margin}%</p>
-          </div>
         </div>
       </div>
     </div>

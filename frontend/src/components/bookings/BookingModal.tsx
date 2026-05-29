@@ -295,6 +295,7 @@ import { useState, useEffect } from "react";
 import { X, User, CalendarDays, Sparkles, Key, Check } from "lucide-react";
 import { Booking, BookingStatus } from "@/types/booking";
 import { getCustomers } from "@/lib/api/customers";
+import { mapBookingStatus } from "@/app/(dashboard)/bookings/page";
 import { getRooms } from "@/lib/api/rooms";
 import { Customer } from "@/types/customer";
 import { Room } from "@/types/room";
@@ -806,8 +807,8 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
                     className={inputClass}
                   >
                     <option value="Đã đặt">Đã đặt</option>
-                    <option value="Checked-in">Checked-in</option>
-                    <option value="Checked-out">Checked-out</option>
+                    <option value="Đang sử dụng">Đang sử dụng</option>
+                    <option value="Đã trả phòng">Đã trả phòng</option>
                     <option value="Đã hủy">Đã hủy</option>
                   </select>
                 </div>

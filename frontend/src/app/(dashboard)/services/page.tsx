@@ -18,7 +18,6 @@ export default function ServicesPage() {
   } = useServices();
 
   const [search, setSearch] = useState("");
-  const [filterCategory, setFilterCategory] = useState("Tất cả");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Service | null>(null);
@@ -27,15 +26,13 @@ export default function ServicesPage() {
     const matchSearch =
       s.name.toLowerCase().includes(search.toLowerCase()) ||
       s.serviceCode.toLowerCase().includes(search.toLowerCase());
-    const matchCat = filterCategory === "Tất cả" || s.category === filterCategory;
-    return matchSearch && matchCat;
+    return matchSearch;
   });
 
   const visibleServices = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
 
   const handleSearch = (val: string) => { setSearch(val); setVisibleCount(PAGE_SIZE); };
-  const handleFilter = (val: string) => { setFilterCategory(val); setVisibleCount(PAGE_SIZE); };
 
   // ← Gộp thành 1 hàm duy nhất, xóa handleDelete cũ
   const handleSave = async (data: Service) => {
@@ -130,18 +127,6 @@ export default function ServicesPage() {
               className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <select
-            value={filterCategory}
-            onChange={(e) => handleFilter(e.target.value)}
-            className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option>Tất cả</option>
-            <option>Ăn uống</option>
-            <option>Phòng</option>
-            <option>Spa</option>
-            <option>Đưa đón</option>
-            <option>Khác</option>
-          </select>
         </div>
 
         <ServiceTable
