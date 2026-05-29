@@ -357,6 +357,7 @@ export default function BookingsPage() {
       {modalOpen && (
         <BookingModal
           booking={editing}
+          bookings={bookings}
           onSave={handleSave}
           onClose={() => { setModalOpen(false); setEditing(null); }}
         />

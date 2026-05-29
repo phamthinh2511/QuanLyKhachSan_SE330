@@ -294,7 +294,7 @@
 import { useState, useEffect } from "react";
 import { X, User, CalendarDays, Sparkles, Key, Check } from "lucide-react";
 import { Booking, BookingStatus } from "@/types/booking";
-import { getCustomers } from "@/lib/api/customers";
+import { getCustomers, createCustomer } from "@/lib/api/customers";
 import { mapBookingStatus } from "@/app/(dashboard)/bookings/page";
 import { getRooms } from "@/lib/api/rooms";
 import { Customer } from "@/types/customer";
@@ -302,6 +302,7 @@ import { Room } from "@/types/room";
 
 interface Props {
   booking: Booking | null;
+  bookings?: Booking[];
   onSave: (data: any) => void;
   onClose: () => void;
 }
@@ -343,7 +344,7 @@ const emptyForm: ExtendedForm = {
   status: "Đã đặt",
 };
 
-export default function BookingModal({ booking, onSave, onClose }: Props) {
+export default function BookingModal({ booking, bookings = [], onSave, onClose }: Props) {
   const [form, setForm] = useState<ExtendedForm>(emptyForm);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -522,18 +523,36 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const isRoomAvailable = (roomNumber: string) => {
+    if (!form.checkIn || !form.checkOut) {
+      return true;
+    }
+    const formIn = new Date(form.checkIn);
+    const formOut = new Date(form.checkOut);
+    if (isNaN(formIn.getTime()) || isNaN(formOut.getTime()) || formIn >= formOut) {
+      return false;
+    }
+
+    return !bookings.some((b) => {
+      if (b.roomNumber !== roomNumber) return false;
+      if (b.status === "Đã hủy" || b.status === "Đã trả phòng") return false;
+      if (booking && b.id === booking.id) return false;
+
+      const bIn = new Date(b.checkIn);
+      const bOut = new Date(b.checkOut);
+      if (isNaN(bIn.getTime()) || isNaN(bOut.getTime())) return false;
+
+      return formIn < bOut && formOut > bIn;
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // ĐỒNG BỘ: Phân tách hình thức dựa trên trạng thái tiếng Việt mới chọn
-    const bookingType = form.status === "Checked-in" ? "THUE_TRUC_TIEP" : "DAT_TRUOC";
-    const selectedCustomer = customers.find((c) => c.id === form.customerId);
+    const bookingType = form.status === "Đang sử dụng" ? "THUE_TRUC_TIEP" : "DAT_TRUOC";
     const selectedRoom = rooms.find((r) => r.roomNumber === form.roomNumber);
 
-    if (!selectedCustomer) {
-      alert("Vui lòng chọn khách hàng!");
-      return;
-    }
     if (!selectedRoom) {
       alert("Vui lòng chọn phòng!");
       return;
@@ -547,10 +566,34 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
       alert(`Thao tác thất bại: Phòng này chỉ chứa tối đa ${phongSucChua} người, đơn của bạn có ${form.guests} khách!`);
       return;
     }
+
+    let customerId = form.customerId;
+    let customerName = form.customerName;
+
+    if (!customerId) {
+      try {
+        const newCustomer = await createCustomer({
+          name: form.customerName,
+          phone: form.customerPhone,
+          gender: form.customerGender,
+          birthday: form.customerBirthday,
+          address: form.customerAddress,
+          email: form.customerEmail,
+          idCard: form.customerIdCard,
+          status: form.customerStatus as any,
+        });
+        customerId = newCustomer.id;
+        customerName = newCustomer.name;
+      } catch (err: any) {
+        alert("Lỗi khi thêm mới khách hàng: " + (err.message || err));
+        return;
+      }
+    }
+
     onSave({
       bookingType,
-      customerId: String(form.customerId),
-      customerName: selectedCustomer.name,
+      customerId: String(customerId),
+      customerName: customerName,
       roomId: String(selectedRoom.id),
       roomNumber: selectedRoom.roomNumber,
       checkIn: form.checkIn,
@@ -810,7 +853,7 @@ export default function BookingModal({ booking, onSave, onClose }: Props) {
                     <option value="">Chọn phòng</option>
                     {/* Include the current room if editing, plus all available rooms */}
                     {rooms
-                      .filter((r) => r.status === "Trống" || r.roomNumber === booking?.roomNumber)
+                      .filter((r) => r.status !== "Bảo trì" && (r.roomNumber === booking?.roomNumber || isRoomAvailable(r.roomNumber)))
                       .map((r) => (
                         <option key={r.id} value={r.roomNumber}>
                           Phòng {r.roomNumber} — {r.type} ({r.pricePerNight.toLocaleString("vi-VN")} VND/đêm)

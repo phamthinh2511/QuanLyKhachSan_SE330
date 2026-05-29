@@ -46,8 +46,17 @@ public void xuLyDatHoacThuePhong(BookingRequest request){
     LocalDate ngayHomNay = LocalDate.now();
 
     // Kiểm tra trạng thái phòng
-    if (!"Trống".equals(phong.getTrangThai())) {
-        throw new IllegalStateException("Thao tác thất bại! Phòng số " + phong.getId() + " đang ở trạng thái '" + phong.getTrangThai() + "', không sẵn sàng để đặt.");
+    if ("Bảo trì".equals(phong.getTrangThai())) {
+        throw new IllegalStateException("Thao tác thất bại! Phòng số " + phong.getId() + " đang trong tình trạng bảo trì, không sẵn sàng để đặt.");
+    }
+
+    LocalDate checkIn = "THUE_TRUC_TIEP".equals(request.getLoaiHinh()) || "Đã nhận phòng tại quầy".equals(request.getTrangThai()) ? ngayHomNay : request.getNgayNhan();
+    LocalDate checkOut = request.getNgayTra();
+
+    List<Integer> bookedRoomIds = datphongRepository.findBookedRoomIds(checkIn, checkOut);
+    List<Integer> directRentedRoomIds = phieuthuephongRepository.findDirectRentedRoomIds(checkIn, checkOut);
+    if (bookedRoomIds.contains(phong.getId()) || directRentedRoomIds.contains(phong.getId())) {
+        throw new IllegalStateException("Thao tác thất bại! Phòng số " + phong.getId() + " đã có khách đặt hoặc thuê trong khoảng thời gian từ " + checkIn + " đến " + checkOut + ".");
     }
 
     // Kiểm tra sức chứa tối đa
@@ -316,12 +325,11 @@ public List<DatPhongResponse> getAllBookings() {
 
     public List<Phong> getAvailableRooms(LocalDate checkIn, LocalDate checkOut) {
         List<Integer> bookedRoomIds = datphongRepository.findBookedRoomIds(checkIn, checkOut);
+        List<Integer> directRentedRoomIds = phieuthuephongRepository.findDirectRentedRoomIds(checkIn, checkOut);
         List<Phong> allRooms = phongRepository.findAll();
-        if (bookedRoomIds.isEmpty()) {
-            return allRooms;
-        }
+        
         return allRooms.stream()
-                .filter(phong -> !bookedRoomIds.contains(phong.getId()))
+                .filter(phong -> !bookedRoomIds.contains(phong.getId()) && !directRentedRoomIds.contains(phong.getId()))
                 .collect(Collectors.toList());
     }
 

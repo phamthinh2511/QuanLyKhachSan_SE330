@@ -14,7 +14,7 @@ import java.util.List;
 public interface DatphongRepository extends JpaRepository<Datphong, Integer> {
 
     @Query("SELECT ct.maPhong.id FROM CtDatphong ct " +
-            "WHERE ct.maDatPhong.trangThai <> 'CANCELLED'" +
+            "WHERE ct.maDatPhong.trangThai NOT IN ('Đã hủy', 'Đã trả phòng', 'CANCELLED', 'Checked-out') " +
             "AND ct.maDatPhong.ngayNhan < :checkOut " +
             "AND ct.maDatPhong.ngayTra > :checkIn")
     List<Integer> findBookedRoomIds(@Param("checkIn") LocalDate checkIn,
