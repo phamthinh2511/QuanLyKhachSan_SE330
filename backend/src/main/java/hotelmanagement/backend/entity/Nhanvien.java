@@ -29,6 +29,10 @@ public class Nhanvien {
     @Column(name = "NgaySinh", nullable = false)
     private LocalDate ngaySinh;
 
+    @Size(max = 100)
+    @Column(name = "Email", length = 100)
+    private String email;
+
     @Size(max = 15)
     @NotNull
     @Column(name = "SoDienThoai", nullable = false, length = 15)
@@ -39,10 +43,19 @@ public class Nhanvien {
     @Column(name = "ChucVu", nullable = false, length = 50)
     private String chucVu;
 
+    @Size(max = 50)
+    @Column(name = "PhongBan", length = 50)
+    private String phongBan;
+
+    @Column(name = "NgayVaoLam")
+    private LocalDate ngayVaoLam;
+
+    @Size(max = 50)
+    @Column(name = "TrangThai", length = 50)
+    private String trangThai;
+
     @OneToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "MaTaiKhoan",nullable = false , unique = true)
+    @JoinColumn(name = "MaTaiKhoan", nullable = false, unique = true)
     private Taikhoan taikhoan;
-
-
 }

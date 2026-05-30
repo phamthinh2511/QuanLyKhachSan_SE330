@@ -10,7 +10,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("api/auth")
 @CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
 
@@ -24,7 +24,7 @@ public class AuthController {
     private JwtService jwtService;
 
     @PostMapping("/login")
-    public ApiResponse<String> login(@RequestBody LoginRequest request) {
+    public ApiResponse<String> login(@jakarta.validation.Valid @RequestBody LoginRequest request) {
 
         try {
             authenticationManager.authenticate(
@@ -41,8 +41,8 @@ public class AuthController {
             response.setResult(token);
 
             return response;
+
         } catch (Exception e) {
-            // Nếu có bất kỳ lỗi gì (Sai pass, lỗi SQL, lỗi JWT...), nó sẽ hiện ở đây.
             ApiResponse<String> errorResponse = new ApiResponse<>();
             errorResponse.setCode(401);
             errorResponse.setMessage("Đăng nhập thất bại!");

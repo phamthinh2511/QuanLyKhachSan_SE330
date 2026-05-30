@@ -47,5 +47,6 @@ public class Sudungdichvu {
     @Column(name = "NgaySuDung", nullable = false)
     private LocalDate ngaySuDung;
 
-
+    @Column(name = "TrangThai", length = 50)
+    private String trangThai;
 }

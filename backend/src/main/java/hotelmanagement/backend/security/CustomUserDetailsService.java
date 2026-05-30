@@ -1,7 +1,7 @@
 package hotelmanagement.backend.security;
 
 import hotelmanagement.backend.entity.Taikhoan;
-import hotelmanagement.backend.repository.TaiKhoanRepository;
+import hotelmanagement.backend.repository.TaikhoanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -16,7 +16,7 @@ import java.util.Collections;
 public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private TaiKhoanRepository taiKhoanRepository;
+    private TaikhoanRepository taiKhoanRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

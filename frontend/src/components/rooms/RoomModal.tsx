@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { Room, RoomType, RoomStatus } from "@/types/room";
+import { Room, RoomStatus } from "@/types/room";
+import { useRoomTypes } from "@/hooks/useRoomTypes";
 
 interface Props {
   room: Room | null;
@@ -10,21 +11,58 @@ interface Props {
   onClose: () => void;
 }
 
-const emptyForm: Omit<Room, "id"> = {
-  roomNumber: "", type: "Thường", floor: 1,
-  capacity: 2, pricePerNight: 0, status: "Trống", description: "",
+const emptyForm: Room = {
+  id: 0,
+  roomNumber: "", 
+  type: "", 
+  floor: 1,
+  capacity: 2, 
+  pricePerNight: 0, 
+  status: "Trống", 
+  description: "",
+  loaiPhongId: undefined,
 };
 
 export default function RoomModal({ room, onSave, onClose }: Props) {
-  const [form, setForm] = useState<Omit<Room, "id">>(emptyForm);
+  const [form, setForm] = useState<Room>(emptyForm);
+  const { roomTypes, loading: loadingTypes } = useRoomTypes();
 
   useEffect(() => {
-    setForm(room ? { ...room } : emptyForm);
+    setForm(room ? { ...room } : { ...emptyForm });
   }, [room]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ ...form, id: room?.id ?? 0 });
+    if (!form.loaiPhongId && roomTypes.length > 0) {
+        alert("Vui lòng chọn loại phòng.");
+        return;
+    }
+    if (!room && (!form.id || form.id <= 0)) {
+        alert("Vui lòng nhập Mã phòng hợp lệ (số nguyên dương).");
+        return;
+    }
+    onSave({ ...form });
+  };
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = Number(e.target.value);
+    const selectedType = roomTypes.find(rt => rt.id === selectedId);
+    if (selectedType) {
+      setForm({
+        ...form,
+        loaiPhongId: selectedId,
+        type: selectedType.tenLoaiPhong,
+        pricePerNight: selectedType.donGia,
+        capacity: selectedType.sucChuaToiDa,
+        description: selectedType.moTa,
+      });
+    } else {
+      setForm({
+        ...form,
+        loaiPhongId: undefined,
+        type: "",
+      });
+    }
   };
 
   const inputClass = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
@@ -42,13 +80,22 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Số phòng + Tầng */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Số phòng</label>
-              <input type="text" value={form.roomNumber}
-                onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
-                className={inputClass} required />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mã phòng (ID)</label>
+              <input
+                type="number"
+                min={1}
+                value={form.id || ""}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  setForm({ ...form, id: isNaN(val) ? 0 : val, roomNumber: e.target.value });
+                }}
+                className={inputClass}
+                required
+                disabled={!!room}
+                placeholder="VD: 101"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Tầng</label>
@@ -58,17 +105,16 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
             </div>
           </div>
 
-          {/* Loại phòng + Sức chứa */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Loại phòng</label>
-              <select value={form.type}
-                onChange={(e) => setForm({ ...form, type: e.target.value as RoomType })}
-                className={inputClass}>
-                <option>Standard</option>
-                <option>Deluxe</option>
-                <option>Suite</option>
-                <option>Presidential</option>
+              <select value={form.loaiPhongId || ""}
+                onChange={handleTypeChange}
+                className={inputClass} required disabled={loadingTypes}>
+                <option value="" disabled>-- Chọn loại phòng --</option>
+                {roomTypes.map((rt) => (
+                  <option key={rt.id} value={rt.id}>{rt.tenLoaiPhong}</option>
+                ))}
               </select>
             </div>
             <div>
@@ -79,13 +125,12 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
             </div>
           </div>
 
-          {/* Giá/đêm + Trạng thái */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Giá/đêm ($)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Giá/đêm (VNĐ)</label>
               <input type="number" min={0} value={form.pricePerNight}
                 onChange={(e) => setForm({ ...form, pricePerNight: +e.target.value })}
-                className={inputClass} required />
+                className={inputClass} required disabled />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
@@ -100,12 +145,11 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
             </div>
           </div>
 
-          {/* Mô tả */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
             <textarea rows={3} value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className={inputClass + " resize-none"} />
+              className={inputClass + " resize-none"} disabled />
           </div>
 
           <div className="flex gap-3 pt-2">

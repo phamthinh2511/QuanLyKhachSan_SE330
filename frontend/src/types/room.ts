@@ -1,10 +1,10 @@
 export type RoomStatus = "Trống" | "Đang sử dụng" | "Đã đặt" | "Bảo trì";
-export type RoomType = "Thường" | "Cao cấp" | "Sang trọng" | "Siêu cấp vip pro";
 
 export interface Room {
   id: number;
   roomNumber: string;
-  type: RoomType;
+  loaiPhongId?: number; // Thêm trường id loại phòng
+  type: string;
   floor: number;
   capacity: number;
   pricePerNight: number;

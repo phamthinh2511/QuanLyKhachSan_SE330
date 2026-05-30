@@ -1,0 +1,44 @@
+package hotelmanagement.backend.controller;
+
+import hotelmanagement.backend.dto.request.PhongRequestDto;
+import hotelmanagement.backend.dto.response.PhongResponseDto;
+import hotelmanagement.backend.service.PhongService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/rooms")
+@RequiredArgsConstructor
+public class PhongController {
+    private final PhongService phongService;
+
+    @GetMapping
+    public ResponseEntity<List<PhongResponseDto>> getAll() { return ResponseEntity.ok(phongService.getAll()); }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PhongResponseDto> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(phongService.getById(id));
+    }
+
+    @PostMapping
+    public ResponseEntity<PhongResponseDto> create(@RequestBody PhongRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(phongService.create(dto));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PhongResponseDto> update(
+            @PathVariable Integer id,
+            @RequestBody PhongRequestDto dto){
+        return ResponseEntity.ok(phongService.update(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+        phongService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+}

@@ -26,9 +26,8 @@ public class CtHoadon {
     @JoinColumn(name = "MaPhong", nullable = false)
     private Phong maPhong;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "MaDichVu", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaDichVu", nullable = true)
     private Dichvu maDichVu;
 
     @Size(max = 50)

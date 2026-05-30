@@ -3,19 +3,34 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { mockCustomers } from "@/lib/data/customers";
+import { useCustomers } from "@/hooks/useCustomers";
 import { Customer } from "@/types/customer";
 import CustomerTable from "@/components/customers/CustomerTable";
 import CustomerModal from "@/components/customers/CustomerModal";
+import CustomerViewModal from "@/components/customers/CustomerViewModal";
+import CustomerDeleteModal from "@/components/customers/CustomerDeleteModal";
 
 const PAGE_SIZE = 50;
 
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
+  const { customers, loading, error, handleCreate, handleUpdate, handleDelete } = useCustomers();
+  
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Tất cả");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE); // 👈 thêm
+  const [viewing, setViewing] = useState<Customer | null>(null);
+  const [deletingCustomer, setDeletingCustomer] = useState<Customer | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [toasts, setToasts] = useState<{ id: string; type: "success" | "error"; message: string }[]>([]);
+
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts((prev) => [...prev, { id, type, message }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3000);
+  };
 
   const filtered = customers.filter((c) => {
     const matchSearch =
@@ -33,22 +48,58 @@ export default function CustomersPage() {
   const handleSearch = (val: string) => { setSearch(val); setVisibleCount(PAGE_SIZE); };
   const handleFilter = (val: string) => { setFilter(val); setVisibleCount(PAGE_SIZE); };
 
-  const handleSave = (data: Customer) => {
-    if (editing) {
-      setCustomers((prev) => prev.map((c) => (c.id === data.id ? data : c)));
-    } else {
-      const newId = customers.length > 0 ? Math.max(...customers.map((c) => c.id)) + 1 : 1;
-      setCustomers((prev) => [...prev, { ...data, id: newId }]);
+   const handleSave = async (data: Customer) => {
+    try {
+      if (editing) {
+        await handleUpdate(data.id, data);
+        showToast("Cập nhật thông tin khách hàng thành công!");
+      } else {
+        await handleCreate(data);
+        showToast("Thêm mới khách hàng thành công!");
+      }
+      setModalOpen(false);
+      setEditing(null);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Có lỗi xảy ra", "error");
     }
-    setModalOpen(false);
-    setEditing(null);
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("Bạn có chắc muốn xóa khách hàng này?")) {
-      setCustomers((prev) => prev.filter((c) => c.id !== id));
+  const handleDeleteConfirm = async () => {
+    if (!deletingCustomer) return;
+    try {
+      await handleDelete(deletingCustomer.id);
+      showToast(`Đã xóa khách hàng ${deletingCustomer.name} thành công!`);
+      setDeletingCustomer(null);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Không thể xóa khách hàng", "error");
+      throw err;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-64">
+        <div className="flex items-center gap-3 text-gray-500">
+          <span className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+          Đang tải dữ liệu...
+        </div>
+      </div>
+    );
+  }
+
+if (error) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-64">
+        <div className="text-center space-y-3">
+          <p className="text-red-500 font-medium">{error}</p>
+          <button onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-xl hover:bg-blue-700 transition">
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleEdit = (customer: Customer) => {
     setEditing(customer);
@@ -56,47 +107,36 @@ export default function CustomersPage() {
   };
 
   const handleView = (customer: Customer) => {
-    setEditing(customer);
-    setModalOpen(true);
+    setViewing(customer);
   }
-
-  return (
+return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
         <div className="p-6 rounded-lg bg-white shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-800">Quản lý phòng</h1>
-        <p className="text-gray-500 text-sm">Welcome back, Admin</p>
-      </div>
-        
+          <h1 className="text-2xl font-bold text-gray-800">Quản lý khách hàng</h1>
+          <p className="text-gray-500 text-sm mt-0.5">Quản lý tất cả thông tin khách hàng</p>
+        </div>
       </div>
 
-      {/* Search & Filter */}
+      {/* Search + Filter */}
       <div className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-3">
         <div className="relative flex-1">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <input
-            type="text"
-            placeholder="Tìm theo tên, email hoặc số điện thoại..."
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+          <input type="text" placeholder="Tìm theo tên, email hoặc số điện thoại..."
+            value={search} onChange={(e) => handleSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
         <button
           onClick={() => { setEditing(null); setModalOpen(true); }}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
         >
-          <Plus className="w-4 h-4" />
-          Thêm khách hàng
+          <Plus className="w-4 h-4" /> Thêm khách hàng
         </button>
-        <select
-          value={filter}
-          onChange={(e) => handleFilter(e.target.value)}
-          className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
+        <select value={filter} onChange={(e) => handleFilter(e.target.value)}
+          className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option>Tất cả</option>
           <option>Thường</option>
           <option>VIP</option>
@@ -106,10 +146,13 @@ export default function CustomersPage() {
 
       {/* Table */}
       <CustomerTable
-        customers={visibleCustomers}  // 👈 truyền visibleCustomers thay vì filtered
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        customers={visibleCustomers}
+        onEdit={(c) => { setEditing(c); setModalOpen(true); }}
         onView={handleView}
+        onDelete={(id) => {
+          const c = customers.find((item) => item.id === id);
+          if (c) setDeletingCustomer(c);
+        }}
       />
 
       {/* Load more */}
@@ -118,16 +161,13 @@ export default function CustomersPage() {
           <p className="text-sm text-gray-400">
             Đang hiển thị {visibleCustomers.length} / {filtered.length} khách hàng
           </p>
-          <button
-            onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
-            className="px-6 py-2.5 border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 text-sm font-medium rounded-xl transition"
-          >
-            Xem thêm
+          <button onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+            className="px-6 py-2.5 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-medium rounded-xl transition">
+            Xem thêm 10 khách hàng
           </button>
         </div>
       )}
 
-      {/* Modal */}
       {modalOpen && (
         <CustomerModal
           customer={editing}
@@ -135,6 +175,55 @@ export default function CustomersPage() {
           onClose={() => { setModalOpen(false); setEditing(null); }}
         />
       )}
+
+      {viewing && (
+        <CustomerViewModal
+          customer={viewing}
+          onClose={() => setViewing(null)}
+        />
+      )}
+
+      {deletingCustomer && (
+        <CustomerDeleteModal
+          customer={deletingCustomer}
+          onConfirm={handleDeleteConfirm}
+          onClose={() => setDeletingCustomer(null)}
+        />
+      )}
+
+      {/* Toast Notification Container */}
+      <div className="fixed top-6 right-6 z-50 flex flex-col gap-3 max-w-sm pointer-events-none">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`flex items-center gap-3 p-4 rounded-xl shadow-lg border pointer-events-auto transition-all duration-300 animate-slide-in ${
+              toast.type === "success"
+                ? "bg-green-50 border-green-200 text-green-800"
+                : "bg-red-50 border-red-200 text-red-800"
+            }`}
+          >
+            {toast.type === "success" ? (
+              <svg className="w-5 h-5 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            )}
+            <span className="text-sm font-medium">{toast.message}</span>
+            <button
+              onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+              className="ml-auto p-1 rounded-lg hover:bg-black/5 transition text-gray-500 hover:text-gray-700"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
+  
 }

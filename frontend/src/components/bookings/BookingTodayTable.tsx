@@ -6,16 +6,19 @@ interface Props {
   bookings: Booking[];
   onEdit: (b: Booking) => void;
   onDelete: (id: number) => void;
+  onRowContextMenu?: (e: React.MouseEvent, booking: Booking) => void;
 }
 
 const statusStyle: Record<string, string> = {
-  "Checked-in":  "bg-green-100 text-green-700",
-  "Checked-out": "bg-gray-100 text-gray-500",
-  "Booked":      "bg-blue-100 text-blue-700",
-  "Cancelled":   "bg-red-100 text-red-500",
+  "Đang sử dụng": "bg-green-100 text-green-700",
+  "Đã trả phòng": "bg-gray-100 text-gray-500",
+  "Checked-in":   "bg-green-100 text-green-700",
+  "Checked-out":  "bg-gray-100 text-gray-500",
+  "Đã đặt":       "bg-blue-100 text-blue-700",
+  "Đã hủy":       "bg-red-100 text-red-500",
 };
 
-export default function BookingTodayTable({ bookings, onEdit, onDelete }: Props) {
+export default function BookingTodayTable({ bookings, onEdit, onDelete, onRowContextMenu }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-100">
@@ -37,14 +40,15 @@ export default function BookingTodayTable({ bookings, onEdit, onDelete }: Props)
                 <td colSpan={9} className="px-6 py-8 text-center text-gray-400">Không có booking nào hôm nay.</td>
               </tr>
             ) : bookings.map((b) => (
-              <tr key={b.id} className="hover:bg-gray-50 transition">
+              <tr key={b.id} className="hover:bg-gray-50 transition"
+                onContextMenu={(e) => onRowContextMenu?.(e, b)}>
                 <td className="px-4 py-4 font-bold text-gray-700">{b.bookingCode}</td>
                 <td className="px-4 py-4 text-gray-700 whitespace-nowrap">{b.customerName}</td>
                 <td className="px-4 py-4 text-gray-600">{b.roomNumber}</td>
                 <td className="px-4 py-4 text-gray-600 whitespace-nowrap">{b.checkIn}</td>
                 <td className="px-4 py-4 text-gray-600 whitespace-nowrap">{b.checkOut}</td>
                 <td className="px-4 py-4 text-gray-600">{b.guests}</td>
-                <td className="px-4 py-4 font-semibold text-gray-800">${b.amount.toLocaleString()}</td>
+                <td className="px-4 py-4 font-semibold text-gray-800">{b.amount.toLocaleString()}</td>
                 <td className="px-4 py-4">
                   <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap", statusStyle[b.status])}>
                     {b.status}
@@ -56,10 +60,18 @@ export default function BookingTodayTable({ bookings, onEdit, onDelete }: Props)
                       className="flex items-center gap-1.5 border border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600 px-3 py-1.5 rounded-lg text-xs font-medium transition">
                       <Pencil className="w-3 h-3" /> Sửa
                     </button>
-                    <button onClick={() => onDelete(b.id)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <button
+                                          onClick={() => {
+                                            const isConfirmed = window.confirm(`Bạn có chắc chắn muốn xóa đơn đặt phòng ${b.bookingCode} của khách ${b.customerName} không?`);
+                                            if (isConfirmed) {
+                                              onDelete(b.id);
+                                            }
+                                          }}
+                                          title="Xóa đơn hàng"
+                                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
                   </div>
                 </td>
               </tr>
