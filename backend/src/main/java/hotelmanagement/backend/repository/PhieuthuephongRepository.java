@@ -8,7 +8,7 @@ import java.util.List;
 
 @Repository
 public interface PhieuthuephongRepository extends JpaRepository<Phieuthuephong, Integer> {
-   List<Phieuthuephong> findByMaDatPhong(Datphong maDatPhong);
+    List<Phieuthuephong> findByMaDatPhong(Datphong maDatPhong);
 
     @org.springframework.data.jpa.repository.Query("SELECT ct.maPhong.id FROM CtPhieuthuephong ct " +
             "WHERE ct.maPhieuThue.maDatPhong IS NULL " +
@@ -16,5 +16,5 @@ public interface PhieuthuephongRepository extends JpaRepository<Phieuthuephong, 
             "AND ct.maPhieuThue.ngayNhanPhong < :checkOut " +
             "AND ct.maPhieuThue.ngayTraPhong > :checkIn")
     List<Integer> findDirectRentedRoomIds(@org.springframework.data.repository.query.Param("checkIn") java.time.LocalDate checkIn,
-                                         @org.springframework.data.repository.query.Param("checkOut") java.time.LocalDate checkOut);
+                                          @org.springframework.data.repository.query.Param("checkOut") java.time.LocalDate checkOut);
 }
