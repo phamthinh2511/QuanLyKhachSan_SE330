@@ -90,10 +90,21 @@ public class BookingController {
     }
 
     @PostMapping("/check-out")
-    public ResponseEntity<?> handleCheckOut(@RequestBody Map<String, Integer> request) {
+    public ResponseEntity<?> handleCheckOut(@RequestBody Map<String, Object> request) {
         try {
-            Integer bookingId = request.get("bookingId");
-            bookingService.checkOut(bookingId);
+            Integer bookingId = null;
+            if (request.get("bookingId") instanceof Number) {
+                bookingId = ((Number) request.get("bookingId")).intValue();
+            } else if (request.get("bookingId") instanceof String) {
+                bookingId = Integer.parseInt((String) request.get("bookingId"));
+            }
+            
+            String paymentMethod = (String) request.get("paymentMethod");
+            if (paymentMethod == null) {
+                paymentMethod = "Tiền mặt";
+            }
+
+            bookingService.checkOut(bookingId, paymentMethod);
 
             Map<String, Object> response = new HashMap<>();
             response.put("code", 200);
@@ -105,9 +116,10 @@ public class BookingController {
             response.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
+            e.printStackTrace();
             Map<String, Object> response = new HashMap<>();
             response.put("code", 550);
-            response.put("message", "Lỗi hệ thống khi thực hiện Check-out.");
+            response.put("message", "Lỗi hệ thống khi thực hiện Check-out: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
     }

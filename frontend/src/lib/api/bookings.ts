@@ -84,9 +84,9 @@ export async function checkInBooking(bookingId: number): Promise<any> {
     body: JSON.stringify({ maDatPhong: bookingId, maNhanVien: 1 }),
   });
 }
-export async function checkOutBooking(bookingId: number): Promise<ApiResponse<void>> {
+export async function checkOutBooking(bookingId: number, paymentMethod?: string): Promise<ApiResponse<void>> {
   return apiClient<ApiResponse<void>>("/api/bookings/check-out", {
     method: "POST",
-    body: JSON.stringify({ bookingId }),
+    body: JSON.stringify({ bookingId, paymentMethod: paymentMethod || "Tiền mặt" }),
   });
 }

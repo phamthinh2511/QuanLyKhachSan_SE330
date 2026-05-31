@@ -18,8 +18,8 @@ public class Phieuthuephong {
     @Column(name = "MaPhieuThue", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "MaDatPhong", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "MaDatPhong", nullable = true)
     private Datphong maDatPhong;
 
     @NotNull

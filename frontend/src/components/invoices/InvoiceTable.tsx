@@ -1,4 +1,4 @@
-import { Eye, Trash2, CreditCard, Banknote, Building2 } from "lucide-react";
+import { Eye, Trash2, CreditCard, Banknote, Building2, Pencil } from "lucide-react";
 import { Invoice } from "@/types/invoice";
 import clsx from "clsx";
 
@@ -6,6 +6,7 @@ interface Props {
   invoices: Invoice[];
   onView: (inv: Invoice) => void;
   onDelete: (id: number) => void;
+  onEdit?: (inv: Invoice) => void;
 }
 
 const statusStyle: Record<string, string> = {
@@ -21,7 +22,7 @@ const PaymentIcon = ({ method }: { method: string }) => {
   return <span className="text-gray-300">—</span>;
 };
 
-export default function InvoiceTable({ invoices, onView, onDelete }: Props) {
+export default function InvoiceTable({ invoices, onView, onDelete, onEdit }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-100">
@@ -67,6 +68,12 @@ export default function InvoiceTable({ invoices, onView, onDelete }: Props) {
                       className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
                       <Eye className="w-4 h-4" />
                     </button>
+                    {onEdit && (
+                      <button onClick={() => onEdit(inv)}
+                        className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition">
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    )}
                     <button onClick={() => onDelete(inv.id)}
                       className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
                       <Trash2 className="w-4 h-4" />

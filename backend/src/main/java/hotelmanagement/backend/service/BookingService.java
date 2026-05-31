@@ -404,6 +404,11 @@ public List<DatPhongResponse> getAllBookings() {
 
     @Transactional
     public void checkOut(Integer bookingId) {
+        checkOut(bookingId, "Tiền mặt");
+    }
+
+    @Transactional
+    public void checkOut(Integer bookingId, String paymentMethod) {
         // 1. Tìm phiếu thuê phòng đang hoạt động
         Phieuthuephong pt = phieuthuephongRepository.findById(bookingId).orElse(null);
         if (pt == null) {
@@ -471,14 +476,17 @@ public List<DatPhongResponse> getAllBookings() {
         hoadon.setMaNhanVien(nhanvien);
         hoadon.setNgayThanhToan(LocalDate.now());
         hoadon.setTongTien(totalAmount);
+        hoadon.setPhuongThucThanhToan(paymentMethod != null ? paymentMethod : "Tiền mặt");
+        hoadon.setTrangThai("Đã thanh toán");
         Hoadon savedHoadon = hoadonRepository.save(hoadon);
 
         // 6. Tạo chi tiết hóa đơn (Tiền phòng)
+        // Lưu ý: MaDichVu cho phép NULL (tiền phòng không liên kết dịch vụ)
         for (CtPhieuthuephong ct : ctPtList) {
             CtHoadon ctH = new CtHoadon();
             ctH.setMaHoaDon(savedHoadon);
             ctH.setMaPhong(ct.getMaPhong());
-            ctH.setMaDichVu(null); // nullable cho tiền phòng
+            // Không set maDichVu - để null cho chi phí tiền phòng
             ctH.setLoaiChiPhi("Tiền phòng");
             ctH.setSoLuong((int) days);
             
