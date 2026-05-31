@@ -173,28 +173,35 @@ public class BillingService {
             // 6. Tạo chi tiết hóa đơn
             List<CtHoadonDetailResponse> chiTietHoaDon = new ArrayList<>();
             
-            // Chi tiết tiền phòng
-            CtHoadon ctPhong = new CtHoadon();
-            ctPhong.setMaHoaDon(savedHoadon);
-            ctPhong.setLoaiChiPhi("Tiền phòng");
-            ctPhong.setSoLuong(1);
-            ctPhong.setDonGia(tienPhong);
-            ctPhong.setThanhTien(tienPhong);
-            CtHoadon savedCtPhong = ctHoadonRepository.save(ctPhong);
-            
-            chiTietHoaDon.add(CtHoadonDetailResponse.builder()
-                    .id(savedCtPhong.getId())
-                    .loaiChiPhi("Tiền phòng")
-                    .soLuong(1)
-                    .donGia(tienPhong)
-                    .thanhTien(tienPhong)
-                    .build());
+            // Chi tiết tiền phòng từ CtPhieuthuephong
+            List<CtPhieuthuephong> danhSachCtPhong = ctPhieuthuephongRepository.findByPhieuThueId(maPhieuThue);
+            for (CtPhieuthuephong ctPhieuThue : danhSachCtPhong) {
+                CtHoadon ctPhong = new CtHoadon();
+                ctPhong.setMaHoaDon(savedHoadon);
+                ctPhong.setMaPhong(ctPhieuThue.getMaPhong());
+                ctPhong.setLoaiChiPhi("Tiền phòng");
+                ctPhong.setSoLuong(1);
+                ctPhong.setDonGia(ctPhieuThue.getDonGia());
+                ctPhong.setThanhTien(ctPhieuThue.getDonGia());
+                
+                CtHoadon savedCtPhong = ctHoadonRepository.save(ctPhong);
+                
+                chiTietHoaDon.add(CtHoadonDetailResponse.builder()
+                        .id(savedCtPhong.getId())
+                        .maPhong(ctPhieuThue.getMaPhong().getId())
+                        .loaiChiPhi("Tiền phòng")
+                        .soLuong(1)
+                        .donGia(ctPhieuThue.getDonGia())
+                        .thanhTien(ctPhieuThue.getDonGia())
+                        .build());
+            }
             
             // Chi tiết từ dịch vụ phát sinh
             List<Sudungdichvu> danhSachDichVu = sudungdichvuRepository.findByPhieuThueId(maPhieuThue);
             for (Sudungdichvu sv : danhSachDichVu) {
                 CtHoadon ctDichVu = new CtHoadon();
                 ctDichVu.setMaHoaDon(savedHoadon);
+                ctDichVu.setMaPhong(sv.getMaPhong());
                 ctDichVu.setMaDichVu(sv.getMaDichVu());
                 ctDichVu.setLoaiChiPhi("Dịch vụ");
                 ctDichVu.setSoLuong(sv.getSoLuong());
@@ -205,6 +212,7 @@ public class BillingService {
                 
                 chiTietHoaDon.add(CtHoadonDetailResponse.builder()
                         .id(savedCtDichVu.getId())
+                        .maPhong(sv.getMaPhong().getId())
                         .maDichVu(sv.getMaDichVu().getId())
                         .tenDichVu(sv.getMaDichVu().getTenDichVu())
                         .loaiChiPhi("Dịch vụ")
@@ -220,6 +228,7 @@ public class BillingService {
                 if (kk.getTienBoiThuong() > 0) {
                     CtHoadon ctPhat = new CtHoadon();
                     ctPhat.setMaHoaDon(savedHoadon);
+                    ctPhat.setMaPhong(kk.getMaPhong());
                     ctPhat.setLoaiChiPhi("Tiền phạt/Bồi thường");
                     ctPhat.setSoLuong(1);
                     ctPhat.setDonGia(kk.getTienBoiThuong());
@@ -229,6 +238,7 @@ public class BillingService {
                     
                     chiTietHoaDon.add(CtHoadonDetailResponse.builder()
                             .id(savedCtPhat.getId())
+                            .maPhong(kk.getMaPhong().getId())
                             .loaiChiPhi("Tiền phạt/Bồi thường")
                             .soLuong(1)
                             .donGia(kk.getTienBoiThuong())

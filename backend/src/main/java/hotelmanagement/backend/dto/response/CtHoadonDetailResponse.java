@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CtHoadonDetailResponse {
     private Integer id;
+    private Integer maPhong;
     private Integer maDichVu;
     private String tenDichVu;
     private String loaiChiPhi;
