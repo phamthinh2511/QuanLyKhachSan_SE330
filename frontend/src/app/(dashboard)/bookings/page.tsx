@@ -65,6 +65,8 @@ export default function BookingsPage() {
     y: number;
     booking: Booking;
   } | null>(null);
+  const [checkoutBooking, setCheckoutBooking] = useState<Booking | null>(null);
+  const [checkoutPaymentMethod, setCheckoutPaymentMethod] = useState<string>("Tiền mặt");
 
   // Thao tác nhanh Check-in
   const handleCheckIn = async (bookingId: number) => {
@@ -392,7 +394,7 @@ export default function BookingsPage() {
           ) : contextMenu.booking.status === "Đang sử dụng" ? (
             <div className="p-1">
               <button
-                onClick={() => { handleCheckOut(contextMenu.booking.id); setContextMenu(null); }}
+                onClick={() => { setCheckoutBooking(contextMenu.booking); setCheckoutPaymentMethod("Tiền mặt"); setContextMenu(null); }}
                 className="w-full text-left px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 rounded-lg transition flex items-center gap-2"
               >
                 <span className="w-2 h-2 rounded-full bg-blue-500" />
@@ -402,6 +404,64 @@ export default function BookingsPage() {
           ) : (
             <div className="px-4 py-3 text-xs text-gray-400 text-center italic">Không khả dụng nhanh</div>
           )}
+        </div>
+      )}
+
+      {checkoutBooking && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setCheckoutBooking(null)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div>
+              <h2 className="font-semibold text-gray-800 text-lg">Xác nhận Trả phòng</h2>
+              <p className="text-gray-400 text-xs mt-0.5">Vui lòng chọn phương thức thanh toán để hoàn tất.</p>
+            </div>
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">Phương thức thanh toán</label>
+              <div className="grid grid-cols-3 gap-2">
+                {["Tiền mặt", "Thẻ", "Chuyển khoản"].map((method) => (
+                  <button
+                    key={method}
+                    type="button"
+                    onClick={() => setCheckoutPaymentMethod(method)}
+                    className={`py-2 px-3 text-xs font-medium rounded-xl border transition ${
+                      checkoutPaymentMethod === method
+                        ? "border-blue-600 bg-blue-50 text-blue-600"
+                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {method}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setCheckoutBooking(null)}
+                className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-xs font-medium hover:bg-gray-50 transition"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    await checkOutBooking(checkoutBooking.id, checkoutPaymentMethod);
+                    alert("Trả phòng (Check-out) và kết xuất hóa đơn thành công!");
+                    setCheckoutBooking(null);
+                    await fetchData();
+                  } catch (error: any) {
+                    alert(error.message || "Trả phòng thất bại!");
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs font-medium transition"
+              >
+                Xác nhận
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

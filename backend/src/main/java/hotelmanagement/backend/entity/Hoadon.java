@@ -35,5 +35,9 @@ public class Hoadon {
     @Column(name = "TongTien", nullable = false)
     private Double tongTien;
 
+    @Column(name = "phuong_thuc_thanh_toan", length = 50)
+    private String phuongThucThanhToan;
 
+    @Column(name = "trang_thai", length = 50)
+    private String trangThai;
 }

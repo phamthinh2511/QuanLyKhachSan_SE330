@@ -1,29 +1,50 @@
 "use client";
 
-import { useState } from "react";
-import { Plus } from "lucide-react";
-import { mockInvoices } from "@/lib/data/invoices";
+import { useState, useEffect } from "react";
 import { Invoice } from "@/types/invoice";
 import InvoiceStatCards from "@/components/invoices/InvoiceStatCards";
 import InvoiceTable from "@/components/invoices/InvoiceTable";
-import InvoiceModal from "@/components/invoices/InvoiceModal";
 import InvoiceDetailModal from "@/components/invoices/InvoiceDetailModal";
+import InvoiceEditModal from "@/components/invoices/InvoiceEditModal";
+import { getAllInvoices, deleteInvoice, updateInvoice } from "@/lib/api/invoices";
 
 const PAGE_SIZE = 50;
 
 export default function InvoicesPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Tất cả");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [generateOpen, setGenerateOpen] = useState(false);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
+  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
+
+  const fetchInvoices = () => {
+    setLoading(true);
+    getAllInvoices()
+      .then((data) => {
+        setInvoices(data || []);
+        setError("");
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(err.message || "Không thể kết nối tới máy chủ.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
 
   const filtered = invoices.filter((inv) => {
     const matchSearch =
-      inv.invoiceCode.toLowerCase().includes(search.toLowerCase()) ||
-      inv.customerName.toLowerCase().includes(search.toLowerCase()) ||
-      inv.bookingCode.toLowerCase().includes(search.toLowerCase());
+      (inv.invoiceCode || "").toLowerCase().includes(search.toLowerCase()) ||
+      (inv.customerName || "").toLowerCase().includes(search.toLowerCase()) ||
+      (inv.bookingCode || "").toLowerCase().includes(search.toLowerCase());
     const matchFilter = filter === "Tất cả" || inv.status === filter;
     return matchSearch && matchFilter;
   });
@@ -34,17 +55,26 @@ export default function InvoicesPage() {
   const handleSearch = (val: string) => { setSearch(val); setVisibleCount(PAGE_SIZE); };
   const handleFilter = (val: string) => { setFilter(val); setVisibleCount(PAGE_SIZE); };
 
-  const handleGenerate = (invoice: Invoice) => {
-    const newId = invoices.length > 0 ? Math.max(...invoices.map((i) => i.id)) + 1 : 1;
-    const year = new Date().getFullYear();
-    const code = `INV-${year}-${String(newId).padStart(3, "0")}`;
-    setInvoices((prev) => [...prev, { ...invoice, id: newId, invoiceCode: code }]);
-    setGenerateOpen(false);
+  const handleUpdate = async (updatedInvoice: Invoice) => {
+    try {
+      await updateInvoice(updatedInvoice.id, updatedInvoice);
+      alert("Cập nhật hóa đơn thành công!");
+      fetchInvoices();
+      setEditingInvoice(null);
+    } catch (err: any) {
+      alert(err.message || "Cập nhật hóa đơn thất bại!");
+    }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Bạn có chắc muốn xóa hóa đơn này?")) {
-      setInvoices((prev) => prev.filter((i) => i.id !== id));
+      try {
+        await deleteInvoice(id);
+        alert("Xóa hóa đơn thành công!");
+        fetchInvoices();
+      } catch (err: any) {
+        alert(err.message || "Xóa hóa đơn thất bại!");
+      }
     }
   };
 
@@ -75,13 +105,6 @@ export default function InvoicesPage() {
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <button
-          onClick={() => setGenerateOpen(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
-        >
-          <Plus className="w-4 h-4" />
-          Tạo hóa đơn
-        </button>
         <select
           value={filter}
           onChange={(e) => handleFilter(e.target.value)}
@@ -98,6 +121,7 @@ export default function InvoicesPage() {
       <InvoiceTable
         invoices={visibleInvoices}
         onView={(inv) => setDetailInvoice(inv)}
+        onEdit={(inv) => setEditingInvoice(inv)}
         onDelete={handleDelete}
       />
 
@@ -115,11 +139,12 @@ export default function InvoicesPage() {
         </div>
       )}
 
-      {/* Generate Modal */}
-      {generateOpen && (
-        <InvoiceModal
-          onSave={handleGenerate}
-          onClose={() => setGenerateOpen(false)}
+      {/* Edit Modal */}
+      {editingInvoice && (
+        <InvoiceEditModal
+          invoice={editingInvoice}
+          onSave={handleUpdate}
+          onClose={() => setEditingInvoice(null)}
         />
       )}
 
