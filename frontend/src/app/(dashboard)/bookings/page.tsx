@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-// Hãy kiểm tra và đảm bảo file @/lib/api/bookings xuất đủ các thành phần này nhé
 import {
   getAllBookings,
   submitBookingForm,
@@ -21,16 +20,15 @@ import BookingStatCards from "@/components/bookings/BookingStatCards";
 import BookingTodayTable from "@/components/bookings/BookingTodayTable";
 import BookingAllTable from "@/components/bookings/BookingAllTable";
 import BookingModal from "@/components/bookings/BookingModal";
-import { createCustomer } from "@/lib/api/customers";
 
 const today = new Date().toISOString().split("T")[0];
 const PAGE_SIZE_ALL = 50;
 
 export const mapBookingStatus = (status: string): BookingStatus => {
-  if (!status) return "Đã đặt";
+  if (!status) return "Đặt trước";
   const s = status.trim();
-  if (s === "Chưa nhận" || s === "Đã đặt trước" || s === "Đã đặt") {
-    return "Đã đặt";
+  if (s === "Chưa nhận" || s === "Đã đặt trước" || s === "Đã đặt" || s === "Đặt trước") {
+      return "Đặt trước";
   }
   if (
     s === "Checked-in" ||
@@ -52,8 +50,8 @@ export const mapBookingStatus = (status: string): BookingStatus => {
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [customers, setCustomers] = useState<CustomerResponse[]>([]); // Tạo State khách hàng
-  const [rooms, setRooms] = useState<RoomResponse[]>([]);             // Tạo State phòng
+  const [customers, setCustomers] = useState<CustomerResponse[]>([]);
+  const [rooms, setRooms] = useState<RoomResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Tất cả");
@@ -77,7 +75,7 @@ export default function BookingsPage() {
       await fetchData();
     } catch (error: any) {
       alert(error.message || "Nhận phòng thất bại!");
-    } finally {
+    } military: {
       setLoading(false);
     }
   };
@@ -122,7 +120,6 @@ export default function BookingsPage() {
     try {
       setLoading(true);
 
-      // Chạy song song cả 3 API nạp dữ liệu từ backend lên hệ thống
       const [response, customerRes, roomRes] = await Promise.all([
         getAllBookings(),
         getAllCustomers().catch(() => []),
@@ -158,50 +155,76 @@ export default function BookingsPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-    const computedBookingsForCards = () => {
-        const todayObj = new Date();
-        const currentMonth = todayObj.getMonth(); // 0-11
-        const currentYear = todayObj.getFullYear();
 
-        // A. Số lượng khách đang lưu trú thực tế tại khách sạn
-        const dangOActive = bookings.filter((b) => b.status === "Đang sử dụng").length;
+  const computedBookingsForCards = () => {
+    const todayObj = new Date();
+    const currentMonth = todayObj.getMonth();
+    const currentYear = todayObj.getFullYear();
 
-        // B. Số lượng đơn đặt trước sẽ check-in trong tháng hiện tại này
-        const sapToiActive = bookings.filter(b => {
-          if (b.status !== "Đã đặt" || !b.checkIn) return false;
-          const checkInDate = new Date(b.checkIn);
-          return checkInDate.getMonth() === currentMonth && checkInDate.getFullYear() === currentYear;
-        }).length;
+    const dangOActive = bookings.filter((b) => b.status === "Đang sử dụng").length;
 
-        // C. Tổng doanh thu tạm tính của các phòng trong tháng (Bỏ qua các phòng đã Hủy)
-        const tongDoanhThuThang = bookings.reduce((sum, b) => {
-          if (b.status === "Đã hủy" || !b.checkIn) return sum;
-          const checkInDate = new Date(b.checkIn);
-          if (checkInDate.getMonth() === currentMonth && checkInDate.getFullYear() === currentYear) {
-            return sum + (b.amount || 0);
-          }
-          return sum;
-        }, 0);
+    const sapToiActive = bookings.filter(b => {
+      if (b.status !== "Đặt trước" || !b.checkIn) return false;
+      const checkInDate = new Date(b.checkIn);
+      return checkInDate.getMonth() === currentMonth && checkInDate.getFullYear() === currentYear;
+    }).length;
 
-        return { dangOActive, sapToiActive, tongDoanhThuThang };
-      };
+    const tongDoanhThuThang = bookings.reduce((sum, b) => {
+      if (b.status === "Đã hủy" || !b.checkIn) return sum;
+      const checkInDate = new Date(b.checkIn);
+      if (checkInDate.getMonth() === currentMonth && checkInDate.getFullYear() === currentYear) {
+        return sum + (b.amount || 0);
+      }
+      return sum;
+    }, 0);
 
-      const { dangOActive, sapToiActive, tongDoanhThuThang } = computedBookingsForCards();
+    return { dangOActive, sapToiActive, tongDoanhThuThang };
+  };
+
+  const { dangOActive, sapToiActive, tongDoanhThuThang } = computedBookingsForCards();
 
   const todayBookings = bookings.filter((b) => b.checkIn === today);
-  const allFiltered = bookings.filter((b) => {
-    const matchSearch =
-      b.bookingCode.toLowerCase().includes(search.toLowerCase()) ||
-      b.customerName.toLowerCase().includes(search.toLowerCase()) ||
-      b.roomNumber.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter == "Tất cả" || b.status === filter;
-    return matchSearch && matchFilter;
-  });
+ // const allFiltered = bookings.filter((b) => {
+//     const matchSearch =
+//       b.bookingCode.toLowerCase().includes(search.toLowerCase()) ||
+//       b.customerName.toLowerCase().includes(search.toLowerCase()) ||
+//       b.roomNumber.toLowerCase().includes(search.toLowerCase());
+//     const matchFilter = filter === "Tất cả" || b.status === filter;
+//     return matchSearch && matchFilter;
+//   });
+        // 1. Áp dụng tìm kiếm text trước
+          const searchedBookings = bookings.filter((b) => {
+            return (
+              b.bookingCode.toLowerCase().includes(search.toLowerCase()) ||
+              b.customerName.toLowerCase().includes(search.toLowerCase()) ||
+              b.roomNumber.toLowerCase().includes(search.toLowerCase())
+            );
+          });
+
+          // 2. TÁCH MẢNG THEO TRẠNG THÁI CHO TỪNG BẢNG
+          // Bảng Đặt Phòng: Chỉ lấy "Đặt trước" và "Đã hủy"
+//           const datPhongList = searchedBookings.filter((b) => {
+//             const isCorrectType = b.status === "Đặt trước" || b.status === "Đã hủy";
+//             const matchFilter = filter === "Tất cả" || b.status === filter;
+//             return isCorrectType && matchFilter;
+//           }).slice(0, visibleCount);
+           const datPhongList = searchedBookings.filter((b) => {
+               const isCorrectType = b.status === "Đặt trước" || b.status === "Đã hủy";
+               const matchFilter = filter === "Tất cả" || b.status === filter;
+               return isCorrectType && matchFilter;
+             });
+
+             const visibleAll = datPhongList.slice(0, visibleCount);
+          // Bảng Phiếu Thuê Phòng: Chỉ lấy "Đang sử dụng" và "Đã trả phòng"
+//           const phieuThueList = searchedBookings.filter((b) => {
+//             const isCorrectType = b.status === "Đang sử dụng" || b.status === "Đã trả phòng";
+//             const matchFilter = filter === "Tất cả" || b.status === filter;
+//             return isCorrectType && matchFilter;
+//           }).slice(0, visibleCount);
+
   const handleDelete = async (id: number) => {
     try {
       setLoading(true);
-
-      // Gọi hàm từ file bookings.ts, nhận về cấu trúc ApiResponse
       const res = await deleteBooking(id);
 
       if (res.code === 200) {
@@ -210,7 +233,6 @@ export default function BookingsPage() {
         alert(res.message || "Xóa phiếu đặt phòng thành công!");
       }
 
-      // Refresh lại danh sách phòng ngay lập tức để dòng vừa xóa biến mất khỏi màn hình
       await fetchData();
     } catch (error: any) {
       console.error("Lỗi khi thực hiện xóa phiếu phòng:", error);
@@ -223,66 +245,55 @@ export default function BookingsPage() {
 
 
 
-  const visibleAll = allFiltered.slice(0, visibleCount);
+  const handleSave = async (formData: any) => {
+    try {
+      setLoading(true);
 
-    const handleSave = async (formData: any) => {
-        try {
-          setLoading(true);
-    let dbStatus = formData.status;
-          if (!editing) {
-            // Nếu tạo mới, tự động gán trạng thái theo loại hình giao dịch
-            const dbStatus = formData.status;
-          }
-        const finalDonGia = dbStatus === "Đã hủy"
-                ? 0.0
-                : (parseFloat(formData.amount) || parseFloat(formData.roomPrice) || 500000.0);
-          // Chuẩn bị gói dữ liệu chi tiết thu được từ Modal gửi lên
-          const bookingPayload: BookingRequestPayload = {
-            role: "NHAN_VIEN",
-            loaiHinh: formData.bookingType,
-            maKhachHangId: parseInt(formData.customerId),
-            maPhongId: parseInt(formData.roomId),
-            maNhanVienId: 1, // Mặc định ID nhân viên lập phiếu
-            ngayNhan: formData.checkIn,
-            ngayTra: formData.checkOut,
-            donGia: parseFloat(formData.amount) || parseFloat(formData.roomPrice) || 500000.0,
-            trangThai: dbStatus,
-            soKhach: parseInt(formData.guests) || 1
-          };
+      let rawStatus = formData.status || "Đặt trước";
+      let dbStatus = "Chưa nhận";
 
-          let res;
-          if (editing) {
-            // TRƯỜNG HỢPẤN NÚT SỬA: Gọi API PUT để cập nhật đè lên dòng cũ
-            res = await updateBooking(editing.id, bookingPayload);
-            if (res.code === 200) {
-              alert(res.message || "Đã lưu thông tin chỉnh sửa vào đơn đặt phòng!");
-            } else {
-              alert("Cập nhật đơn đặt phòng thành công!");
-            }
-          } else {
-            // TRƯỜNG HỢP ĐẶT PHÒNG MỚI: Gọi API POST như bình thường
-            res = await submitBookingForm(bookingPayload);
-            if (res.code === 200) {
-              alert(res.message || "Tạo mới đơn đặt phòng thành công!");
-            } else {
-              alert("Thao tác thành công!");
-            }
-          }
+      if (rawStatus === "Đang sử dụng") {
+        dbStatus = "Đang sử dụng";
+      } else if (rawStatus === "Đã trả phòng") {
+        dbStatus = "Đã trả phòng";
+      } else if (rawStatus === "Đã hủy") {
+        dbStatus = "Đã hủy";
+      }
 
-          // Tải lại danh sách từ database để dòng dữ liệu trên bảng thay đổi ngay lập tức
-          await fetchData();
-        } catch (error: any) {
-          console.error("Lỗi trong quá trình xử lý lưu dữ liệu phòng:", error);
-          alert("Không thể lưu thông tin. Vui lòng kiểm tra lại tính hợp lệ của phòng và ngày đặt!");
-          await fetchData();
-        } finally {
-          setLoading(false);
-        }
-
-        // Đóng modal và giải phóng trạng thái chỉnh sửa
-        setModalOpen(false);
-        setEditing(null);
+      const bookingPayload: BookingRequestPayload = {
+        role: "NHAN_VIEN",
+        loaiHinh: formData.bookingType || (dbStatus === "Đang sử dụng" ? "THUE_TRUC_TIEP" : "DAT_TRUOC"),
+        maKhachHangId: parseInt(formData.customerId),
+        maPhongId: parseInt(formData.roomId),
+        maNhanVienId: 1,
+        ngayNhan: formData.checkIn,
+        ngayTra: formData.checkOut,
+        donGia: dbStatus === "Đã hủy" ? 0.0 : (parseFloat(formData.amount) || parseFloat(formData.roomPrice) || 300000.0),
+        trangThai: dbStatus,
+        soKhach: parseInt(formData.guests) || 1
       };
+
+      let res;
+      if (editing) {
+        res = await updateBooking(editing.id, bookingPayload);
+        alert(res.message || "Cập nhật trạng thái đơn thành công!");
+      } else {
+        res = await submitBookingForm(bookingPayload);
+        alert(res.message || "Tạo mới yêu cầu phòng thành công!");
+      }
+
+      await fetchData();
+      setModalOpen(false);
+      setEditing(null);
+    } catch (error: any) {
+      console.error("Lỗi lưu dữ liệu:", error);
+      alert(error.message || "Không thể lưu thông tin. Vui lòng kiểm tra tính hợp lệ của phòng và ngày đặt!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔥 ĐÃ FIX: Chỉ giữ lại một hàm duy nhất ở đây, xóa bỏ hàm trùng lặp gây lỗi 500
   const handleEdit = (booking: Booking) => {
     setEditing(booking);
     setModalOpen(true);
@@ -305,24 +316,19 @@ export default function BookingsPage() {
       </div>
 
      <BookingStatCards
-             bookings={bookings}
-             overrideStats={{
-               dangO: dangOActive,
-               sapToi: sapToiActive,
-               doanhThu: tongDoanhThuThang
-             }}
-           />
+       bookings={bookings}
+       overrideStats={{
+         dangO: dangOActive,
+         sapToi: sapToiActive,
+         doanhThu: tongDoanhThuThang
+       }}
+     />
 
       {loading && bookings.length === 0 ? (
         <div className="p-12 text-center text-gray-400 text-sm">Đang đồng bộ dữ liệu hệ thống phòng...</div>
       ) : (
         <>
-          <BookingTodayTable
-                      bookings={todayBookings}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onRowContextMenu={handleRowContextMenu}
-                    />
+
 
           <div className="space-y-4">
             <div className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-3 shadow-sm">
@@ -339,19 +345,17 @@ export default function BookingsPage() {
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
                 <option value="Tất cả">Tất cả trạng thái (Filter tổng)</option>
-                <option value="Đã đặt">Đã đặt</option>
-                <option value="Đang sử dụng">Đang sử dụng</option>
-                <option value="Đã trả phòng">Đã trả phòng</option>
+                <option value="Đặt trước">Đặt trước</option>
                 <option value="Đã hủy">Đã hủy</option>
               </select>
             </div>
 
             <BookingAllTable
-                          bookings={visibleAll}
-                          onEdit={handleEdit}
-                          onDelete={handleDelete}
-                          onRowContextMenu={handleRowContextMenu}
-                        />
+              bookings={visibleAll}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onRowContextMenu={handleRowContextMenu}
+            />
           </div>
         </>
       )}
@@ -374,7 +378,7 @@ export default function BookingsPage() {
           <div className="px-4 py-1.5 border-b border-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
             Đơn: #{contextMenu.booking.bookingCode}
           </div>
-          {contextMenu.booking.status === "Đã đặt" ? (
+          {contextMenu.booking.status === "Đặt trước" ? (
             <div className="p-1 space-y-0.5">
               <button
                 onClick={() => { handleCheckIn(contextMenu.booking.id); setContextMenu(null); }}
