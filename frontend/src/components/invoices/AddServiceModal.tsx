@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, Plus } from "lucide-react";
-import { useBillingServices } from "@/hooks/useBillingServices";
+import { useBilling } from "@/hooks/useBilling";
 import { getServices } from "@/lib/api/services";
 import { Service } from "@/types/service";
 import { AddServiceRequest } from "@/lib/api/billing";
@@ -28,7 +28,7 @@ export default function AddServiceModal({
   const [selectedServices, setSelectedServices] = useState<ServiceWithQuantity[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showError, setShowError] = useState<string | null>(null);
-  const { addService, loading, error, clearError } = useBillingServices();
+  const { addService, loading, error, clearError } = useBilling();
 
   // Load danh sách dịch vụ
   useEffect(() => {

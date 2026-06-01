@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, AlertTriangle } from "lucide-react";
-import { useBillingServices } from "@/hooks/useBillingServices";
+import { useBilling } from "@/hooks/useBilling";
 import { RecordInspectionRequest } from "@/lib/api/billing";
 
 interface Props {
@@ -23,7 +23,7 @@ export default function RecordInspectionModal({
   const [tinhTrang, setTinhTrang] = useState("Phòng bình thường");
   const [tienBoiThuong, setTienBoiThuong] = useState(0);
   const [showError, setShowError] = useState<string | null>(null);
-  const { recordInspection, loading, error, clearError } = useBillingServices();
+  const { recordInspection, loading, error, clearError } = useBilling();
 
   // Predefined inspection statuses
   const inspectionStatuses = [
