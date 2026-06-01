@@ -67,27 +67,57 @@ public class BookingController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateBooking(@PathVariable Integer id, @RequestBody BookingRequest request) {
-        try {
-            bookingService.updateBooking(id, request);
+//    @PutMapping("/{id}")
+//    public ResponseEntity<?> updateBooking(@PathVariable Integer id, @RequestBody BookingRequest request) {
+//        try {
+//            bookingService.updateBooking(id, request);
+//
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("code", 200);
+//            response.put("message", "Cập nhật dữ liệu đơn đặt phòng và bảng chi tiết thành công!");
+//            return ResponseEntity.ok(response);
+//        } catch (IllegalStateException e) {
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("code", 400);
+//            response.put("message", e.getMessage());
+//            return ResponseEntity.badRequest().body(response);
+//        } catch (Exception e) {
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("code", 500);
+//            response.put("message", "Lỗi máy chủ khi xử lý cập nhật đơn phòng.");
+//            return ResponseEntity.internalServerError().body(response);
+//        }
+//    }
+@PutMapping("/{id}")
+public ResponseEntity<?> updateBooking(@PathVariable Integer id, @Valid @RequestBody BookingRequest request) {
+    try {
+        // Đảm bảo gán ID từ URL vào Request DTO để đồng bộ dữ liệu
+        request.setId(id);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("message", "Cập nhật dữ liệu đơn đặt phòng và bảng chi tiết thành công!");
-            return ResponseEntity.ok(response);
-        } catch (IllegalStateException e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 400);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("message", "Lỗi máy chủ khi xử lý cập nhật đơn phòng.");
-            return ResponseEntity.internalServerError().body(response);
-        }
+        // Lấy mã nhân viên mặc định bằng 1 nếu Frontend không truyền lên (luồng tự động)
+        Integer maNhanVien = request.getMaNhanVienId() != null ? request.getMaNhanVienId() : 1;
+
+        // Gọi hàm xử lý trạng thái nghiêm ngặt đã viết trong BookingService
+        bookingService.capNhatTrangThaiNghiepVu(id, request.getTrangThai(), maNhanVien);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("code", 200);
+        response.put("message", "Cập nhật tiến độ trạng thái và giải phóng phòng thành công!");
+        return ResponseEntity.ok(response);
+    } catch (IllegalStateException e) {
+        // Hứng toàn bộ lỗi logic nghiệp vụ chủ động quăng ra từ Service (ví dụ: phòng bảo trì, sai trạng thái)
+        Map<String, Object> response = new HashMap<>();
+        response.put("code", 400);
+        response.put("message", e.getMessage());
+        return ResponseEntity.badRequest().body(response);
+    } catch (Exception e) {
+        e.printStackTrace();
+        Map<String, Object> response = new HashMap<>();
+        response.put("code", 500);
+        response.put("message", "Lỗi máy chủ khi xử lý cập nhật trạng thái đơn: " + e.getMessage());
+        return ResponseEntity.internalServerError().body(response);
     }
+}
 
     @PostMapping("/check-out")
     public ResponseEntity<?> handleCheckOut(@RequestBody Map<String, Object> request) {

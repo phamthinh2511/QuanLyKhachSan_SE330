@@ -15,7 +15,8 @@ public class BookingRequest {
 //    private LocalDate ngayNhan;
 //    private LocalDate ngayTra;
 //    private List<Integer> dsMaPhong;
-@NotNull(message = "Vai tro khong duoc de trong")
+    private Integer id;
+    @NotNull(message = "Vai tro khong duoc de trong")
 private String role;
     @NotNull(message = "Loai hinh giao dich khong duoc de trong")
     private String loaiHinh;
