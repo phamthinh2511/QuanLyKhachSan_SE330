@@ -341,7 +341,7 @@ const emptyForm: ExtendedForm = {
   checkOut: "",
   guests: 1,
   amount: 0,
-  status: "Đã đặt",
+  status: "Đặt trước",
 };
 
 export default function BookingModal({ booking, bookings = [], onSave, onClose }: Props) {
@@ -401,7 +401,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
         checkOut: booking.checkOut || "",
         guests: booking.guests || 1,
         amount: booking.amount || 0,
-        status: booking.status || "Đã đặt",
+        status: booking.status || "Đặt trước",
       });
       if (cust) {
         setIsAutoFilled(true);
@@ -869,9 +869,8 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                     onChange={(e) => setForm({ ...form, status: e.target.value as BookingStatus })}
                     className={inputClass}
                   >
-                    <option value="Đã đặt">Đã đặt</option>
+                    <option value="Đặt trước">Đặt trước</option>
                     <option value="Đang sử dụng">Đang sử dụng</option>
-                    <option value="Đã trả phòng">Đã trả phòng</option>
                     <option value="Đã hủy">Đã hủy</option>
                   </select>
                 </div>
