@@ -6,6 +6,7 @@ import InvoiceStatCards from "@/components/invoices/InvoiceStatCards";
 import InvoiceTable from "@/components/invoices/InvoiceTable";
 import InvoiceDetailModal from "@/components/invoices/InvoiceDetailModal";
 import InvoiceEditModal from "@/components/invoices/InvoiceEditModal";
+import CheckoutModal from "@/components/invoices/CheckoutModal";
 import { getAllInvoices, deleteInvoice, updateInvoice } from "@/lib/api/invoices";
 
 const PAGE_SIZE = 50;
@@ -19,6 +20,7 @@ export default function InvoicesPage() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
+  const [checkoutInvoice, setCheckoutInvoice] = useState<Invoice | null>(null);
 
   const fetchInvoices = () => {
     setLoading(true);
@@ -123,6 +125,7 @@ export default function InvoicesPage() {
         onView={(inv) => setDetailInvoice(inv)}
         onEdit={(inv) => setEditingInvoice(inv)}
         onDelete={handleDelete}
+        onCheckout={(inv) => setCheckoutInvoice(inv)}
       />
 
       {hasMore && (
@@ -153,6 +156,22 @@ export default function InvoicesPage() {
         <InvoiceDetailModal
           invoice={detailInvoice}
           onClose={() => setDetailInvoice(null)}
+        />
+      )}
+
+      {/* Checkout Modal */}
+      {checkoutInvoice && (
+        <CheckoutModal
+          maPhieuThue={parseInt(checkoutInvoice.bookingCode) || 0}
+          maPhong={parseInt(checkoutInvoice.roomNumber) || 0}
+          maNhanVien={1}
+          khachHang={checkoutInvoice.customerName}
+          onSuccess={(result) => {
+            alert(`Checkout thành công! Mã hóa đơn: #${result.maHoaDon}`);
+            fetchInvoices();
+            setCheckoutInvoice(null);
+          }}
+          onClose={() => setCheckoutInvoice(null)}
         />
       )}
     </div>

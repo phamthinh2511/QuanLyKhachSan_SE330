@@ -17,6 +17,7 @@ interface Props {
 }
 
 interface CheckoutSummary {
+  maHoaDon: number;
   tienPhong: number;
   tienDichVu: number;
   tienPhat: number;
