@@ -7,7 +7,8 @@ import InvoiceTable from "@/components/invoices/InvoiceTable";
 import InvoiceDetailModal from "@/components/invoices/InvoiceDetailModal";
 import InvoiceEditModal from "@/components/invoices/InvoiceEditModal";
 import CheckoutModal from "@/components/invoices/CheckoutModal";
-import { getAllInvoices, deleteInvoice, updateInvoice } from "@/lib/api/invoices";
+import { getAllInvoices, deleteInvoice, updateInvoice, exportInvoices } from "@/lib/api/invoices";
+import { Download } from "lucide-react";
 
 const PAGE_SIZE = 50;
 
@@ -80,13 +81,41 @@ export default function InvoicesPage() {
     }
   };
 
+  const handleExportExcel = async () => {
+    try {
+      setLoading(true);
+      const blob = await exportInvoices();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "danh_sach_hoa_don.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert(err.message || "Xuất file Excel thất bại!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <div className="p-6 rounded-lg bg-white shadow-sm">
-          <h1 className="text-2xl font-bold text-gray-800">Quản lý hóa đơn</h1>
-          <p className="text-gray-500 text-sm">Welcome back, Admin</p>
+        <div className="p-6 rounded-lg bg-white shadow-sm flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Quản lý hóa đơn</h1>
+            <p className="text-gray-500 text-sm">Welcome back, Admin</p>
+          </div>
+          <button
+            onClick={handleExportExcel}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition shadow-sm"
+          >
+            <Download className="w-4 h-4" />
+            Xuất Excel
+          </button>
         </div>
       </div>
 

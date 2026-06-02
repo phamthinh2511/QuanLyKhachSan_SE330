@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { ServiceUsage, ServiceUsageStatus } from "@/types/serviceUsage";
 import { Booking } from "@/types/booking";
-import { getAllBookings } from "@/lib/api/bookings";
+import { getAllBookings, getAllRooms, RoomResponse } from "@/lib/api/bookings";
 import { getServices } from "@/lib/api/services";
 import { Service } from "@/types/service";
 import { mapBookingStatus } from "@/app/(dashboard)/bookings/page";
@@ -27,6 +27,7 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
   const [form, setForm] = useState<Omit<ServiceUsage, "id" | "usageCode">>(emptyForm);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [rooms, setRooms] = useState<RoomResponse[]>([]);
 
   useEffect(() => {
     // Load Bookings
@@ -53,6 +54,13 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
     getServices()
       .then((data) => {
         setServices(data || []);
+      })
+      .catch((err) => console.error(err));
+
+    // Load Rooms
+    getAllRooms()
+      .then((data) => {
+        setRooms(data || []);
       })
       .catch((err) => console.error(err));
   }, []);
@@ -124,7 +132,15 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
               className={inputClass} required>
               <option value="">Chọn booking</option>
               {bookings
-                .filter((b) => b.status === "Đang sử dụng" || b.status === "Đã đặt" || b.bookingCode === form.bookingCode)
+                .filter((b) => {
+                  const isCurrent = b.bookingCode === form.bookingCode;
+                  if (isCurrent) return true;
+
+                  if (b.status !== "Đang sử dụng") return false;
+
+                  const room = rooms.find((r) => String(r.id) === String(b.roomNumber));
+                  return room?.trangThai === "Đang sử dụng";
+                })
                 .map((b) => (
                   <option key={b.id} value={b.bookingCode}>
                     {b.bookingCode} — {b.customerName} (Phòng {b.roomNumber})

@@ -5,6 +5,7 @@ import { Download } from "lucide-react";
 import ReportStatCards from "@/components/reports/ReportStatCards";
 import ReportTabs from "@/components/reports/ReportTabs";
 import { monthlyData, quarterlyData, thisMonthData } from "@/lib/data/reports";
+import { exportRevenueReport } from "@/lib/api/invoices";
 
 export type Period = "Tháng này" | "Quý này" | "Năm nay";
 export type ReportTab = "Phân tích doanh thu" | "Tỉ lệ bận phòng" | "Sử dụng dịch vụ" | "Năng suất phòng";
@@ -64,6 +65,22 @@ export default function ReportsPage() {
     pdf.save(`Hotel-Report-${period.replace(" ", "-")}.pdf`);
   };
 
+  const handleExportExcel = async () => {
+    try {
+      const blob = await exportRevenueReport();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `bao_cao_doanh_thu_${period.replace(" ", "_")}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert(err.message || "Xuất báo cáo doanh thu thất bại!");
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -102,11 +119,13 @@ export default function ReportsPage() {
             )}
           </div>
 
-          {/* Export */}
-          <button onClick={handleExport}
-            className="flex items-center gap-2 border border-gray-200 bg-white text-gray-700 text-sm px-4 py-2.5 rounded-xl hover:bg-gray-50 transition">
+
+
+          {/* Export Excel */}
+          <button onClick={handleExportExcel}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 py-2.5 rounded-xl transition shadow-sm font-medium">
             <Download className="w-4 h-4" />
-            Xuất báo cáo
+            Xuất Excel
           </button>
         </div>
       </div>
