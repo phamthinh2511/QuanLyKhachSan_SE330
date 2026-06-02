@@ -14,9 +14,9 @@ export default function OccupancyRate({ data }: Props) {
     label, occupancy: data.occupancy[i], guests: data.guests[i],
   }));
 
-  const avgOccupancy = Math.round(
-    data.occupancy.reduce((s, v) => s + v, 0) / data.occupancy.length
-  );
+  const avgOccupancy = data.occupancy && data.occupancy.length > 0
+    ? Math.round(data.occupancy.reduce((s, v) => s + v, 0) / data.occupancy.length)
+    : 0;
 
   return (
     <div className="space-y-4">

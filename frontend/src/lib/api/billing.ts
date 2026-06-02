@@ -1,5 +1,11 @@
 import { apiClient } from "./client";
 
+export interface ApiResponse<T> {
+  code: number;
+  message: string;
+  result: T;
+}
+
 /**
  * DTO cho request Thêm Dịch vụ Phát sinh
  */
@@ -76,8 +82,8 @@ export interface CheckoutResponse {
  */
 export async function addServiceUsage(
   request: AddServiceRequest
-): Promise<AddServiceResponse> {
-  return apiClient<AddServiceResponse>("/api/billing/add-service", {
+): Promise<ApiResponse<AddServiceResponse>> {
+  return apiClient<ApiResponse<AddServiceResponse>>("/api/billing/add-service", {
     method: "POST",
     body: JSON.stringify(request),
   });
@@ -91,8 +97,8 @@ export async function addServiceUsage(
  */
 export async function recordRoomInspection(
   request: RecordInspectionRequest
-): Promise<RecordInspectionResponse> {
-  return apiClient<RecordInspectionResponse>("/api/billing/record-inspection", {
+): Promise<ApiResponse<RecordInspectionResponse>> {
+  return apiClient<ApiResponse<RecordInspectionResponse>>("/api/billing/record-inspection", {
     method: "POST",
     body: JSON.stringify(request),
   });
@@ -114,8 +120,8 @@ export async function recordRoomInspection(
  */
 export async function checkout(
   request: CheckoutRequest
-): Promise<CheckoutResponse> {
-  return apiClient<CheckoutResponse>("/api/billing/checkout", {
+): Promise<ApiResponse<CheckoutResponse>> {
+  return apiClient<ApiResponse<CheckoutResponse>>("/api/billing/checkout", {
     method: "POST",
     body: JSON.stringify(request),
   });

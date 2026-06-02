@@ -1,5 +1,6 @@
 import { apiClient } from "./client";
 import { Invoice } from "@/types/invoice";
+import { getToken } from "@/lib/auth";
 
 export interface CreateInvoicePayload {
   bookingCode: string;
@@ -32,4 +33,32 @@ export async function updateInvoice(id: number, payload: Partial<Invoice>): Prom
     method: "PUT",
     body: JSON.stringify(payload),
   });
+}
+
+export async function exportInvoices(): Promise<Blob> {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+  const token = getToken();
+  const res = await fetch(`${API_URL}/api/invoices/export`, {
+    headers: {
+      Authorization: token ? `Bearer ${token}` : "",
+    },
+  });
+  if (!res.ok) {
+    throw new Error("Lỗi khi tải tệp xuất hóa đơn.");
+  }
+  return res.blob();
+}
+
+export async function exportRevenueReport(): Promise<Blob> {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+  const token = getToken();
+  const res = await fetch(`${API_URL}/api/invoices/revenue-report/export`, {
+    headers: {
+      Authorization: token ? `Bearer ${token}` : "",
+    },
+  });
+  if (!res.ok) {
+    throw new Error("Lỗi khi tải tệp xuất báo cáo doanh thu.");
+  }
+  return res.blob();
 }

@@ -3,13 +3,12 @@ package hotelmanagement.backend.controller;
 import hotelmanagement.backend.dto.request.SudungdichvuRequest;
 import hotelmanagement.backend.dto.request.KiemkephongRequest;
 import hotelmanagement.backend.dto.request.CheckoutRequest;
+import hotelmanagement.backend.dto.response.ApiResponse;
 import hotelmanagement.backend.dto.response.SudungdichvuResponse;
 import hotelmanagement.backend.dto.response.KiemkephongResponse;
 import hotelmanagement.backend.dto.response.CheckoutResponse;
 import hotelmanagement.backend.service.BillingService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -29,19 +28,19 @@ public class BillingController {
      * POST /api/billing/add-service
      */
     @PostMapping("/add-service")
-    public ResponseEntity<SudungdichvuResponse> addServiceUsage(@RequestBody SudungdichvuRequest request) {
-        try {
-            SudungdichvuResponse response = billingService.addServiceUsage(request);
-            if (response.getMessage().startsWith("Lỗi")) {
-                return ResponseEntity.badRequest().body(response);
-            }
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(SudungdichvuResponse.builder()
-                            .message("Lỗi server: " + e.getMessage())
-                            .build());
+    public ApiResponse<SudungdichvuResponse> addServiceUsage(@RequestBody SudungdichvuRequest request) {
+        SudungdichvuResponse response = billingService.addServiceUsage(request);
+        if (response.getMessage() != null && response.getMessage().startsWith("Lỗi")) {
+            return ApiResponse.<SudungdichvuResponse>builder()
+                    .code(400)
+                    .message(response.getMessage())
+                    .build();
         }
+        return ApiResponse.<SudungdichvuResponse>builder()
+                .code(200)
+                .message(response.getMessage())
+                .result(response)
+                .build();
     }
     
     /**
@@ -49,19 +48,19 @@ public class BillingController {
      * POST /api/billing/record-inspection
      */
     @PostMapping("/record-inspection")
-    public ResponseEntity<KiemkephongResponse> recordRoomInspection(@RequestBody KiemkephongRequest request) {
-        try {
-            KiemkephongResponse response = billingService.recordRoomInspection(request);
-            if (response.getMessage().startsWith("Lỗi")) {
-                return ResponseEntity.badRequest().body(response);
-            }
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(KiemkephongResponse.builder()
-                            .message("Lỗi server: " + e.getMessage())
-                            .build());
+    public ApiResponse<KiemkephongResponse> recordRoomInspection(@RequestBody KiemkephongRequest request) {
+        KiemkephongResponse response = billingService.recordRoomInspection(request);
+        if (response.getMessage() != null && response.getMessage().startsWith("Lỗi")) {
+            return ApiResponse.<KiemkephongResponse>builder()
+                    .code(400)
+                    .message(response.getMessage())
+                    .build();
         }
+        return ApiResponse.<KiemkephongResponse>builder()
+                .code(200)
+                .message(response.getMessage())
+                .result(response)
+                .build();
     }
     
     /**
@@ -71,18 +70,18 @@ public class BillingController {
      * POST /api/billing/checkout
      */
     @PostMapping("/checkout")
-    public ResponseEntity<CheckoutResponse> checkout(@RequestBody CheckoutRequest request) {
-        try {
-            CheckoutResponse response = billingService.checkout(request);
-            if (response.getMessage().startsWith("Lỗi")) {
-                return ResponseEntity.badRequest().body(response);
-            }
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(CheckoutResponse.builder()
-                            .message("Lỗi server: " + e.getMessage())
-                            .build());
+    public ApiResponse<CheckoutResponse> checkout(@RequestBody CheckoutRequest request) {
+        CheckoutResponse response = billingService.checkout(request);
+        if (response.getMessage() != null && response.getMessage().startsWith("Lỗi")) {
+            return ApiResponse.<CheckoutResponse>builder()
+                    .code(400)
+                    .message(response.getMessage())
+                    .build();
         }
+        return ApiResponse.<CheckoutResponse>builder()
+                .code(200)
+                .message(response.getMessage())
+                .result(response)
+                .build();
     }
 }

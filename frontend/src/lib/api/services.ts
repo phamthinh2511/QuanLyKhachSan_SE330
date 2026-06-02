@@ -1,6 +1,12 @@
 import { Service } from "@/types/service";
 import { apiClient } from "./client";
 
+export interface ApiResponse<T> {
+  code: number;
+  message: string;
+  result: T;
+}
+
 export interface DichvuApi{
     id: number,
     tenDichVu: string,
@@ -30,36 +36,36 @@ function mapToDTO(service: Omit<Service, "id" | "serviceCode">): DichvuApi {
 
 // ── API calls ─────────────────────────────────────────────────────────────
 export async function getServices(): Promise<Service[]> {
-  const data = await apiClient<DichvuApi[]>("/api/services");
-  return data.map(mapToService);
+  const data = await apiClient<ApiResponse<DichvuApi[]>>("/api/services");
+  return (data.result || []).map(mapToService);
 }
 
 export async function getServiceById(id: number): Promise<Service> {
-  const data = await apiClient<DichvuApi>(`/api/services/${id}`);
-  return mapToService(data);
+  const data = await apiClient<ApiResponse<DichvuApi>>(`/api/services/${id}`);
+  return mapToService(data.result);
 }
 
 export async function createService(
   service: Omit<Service, "id" | "serviceCode">
 ): Promise<Service> {
-  const data = await apiClient<DichvuApi>("/api/services", {
+  const data = await apiClient<ApiResponse<DichvuApi>>("/api/services", {
     method: "POST",
     body: JSON.stringify(mapToDTO(service)),
   });
-  return mapToService(data);
+  return mapToService(data.result);
 }
 
 export async function updateService(
   id: number,
   service: Omit<Service, "id" | "serviceCode">
 ): Promise<Service> {
-  const data = await apiClient<DichvuApi>(`/api/services/${id}`, {
+  const data = await apiClient<ApiResponse<DichvuApi>>(`/api/services/${id}`, {
     method: "PUT",
     body: JSON.stringify(mapToDTO(service)),
   });
-  return mapToService(data);
+  return mapToService(data.result);
 }
 
 export async function deleteService(id: number): Promise<void> {
-  return apiClient<void>(`/api/services/${id}`, { method: "DELETE" });
+  await apiClient<ApiResponse<void>>(`/api/services/${id}`, { method: "DELETE" });
 }

@@ -1,23 +1,23 @@
 export const monthlyData = {
-  labels: [],
-  revenue: [],
-  profit:  [],
-  occupancy: [],
-  guests:  [],
+  labels: ["Th1", "Th2", "Th3", "Th4", "Th5", "Th6", "Th7", "Th8", "Th9", "Th10", "Th11", "Th12"],
+  revenue: [45000, 52000, 58000, 61000, 65000, 72000, 68000, 70000, 63000, 67000, 69000, 67000],
+  profit:  [22000, 26000, 30000, 31000, 34000, 38000, 35000, 36000, 32000, 35000, 36000, 36000],
+  occupancy: [72, 75, 78, 80, 82, 85, 81, 83, 76, 77, 79, 78],
+  guests:  [180, 200, 220, 230, 250, 270, 260, 265, 235, 245, 250, 240],
 };
 
 export const quarterlyData = {
-  labels: [],
-  revenue: [],
-  profit:  [],
-  occupancy: [],
-  guests:  [],
+  labels: ["Tuần 1", "Tuần 2", "Tuần 3", "Tuần 4", "Tuần 5", "Tuần 6", "Tuần 7", "Tuần 8", "Tuần 9", "Tuần 10", "Tuần 11", "Tuần 12"],
+  revenue: [14000, 15000, 16000, 15500, 16500, 17000, 16800, 17200, 16500, 17500, 18000, 18000],
+  profit:  [7000, 7500, 8200, 7800, 8400, 8700, 8600, 8800, 8400, 8900, 9200, 9500],
+  occupancy: [74, 75, 76, 75, 77, 78, 77, 79, 76, 78, 80, 81],
+  guests:  [65, 70, 75, 72, 77, 80, 78, 81, 76, 82, 85, 90],
 };
 
 export const thisMonthData = {
-  labels: [],
-  revenue: [],
-  profit:  [],
-  occupancy: [],
-  guests:  [],
+  labels: ["Tuần 1", "Tuần 2", "Tuần 3", "Tuần 4"],
+  revenue: [17500, 18500, 19500, 20500],
+  profit:  [9000, 9800, 10200, 11000],
+  occupancy: [79, 81, 83, 85],
+  guests:  [80, 85, 90, 93],
 };
