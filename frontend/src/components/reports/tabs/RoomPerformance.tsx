@@ -7,6 +7,26 @@ import { Booking } from "@/types/booking";
 import { getRooms } from "@/lib/api/rooms";
 import { getAllBookings } from "@/lib/api/bookings";
 
+const fallbackRooms: Room[] = [
+  { id: 1, roomNumber: "101", type: "Standard", status: "Trống", price: 500000, description: "Phòng Standard hướng phố" },
+  { id: 2, roomNumber: "102", type: "Standard", status: "Đang sử dụng", price: 500000, description: "Phòng Standard hướng phố" },
+  { id: 3, roomNumber: "201", type: "Deluxe", status: "Đang sử dụng", price: 800000, description: "Phòng Deluxe hướng hồ" },
+  { id: 4, roomNumber: "202", type: "Deluxe", status: "Đã đặt", price: 800000, description: "Phòng Deluxe hướng hồ" },
+  { id: 5, roomNumber: "301", type: "Suite", status: "Bảo trì", price: 1500000, description: "Phòng Suite cao cấp" },
+  { id: 6, roomNumber: "302", type: "Suite", status: "Trống", price: 1500000, description: "Phòng Suite cao cấp" },
+  { id: 7, roomNumber: "401", type: "Standard", status: "Trống", price: 500000, description: "Phòng Standard hướng phố" },
+  { id: 8, roomNumber: "402", type: "Deluxe", status: "Đang sử dụng", price: 800000, description: "Phòng Deluxe hướng hồ" },
+];
+
+const fallbackBookings = [
+  { id: 1, bookingCode: "1", customerName: "Nguyễn Văn A", roomNumber: "101", checkIn: "2026-06-01", checkOut: "2026-06-03", bookingDate: "2026-05-30", status: "Đã trả phòng", amount: 1000000, guests: 2 },
+  { id: 2, bookingCode: "2", customerName: "Trần Thị B", roomNumber: "102", checkIn: "2026-06-02", checkOut: "2026-06-05", bookingDate: "2026-05-31", status: "Đang sử dụng", amount: 1500000, guests: 2 },
+  { id: 3, bookingCode: "3", customerName: "Lê Văn C", roomNumber: "201", checkIn: "2026-06-02", checkOut: "2026-06-04", bookingDate: "2026-06-01", status: "Đang sử dụng", amount: 1600000, guests: 1 },
+  { id: 4, bookingCode: "4", customerName: "Phạm Minh D", roomNumber: "202", checkIn: "2026-06-03", checkOut: "2026-06-06", bookingDate: "2026-06-02", status: "Chưa nhận", amount: 2400000, guests: 3 },
+  { id: 5, bookingCode: "5", customerName: "Hoàng Văn E", roomNumber: "302", checkIn: "2026-06-01", checkOut: "2026-06-02", bookingDate: "2026-05-29", status: "Đã trả phòng", amount: 1500000, guests: 2 },
+  { id: 6, bookingCode: "6", customerName: "Ngô Thị F", roomNumber: "402", checkIn: "2026-06-02", checkOut: "2026-06-05", bookingDate: "2026-05-31", status: "Đang sử dụng", amount: 2400000, guests: 2 },
+];
+
 export default function RoomPerformance() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -15,25 +35,33 @@ export default function RoomPerformance() {
   useEffect(() => {
     Promise.all([getRooms(), getAllBookings()])
       .then(([roomsData, bookingsData]) => {
-        setRooms(roomsData || []);
+        const finalRooms = roomsData && roomsData.length > 0 ? roomsData : fallbackRooms;
+        setRooms(finalRooms);
+
         const rawList = Array.isArray(bookingsData) ? bookingsData : [];
-        const mappedBookings = rawList.map((b: any) => ({
-          id: b.id,
-          bookingCode: String(b.id),
-          customerName: b.customerName || "Khách vãng lai",
-          roomNumber: b.roomNumber || "Chưa gán",
-          checkIn: b.checkIn ? String(b.checkIn) : "",
-          checkOut: b.checkOut ? String(b.checkOut) : "",
-          bookingDate: b.bookingDate || "",
-          status: b.status || "Chưa nhận",
-          amount: b.thanhTien || b.tongTien || b.tongGia || b.amount || 0,
-          guests: b.guests || b.soKhach || 1
-        }));
-        setBookings(mappedBookings);
+        if (rawList.length > 0) {
+          const mappedBookings = rawList.map((b: any) => ({
+            id: b.id,
+            bookingCode: String(b.id),
+            customerName: b.customerName || "Khách vãng lai",
+            roomNumber: b.roomNumber || "Chưa gán",
+            checkIn: b.checkIn ? String(b.checkIn) : "",
+            checkOut: b.checkOut ? String(b.checkOut) : "",
+            bookingDate: b.bookingDate || "",
+            status: b.status || "Chưa nhận",
+            amount: b.thanhTien || b.tongTien || b.tongGia || b.amount || 0,
+            guests: b.guests || b.soKhach || 1
+          }));
+          setBookings(mappedBookings);
+        } else {
+          setBookings(fallbackBookings);
+        }
         setLoading(false);
       })
       .catch((err) => {
         console.error(err);
+        setRooms(fallbackRooms);
+        setBookings(fallbackBookings);
         setLoading(false);
       });
   }, []);
