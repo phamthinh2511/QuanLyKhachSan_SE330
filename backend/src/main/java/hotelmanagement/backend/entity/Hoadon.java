@@ -27,8 +27,7 @@ public class Hoadon {
     @JoinColumn(name = "MaNhanVien", nullable = false)
     private Nhanvien maNhanVien;
 
-    @NotNull
-    @Column(name = "NgayThanhToan", nullable = false)
+    @Column(name = "NgayThanhToan", nullable = true)
     private LocalDate ngayThanhToan;
 
     @NotNull

@@ -80,19 +80,7 @@ export default function BookingsPage() {
     }
   };
 
-  // Thao tác nhanh Check-out
-  const handleCheckOut = async (bookingId: number) => {
-    try {
-      setLoading(true);
-      await checkOutBooking(bookingId);
-      alert("Trả phòng (Check-out) và kết xuất hóa đơn thành công!");
-      await fetchData();
-    } catch (error: any) {
-      alert(error.message || "Trả phòng thất bại!");
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const handleCancelBooking = async (booking: Booking) => {
     const isConfirmed = window.confirm(`Bạn có chắc chắn muốn hủy đơn đặt phòng ${booking.bookingCode} của khách ${booking.customerName} không?`);
@@ -184,14 +172,6 @@ export default function BookingsPage() {
   const { dangOActive, sapToiActive, tongDoanhThuThang } = computedBookingsForCards();
 
   const todayBookings = bookings.filter((b) => b.checkIn === today);
- // const allFiltered = bookings.filter((b) => {
-//     const matchSearch =
-//       b.bookingCode.toLowerCase().includes(search.toLowerCase()) ||
-//       b.customerName.toLowerCase().includes(search.toLowerCase()) ||
-//       b.roomNumber.toLowerCase().includes(search.toLowerCase());
-//     const matchFilter = filter === "Tất cả" || b.status === filter;
-//     return matchSearch && matchFilter;
-//   });
         // 1. Áp dụng tìm kiếm text trước
           const searchedBookings = bookings.filter((b) => {
             return (
@@ -202,12 +182,6 @@ export default function BookingsPage() {
           });
 
           // 2. TÁCH MẢNG THEO TRẠNG THÁI CHO TỪNG BẢNG
-          // Bảng Đặt Phòng: Chỉ lấy "Đặt trước" và "Đã hủy"
-//           const datPhongList = searchedBookings.filter((b) => {
-//             const isCorrectType = b.status === "Đặt trước" || b.status === "Đã hủy";
-//             const matchFilter = filter === "Tất cả" || b.status === filter;
-//             return isCorrectType && matchFilter;
-//           }).slice(0, visibleCount);
            const datPhongList = searchedBookings.filter((b) => {
                const isCorrectType = b.status === "Đặt trước" || b.status === "Đã hủy";
                const matchFilter = filter === "Tất cả" || b.status === filter;
@@ -215,12 +189,7 @@ export default function BookingsPage() {
              });
 
              const visibleAll = datPhongList.slice(0, visibleCount);
-          // Bảng Phiếu Thuê Phòng: Chỉ lấy "Đang sử dụng" và "Đã trả phòng"
-//           const phieuThueList = searchedBookings.filter((b) => {
-//             const isCorrectType = b.status === "Đang sử dụng" || b.status === "Đã trả phòng";
-//             const matchFilter = filter === "Tất cả" || b.status === filter;
-//             return isCorrectType && matchFilter;
-//           }).slice(0, visibleCount);
+
 
   const handleDelete = async (id: number) => {
     try {
