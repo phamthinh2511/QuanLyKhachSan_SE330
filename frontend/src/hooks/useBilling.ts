@@ -33,12 +33,17 @@ export function useBilling() {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const response = await checkout(request);
+        if (response.code >= 400 || !response.result) {
+          const errorMsg = response.message || "Lỗi checkout không xác định";
+          setState((prev) => ({ ...prev, loading: false, error: errorMsg }));
+          throw new Error(errorMsg);
+        }
         setState((prev) => ({
           ...prev,
           loading: false,
           error: null,
         }));
-        return response;
+        return response.result;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Lỗi checkout không xác định";
@@ -54,8 +59,8 @@ export function useBilling() {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const response = await addServiceUsage(request);
-        if (response.message.startsWith("Lỗi")) {
-          const errorMsg = response.message;
+        if (response.code >= 400 || !response.result) {
+          const errorMsg = response.message || "Lỗi thêm dịch vụ không xác định";
           setState((prev) => ({ ...prev, loading: false, error: errorMsg }));
           throw new Error(errorMsg);
         }
@@ -63,9 +68,9 @@ export function useBilling() {
           ...prev,
           loading: false,
           error: null,
-          lastAddedService: response,
+          lastAddedService: response.result,
         }));
-        return response;
+        return response.result;
       } catch (err) {
         const errorMessage =
           err instanceof Error
@@ -89,8 +94,8 @@ export function useBilling() {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const response = await recordRoomInspection(request);
-        if (response.message.startsWith("Lỗi")) {
-          const errorMsg = response.message;
+        if (response.code >= 400 || !response.result) {
+          const errorMsg = response.message || "Lỗi ghi nhận kiểm kê không xác định";
           setState((prev) => ({ ...prev, loading: false, error: errorMsg }));
           throw new Error(errorMsg);
         }
@@ -98,9 +103,9 @@ export function useBilling() {
           ...prev,
           loading: false,
           error: null,
-          lastInspection: response,
+          lastInspection: response.result,
         }));
-        return response;
+        return response.result;
       } catch (err) {
         const errorMessage =
           err instanceof Error

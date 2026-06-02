@@ -1,11 +1,10 @@
 package hotelmanagement.backend.controller;
 
 import hotelmanagement.backend.dto.request.DichvuRequestDto;
+import hotelmanagement.backend.dto.response.ApiResponse;
 import hotelmanagement.backend.dto.response.DichvuResponseDto;
 import hotelmanagement.backend.service.DichvuService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,30 +16,43 @@ public class DichvuController {
     private final DichvuService dichvuService;
 
     @GetMapping
-    public ResponseEntity<List<DichvuResponseDto>> getAll() { 
-        return ResponseEntity.ok(dichvuService.getAll()); 
+    public ApiResponse<List<DichvuResponseDto>> getAll() { 
+        return ApiResponse.<List<DichvuResponseDto>>builder()
+                .result(dichvuService.getAll())
+                .build(); 
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DichvuResponseDto> getById(@PathVariable Integer id) {
-        return ResponseEntity.ok(dichvuService.getById(id));
+    public ApiResponse<DichvuResponseDto> getById(@PathVariable Integer id) {
+        return ApiResponse.<DichvuResponseDto>builder()
+                .result(dichvuService.getById(id))
+                .build();
     }
 
     @PostMapping
-    public ResponseEntity<DichvuResponseDto> create(@RequestBody DichvuRequestDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(dichvuService.create(dto));
+    public ApiResponse<DichvuResponseDto> create(@RequestBody DichvuRequestDto dto) {
+        return ApiResponse.<DichvuResponseDto>builder()
+                .code(201)
+                .message("Tạo dịch vụ thành công")
+                .result(dichvuService.create(dto))
+                .build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DichvuResponseDto> update(
+    public ApiResponse<DichvuResponseDto> update(
             @PathVariable Integer id,
             @RequestBody DichvuRequestDto dto){
-        return ResponseEntity.ok(dichvuService.update(id, dto));
+        return ApiResponse.<DichvuResponseDto>builder()
+                .message("Cập nhật dịch vụ thành công")
+                .result(dichvuService.update(id, dto))
+                .build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ApiResponse<Void> delete(@PathVariable Integer id) {
         dichvuService.delete(id);
-        return ResponseEntity.noContent().build();
+        return ApiResponse.<Void>builder()
+                .message("Xóa dịch vụ thành công")
+                .build();
     }
 }

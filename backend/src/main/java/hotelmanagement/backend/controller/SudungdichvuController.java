@@ -1,11 +1,10 @@
 package hotelmanagement.backend.controller;
 
 import hotelmanagement.backend.dto.request.SudungdichvuRequestDto;
+import hotelmanagement.backend.dto.response.ApiResponse;
 import hotelmanagement.backend.dto.response.SudungdichvuResponseDto;
 import hotelmanagement.backend.service.SudungdichvuService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,34 +19,47 @@ public class SudungdichvuController {
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<List<SudungdichvuResponseDto>> getAll() {
-        return ResponseEntity.ok(sudungdichvuService.getAll());
+    public ApiResponse<List<SudungdichvuResponseDto>> getAll() {
+        return ApiResponse.<List<SudungdichvuResponseDto>>builder()
+                .result(sudungdichvuService.getAll())
+                .build();
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<SudungdichvuResponseDto> getById(@PathVariable Integer id) {
-        return ResponseEntity.ok(sudungdichvuService.getById(id));
+    public ApiResponse<SudungdichvuResponseDto> getById(@PathVariable Integer id) {
+        return ApiResponse.<SudungdichvuResponseDto>builder()
+                .result(sudungdichvuService.getById(id))
+                .build();
     }
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<SudungdichvuResponseDto> create(@RequestBody SudungdichvuRequestDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(sudungdichvuService.create(dto));
+    public ApiResponse<SudungdichvuResponseDto> create(@RequestBody SudungdichvuRequestDto dto) {
+        return ApiResponse.<SudungdichvuResponseDto>builder()
+                .code(201)
+                .message("Tạo lượt sử dụng dịch vụ thành công")
+                .result(sudungdichvuService.create(dto))
+                .build();
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<SudungdichvuResponseDto> update(
+    public ApiResponse<SudungdichvuResponseDto> update(
             @PathVariable Integer id,
             @RequestBody SudungdichvuRequestDto dto) {
-        return ResponseEntity.ok(sudungdichvuService.update(id, dto));
+        return ApiResponse.<SudungdichvuResponseDto>builder()
+                .message("Cập nhật lượt sử dụng dịch vụ thành công")
+                .result(sudungdichvuService.update(id, dto))
+                .build();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ApiResponse<Void> delete(@PathVariable Integer id) {
         sudungdichvuService.delete(id);
-        return ResponseEntity.noContent().build();
+        return ApiResponse.<Void>builder()
+                .message("Xóa lượt sử dụng dịch vụ thành công")
+                .build();
     }
 }
