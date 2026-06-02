@@ -19,12 +19,12 @@ const fallbackRooms: Room[] = [
 ];
 
 const fallbackBookings: Booking[] = [
-  { id: 1, bookingCode: "1", customerName: "Nguyễn Văn A", roomNumber: "101", checkIn: "2026-06-01", checkOut: "2026-06-03", bookingDate: "2026-05-30", status: "Đã trả phòng", amount: 1000000, guests: 2 },
-  { id: 2, bookingCode: "2", customerName: "Trần Thị B", roomNumber: "102", checkIn: "2026-06-02", checkOut: "2026-06-05", bookingDate: "2026-05-31", status: "Đang sử dụng", amount: 1500000, guests: 2 },
-  { id: 3, bookingCode: "3", customerName: "Lê Văn C", roomNumber: "201", checkIn: "2026-06-02", checkOut: "2026-06-04", bookingDate: "2026-06-01", status: "Đang sử dụng", amount: 1600000, guests: 1 },
-  { id: 4, bookingCode: "4", customerName: "Phạm Minh D", roomNumber: "202", checkIn: "2026-06-03", checkOut: "2026-06-06", bookingDate: "2026-06-02", status: "Chưa nhận", amount: 2400000, guests: 3 },
-  { id: 5, bookingCode: "5", customerName: "Hoàng Văn E", roomNumber: "302", checkIn: "2026-06-01", checkOut: "2026-06-02", bookingDate: "2026-05-29", status: "Đã trả phòng", amount: 1500000, guests: 2 },
-  { id: 6, bookingCode: "6", customerName: "Ngô Thị F", roomNumber: "402", checkIn: "2026-06-02", checkOut: "2026-06-05", bookingDate: "2026-05-31", status: "Đang sử dụng", amount: 2400000, guests: 2 },
+  { id: 1, bookingCode: "1", customerName: "Nguyễn Văn A", roomNumber: "101", checkIn: "2026-06-01", checkOut: "2026-06-03", status: "Đã trả phòng", amount: 1000000, guests: 2 },
+  { id: 2, bookingCode: "2", customerName: "Trần Thị B", roomNumber: "102", checkIn: "2026-06-02", checkOut: "2026-06-05", status: "Đang sử dụng", amount: 1500000, guests: 2 },
+  { id: 3, bookingCode: "3", customerName: "Lê Văn C", roomNumber: "201", checkIn: "2026-06-02", checkOut: "2026-06-04", status: "Đang sử dụng", amount: 1600000, guests: 1 },
+  { id: 4, bookingCode: "4", customerName: "Phạm Minh D", roomNumber: "202", checkIn: "2026-06-03", checkOut: "2026-06-06", status: "Chưa nhận", amount: 2400000, guests: 3 },
+  { id: 5, bookingCode: "5", customerName: "Hoàng Văn E", roomNumber: "302", checkIn: "2026-06-01", checkOut: "2026-06-02", status: "Đã trả phòng", amount: 1500000, guests: 2 },
+  { id: 6, bookingCode: "6", customerName: "Ngô Thị F", roomNumber: "402", checkIn: "2026-06-02", checkOut: "2026-06-05", status: "Đang sử dụng", amount: 2400000, guests: 2 },
 ];
 
 export default function RoomPerformance() {
