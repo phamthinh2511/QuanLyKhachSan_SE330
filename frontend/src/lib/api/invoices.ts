@@ -7,8 +7,46 @@ export interface CreateInvoicePayload {
   paymentMethod: string;
 }
 
+export interface PaginatedInvoices {
+  content: Invoice[];
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+  totalCount: number;
+  paidAmount: number;
+  pendingAmount: number;
+}
+
 export async function getAllInvoices(): Promise<Invoice[]> {
   return apiClient<Invoice[]>("/api/invoices");
+}
+
+export async function getPagedInvoices(params: {
+  year?: number;
+  month?: number;
+  search?: string;
+  status?: string;
+  page: number;
+  size: number;
+}): Promise<PaginatedInvoices> {
+  const queryParams: Record<string, string> = {
+    page: String(params.page),
+    size: String(params.size),
+  };
+  if (params.year !== undefined) queryParams.year = String(params.year);
+  if (params.month !== undefined) queryParams.month = String(params.month);
+  if (params.search !== undefined && params.search.trim() !== "") {
+    queryParams.search = params.search.trim();
+  }
+  if (params.status !== undefined && params.status !== "Tất cả") {
+    queryParams.status = params.status;
+  }
+
+  return apiClient<PaginatedInvoices>("/api/invoices/paged", {
+    params: queryParams,
+  });
 }
 
 export async function getInvoiceById(id: number): Promise<Invoice> {
@@ -35,10 +73,15 @@ export async function updateInvoice(id: number, payload: Partial<Invoice>): Prom
   });
 }
 
-export async function exportInvoices(): Promise<Blob> {
+export async function exportInvoices(year?: number, month?: number): Promise<Blob> {
   const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
   const token = getToken();
-  const res = await fetch(`${API_URL}/api/invoices/export`, {
+
+  const url = new URL(`${API_URL}/api/invoices/export`);
+  if (year !== undefined) url.searchParams.append("year", String(year));
+  if (month !== undefined) url.searchParams.append("month", String(month));
+
+  const res = await fetch(url.toString(), {
     headers: {
       Authorization: token ? `Bearer ${token}` : "",
     },
