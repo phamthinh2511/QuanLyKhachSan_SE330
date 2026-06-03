@@ -15,8 +15,8 @@ export default function OccupancyRate({ data }: Props) {
   }));
 
   const avgOccupancy = data.occupancy && data.occupancy.length > 0
-    ? Math.round(data.occupancy.reduce((s, v) => s + v, 0) / data.occupancy.length)
-    : 0;
+    ? (data.occupancy.reduce((s, v) => s + v, 0) / data.occupancy.length).toFixed(2)
+    : "0.00";
 
   return (
     <div className="space-y-4">
@@ -30,7 +30,7 @@ export default function OccupancyRate({ data }: Props) {
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-              <Tooltip formatter={(v: any) => `${v}%`} />
+              <Tooltip formatter={(v: any) => `${Number(v).toFixed(2)}%`} />
               <Line type="monotone" dataKey="occupancy" name="Tỷ lệ lấp đầy"
                 stroke="#8b5cf6" strokeWidth={2.5} dot={{ r: 4 }} />
             </LineChart>

@@ -75,7 +75,7 @@ export default function BookingsPage() {
       await fetchData();
     } catch (error: any) {
       alert(error.message || "Nhận phòng thất bại!");
-    } military: {
+    } finally {
       setLoading(false);
     }
   };

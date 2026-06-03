@@ -276,4 +276,10 @@ public class InvoiceService {
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
+
+    public List<InvoiceResponseDto> getInvoicesInPeriod(LocalDate start, LocalDate end) {
+        return hoadonRepository.findByNgayThanhToanBetween(start, end).stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
 }
