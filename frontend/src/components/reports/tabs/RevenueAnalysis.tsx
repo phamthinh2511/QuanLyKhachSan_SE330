@@ -26,8 +26,8 @@ export default function RevenueAnalysis({ data, stats }: Props) {
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: any) => `$${v.toLocaleString()}`} />
+              <YAxis tick={{ fontSize: 11 }} width={60} tickFormatter={(v: any) => v >= 1000000 ? `${(v / 1000000).toFixed(1).replace(/\.0$/, "")}M` : v >= 1000 ? `${(v / 1000).toFixed(1).replace(/\.0$/, "")}k` : v} />
+              <Tooltip formatter={(v: any) => `${v.toLocaleString()} VNĐ`} />
               <Legend />
               <Bar dataKey="revenue" name="Doanh thu" fill="#3b82f6" radius={[4,4,0,0]} />
               <Bar dataKey="profit"  name="Lợi nhuận" fill="#10b981" radius={[4,4,0,0]} />
@@ -49,8 +49,8 @@ export default function RevenueAnalysis({ data, stats }: Props) {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: any) => `$${v.toLocaleString()}`} />
+              <YAxis tick={{ fontSize: 11 }} width={60} tickFormatter={(v: any) => v >= 1000000 ? `${(v / 1000000).toFixed(1).replace(/\.0$/, "")}M` : v >= 1000 ? `${(v / 1000).toFixed(1).replace(/\.0$/, "")}k` : v} />
+              <Tooltip formatter={(v: any) => `${v.toLocaleString()} VNĐ`} />
               <Area type="monotone" dataKey="revenue" name="Doanh thu"
                 stroke="#3b82f6" strokeWidth={2} fill="url(#revGrad)" />
             </AreaChart>

@@ -39,9 +39,9 @@ export default function ServiceUsageReport() {
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={barData} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis type="number" tick={{ fontSize: 11 }} />
+            <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v: any) => v >= 1000000 ? `${(v / 1000000).toFixed(1).replace(/\.0$/, "")}M` : v >= 1000 ? `${(v / 1000).toFixed(1).replace(/\.0$/, "")}k` : v} />
             <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={100} />
-            <Tooltip formatter={(v: any) => `$${v}`} />
+            <Tooltip formatter={(v: any) => `${Number(v).toLocaleString()} VNĐ`} />
             <Bar dataKey="revenue" name="Doanh thu" fill="#10b981" radius={[0,4,4,0]} />
           </BarChart>
         </ResponsiveContainer>

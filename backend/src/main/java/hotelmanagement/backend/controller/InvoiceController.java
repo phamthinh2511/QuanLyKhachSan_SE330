@@ -81,9 +81,30 @@ public class InvoiceController {
 
     @GetMapping("/revenue-report/export")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public void exportRevenueReport(HttpServletResponse response) throws IOException {
+    public void exportRevenueReport(
+            @RequestParam String type,
+            @RequestParam int year,
+            @RequestParam(required = false) Integer value,
+            HttpServletResponse response) throws IOException {
         response.setContentType("text/csv; charset=UTF-8");
-        response.setHeader("Content-Disposition", "attachment; filename=revenue_report.csv");
+
+        LocalDate startDate;
+        LocalDate endDate;
+
+        if ("month".equalsIgnoreCase(type)) {
+            startDate = LocalDate.of(year, value, 1);
+            endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+        } else if ("quarter".equalsIgnoreCase(type)) {
+            int startMonth = (value - 1) * 3 + 1;
+            startDate = LocalDate.of(year, startMonth, 1);
+            LocalDate lastMonthOfQuarter = LocalDate.of(year, startMonth + 2, 1);
+            endDate = lastMonthOfQuarter.withDayOfMonth(lastMonthOfQuarter.lengthOfMonth());
+        } else { // year
+            startDate = LocalDate.of(year, 1, 1);
+            endDate = LocalDate.of(year, 12, 31);
+        }
+
+        response.setHeader("Content-Disposition", String.format("attachment; filename=revenue_report_%s_%d_%s.csv", type, year, value != null ? value : ""));
 
         java.io.OutputStream os = response.getOutputStream();
         // Write UTF-8 BOM
@@ -92,7 +113,7 @@ public class InvoiceController {
         PrintWriter writer = new PrintWriter(new java.io.OutputStreamWriter(os, java.nio.charset.StandardCharsets.UTF_8), true);
         writer.println("Ngày,Số lượng hóa đơn,Doanh thu phòng,Doanh thu dịch vụ,Tổng doanh thu");
 
-        List<InvoiceResponseDto> list = invoiceService.getAll();
+        List<InvoiceResponseDto> list = invoiceService.getInvoicesInPeriod(startDate, endDate);
         
         // Group by Date
         Map<LocalDate, List<InvoiceResponseDto>> grouped = list.stream()

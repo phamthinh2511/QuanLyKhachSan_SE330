@@ -72,4 +72,10 @@ public interface HoadonRepository extends JpaRepository<Hoadon, Integer> {
 
     @Query("SELECT COALESCE(SUM(h.tongTien), 0.0) FROM Hoadon h WHERE h.trangThai = :status")
     double sumAmountByStatusAllTime(@Param("status") String status);
+
+    @Query("SELECT COALESCE(SUM(pt.soKhach), 0L) FROM Hoadon h JOIN h.maPhieuThue pt WHERE h.ngayThanhToan BETWEEN :start AND :end")
+    long sumGuestsWithDate(@Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    @Query("SELECT COALESCE(SUM(pt.soKhach), 0L) FROM Hoadon h JOIN h.maPhieuThue pt")
+    long sumGuestsAllTime();
 }
