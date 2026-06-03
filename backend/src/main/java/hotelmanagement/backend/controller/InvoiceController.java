@@ -2,6 +2,7 @@ package hotelmanagement.backend.controller;
 
 import hotelmanagement.backend.dto.request.InvoiceRequestDto;
 import hotelmanagement.backend.dto.response.InvoiceResponseDto;
+import hotelmanagement.backend.dto.response.InvoicePageResponseDto;
 import hotelmanagement.backend.service.InvoiceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,9 +30,26 @@ public class InvoiceController {
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
     public ResponseEntity<List<InvoiceResponseDto>> getAll() {
         return ResponseEntity.ok(invoiceService.getAll());
-    }    @GetMapping("/export")
+    }
+
+    @GetMapping("/paged")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public void exportInvoicesToCsv(HttpServletResponse response) throws IOException {
+    public ResponseEntity<InvoicePageResponseDto> getPaged(
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(invoiceService.getPagedInvoices(year, month, search, status, page, size));
+    }
+
+    @GetMapping("/export")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
+    public void exportInvoicesToCsv(
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            HttpServletResponse response) throws IOException {
         response.setContentType("text/csv; charset=UTF-8");
         response.setHeader("Content-Disposition", "attachment; filename=invoices.csv");
 
@@ -42,7 +60,7 @@ public class InvoiceController {
         PrintWriter writer = new PrintWriter(new java.io.OutputStreamWriter(os, java.nio.charset.StandardCharsets.UTF_8), true);
         writer.println("Mã hóa đơn,Mã đặt phòng,Tên khách hàng,Số phòng,Tiền phòng,Tiền dịch vụ,Tổng tiền,Phương thức thanh toán,Trạng thái,Ngày thanh toán");
 
-        List<InvoiceResponseDto> list = invoiceService.getAll();
+        List<InvoiceResponseDto> list = invoiceService.getFilteredInvoices(year, month);
         for (InvoiceResponseDto dto : list) {
             String customerName = dto.getCustomerName() != null ? dto.getCustomerName().replace(",", " ") : "";
             writer.println(String.format("%s,%s,%s,%s,%.2f,%.2f,%.2f,%s,%s,%s",

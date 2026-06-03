@@ -1,25 +1,18 @@
 import { Invoice } from "@/types/invoice";
 
-interface Props { invoices: Invoice[] }
+interface Props {
+  totalCount: number;
+  paidAmount: number;
+  pendingAmount: number;
+  monthLabel: string;
+}
 
-export default function InvoiceStatCards({ invoices }: Props) {
-  const now = new Date();
-  const monthLabel = `Tháng ${now.getMonth() + 1}/${now.getFullYear()}`;
-
-  const thisMonth = invoices.filter((inv) => {
-    const d = new Date(inv.createdAt);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  });
-
-  const total   = thisMonth.length;
-  const paid    = thisMonth.filter((i) => i.status === "Đã thanh toán").reduce((s, i) => s + i.total, 0);
-  const pending = thisMonth.filter((i) => i.status !== "Đã thanh toán").reduce((s, i) => s + i.total, 0);
-
+export default function InvoiceStatCards({ totalCount, paidAmount, pendingAmount, monthLabel }: Props) {
   const cards = [
-    { label: `Tổng hóa đơn (${monthLabel})`, value: String(total),              color: "text-gray-800"   },
-    { label: `Đã thanh toán (${monthLabel})`, value: `${paid.toLocaleString()}`,    color: "text-green-600"  },
-    { label: `Chờ thanh toán (${monthLabel})`,value: `${pending.toLocaleString()}`, color: "text-orange-500" },
-    { label: `Tháng này`,                     value: String(total),              color: "text-blue-600"   },
+    { label: `Tổng hóa đơn`, value: String(totalCount), color: "text-gray-800" },
+    { label: `Đã thanh toán`, value: `${paidAmount.toLocaleString()} đ`, color: "text-green-600" },
+    { label: `Chờ thanh toán`, value: `${pendingAmount.toLocaleString()} đ`, color: "text-orange-500" },
+    { label: `Khoảng thời gian`, value: monthLabel, color: "text-blue-600" },
   ];
 
   return (
