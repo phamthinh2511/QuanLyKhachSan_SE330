@@ -7,6 +7,7 @@ import hotelmanagement.backend.service.SudungdichvuService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class SudungdichvuController {
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ApiResponse<SudungdichvuResponseDto> create(@RequestBody SudungdichvuRequestDto dto) {
+    public ApiResponse<SudungdichvuResponseDto> create(@Valid @RequestBody SudungdichvuRequestDto dto) {
         return ApiResponse.<SudungdichvuResponseDto>builder()
                 .code(201)
                 .message("Tạo lượt sử dụng dịch vụ thành công")
@@ -47,7 +48,7 @@ public class SudungdichvuController {
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
     public ApiResponse<SudungdichvuResponseDto> update(
             @PathVariable Integer id,
-            @RequestBody SudungdichvuRequestDto dto) {
+            @Valid @RequestBody SudungdichvuRequestDto dto) {
         return ApiResponse.<SudungdichvuResponseDto>builder()
                 .message("Cập nhật lượt sử dụng dịch vụ thành công")
                 .result(sudungdichvuService.update(id, dto))

@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -148,7 +149,7 @@ public class InvoiceController {
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<InvoiceResponseDto> create(@RequestBody InvoiceRequestDto dto) {
+    public ResponseEntity<InvoiceResponseDto> create(@Valid @RequestBody InvoiceRequestDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(invoiceService.create(dto));
     }
 

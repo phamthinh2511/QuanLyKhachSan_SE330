@@ -10,6 +10,7 @@ import hotelmanagement.backend.dto.response.CheckoutResponse;
 import hotelmanagement.backend.service.BillingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 /**
  * Controller xử lý dịch vụ phát sinh & thanh toán
@@ -28,7 +29,7 @@ public class BillingController {
      * POST /api/billing/add-service
      */
     @PostMapping("/add-service")
-    public ApiResponse<SudungdichvuResponse> addServiceUsage(@RequestBody SudungdichvuRequest request) {
+    public ApiResponse<SudungdichvuResponse> addServiceUsage(@Valid @RequestBody SudungdichvuRequest request) {
         SudungdichvuResponse response = billingService.addServiceUsage(request);
         if (response.getMessage() != null && response.getMessage().startsWith("Lỗi")) {
             return ApiResponse.<SudungdichvuResponse>builder()
@@ -70,7 +71,7 @@ public class BillingController {
      * POST /api/billing/checkout
      */
     @PostMapping("/checkout")
-    public ApiResponse<CheckoutResponse> checkout(@RequestBody CheckoutRequest request) {
+    public ApiResponse<CheckoutResponse> checkout(@Valid @RequestBody CheckoutRequest request) {
         CheckoutResponse response = billingService.checkout(request);
         if (response.getMessage() != null && response.getMessage().startsWith("Lỗi")) {
             return ApiResponse.<CheckoutResponse>builder()
