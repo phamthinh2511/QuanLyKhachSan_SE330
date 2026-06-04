@@ -16,6 +16,7 @@ const statusStyle: Record<string, string> = {
   "Checked-out":  "bg-gray-100 text-gray-500",
   "Đã đặt":       "bg-blue-100 text-blue-700",
   "Đã hủy":       "bg-red-100 text-red-500",
+  "Đặt trước":    "bg-blue-100 text-blue-700",
 };
 
 export default function BookingTodayTable({ bookings, onEdit, onDelete, onRowContextMenu }: Props) {
