@@ -8,7 +8,8 @@ export type BookingStatus =
   | "Đã nhận phòng đặt trước"
   | "Đã nhận phòng"
   | "Đang sử dụng"
-  | "Đã trả phòng";
+  | "Đã trả phòng"
+  | "Đặt trước";
 
 export interface Booking {
   id: number;

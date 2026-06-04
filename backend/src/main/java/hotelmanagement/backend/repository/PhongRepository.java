@@ -12,6 +12,10 @@ import java.util.List;
 @Repository
 public interface PhongRepository extends JpaRepository<Phong, Integer> {
     List<Phong> findByTrangThai(String trangThai);
+    long countByTrangThai(String trangThai);
     List<Phong> findBySoTang(Integer soTang);
     List<Phong> findByMaLoaiPhong(Integer maLoaiPhong);
+
+    @Query("SELECT p FROM Phong p JOIN FETCH p.maLoaiPhong")
+    List<Phong> findAllWithLoaiPhong();
 }
