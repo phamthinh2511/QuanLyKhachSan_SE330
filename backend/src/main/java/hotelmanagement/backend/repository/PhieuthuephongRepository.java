@@ -10,6 +10,10 @@ import java.util.List;
 public interface PhieuthuephongRepository extends JpaRepository<Phieuthuephong, Integer> {
     List<Phieuthuephong> findByMaDatPhong(Datphong maDatPhong);
 
+    @org.springframework.data.jpa.repository.Query("SELECT p FROM Phieuthuephong p WHERE p.ngayNhanPhong <= :end AND p.ngayTraPhong >= :start")
+    List<Phieuthuephong> findActiveInPeriod(@org.springframework.data.repository.query.Param("start") java.time.LocalDate start,
+                                            @org.springframework.data.repository.query.Param("end") java.time.LocalDate end);
+
     @org.springframework.data.jpa.repository.Query("SELECT ct.maPhong.id FROM CtPhieuthuephong ct " +
             "WHERE ct.maPhieuThue.maDatPhong IS NULL " +
             "AND ct.maPhieuThue.trangThai NOT IN ('Đã trả phòng', 'Đã hủy') " +

@@ -43,6 +43,14 @@ public class DatabaseMigration implements CommandLineRunner {
         } catch (Exception e) {
             System.out.println("[DB Migration] hoadon columns: " + e.getMessage());
         }
+
+        try {
+            // Thêm index cho NgayThanhToan trong bảng hoadon
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_hoadon_ngaythanhtoan ON hoadon (ngaythanhtoan)");
+            System.out.println("[DB Migration] Index idx_hoadon_ngaythanhtoan => OK");
+        } catch (Exception e) {
+            System.out.println("[DB Migration] Index idx_hoadon_ngaythanhtoan error: " + e.getMessage());
+        }
     }
 }
 

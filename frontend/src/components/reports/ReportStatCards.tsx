@@ -1,17 +1,17 @@
 interface Props {
   stats: {
-    revenue: number; revenueChange: string;
-    profit: number;  profitChange: string;
-    occupancy: number; occupancyChange: string;
-    guests: number;  guestsChange: string;
+    revenue: number;
+    profit: number;
+    occupancy: number;
+    guests: number;
   };
 }
 
 export default function ReportStatCards({ stats }: Props) {
   const cards = [
-    { label: "Tổng doanh thu", value: `$${stats.revenue.toLocaleString()}`,  change: stats.revenueChange,   iconBg: "bg-blue-100",   iconColor: "text-blue-600",   icon: "$" },
-    { label: "Tỷ lệ lấp đầy",  value: `${stats.occupancy}%`,                change: stats.occupancyChange, iconBg: "bg-purple-100", iconColor: "text-purple-600", icon: "⊟" },
-    { label: "Tổng khách",     value: stats.guests.toLocaleString(),         change: stats.guestsChange,    iconBg: "bg-orange-100", iconColor: "text-orange-500", icon: "👤" },
+    { label: "Tổng doanh thu", value: `${stats.revenue.toLocaleString()} VNĐ`,  iconBg: "bg-blue-100",   iconColor: "text-blue-600",   icon: "₫" },
+    { label: "Tỷ lệ lấp đầy",  value: `${stats.occupancy.toFixed(2)}%`,                iconBg: "bg-purple-100", iconColor: "text-purple-600", icon: "⊟" },
+    { label: "Tổng khách",     value: stats.guests.toLocaleString(),         iconBg: "bg-orange-100", iconColor: "text-orange-500", icon: "👤" },
   ];
 
   return (

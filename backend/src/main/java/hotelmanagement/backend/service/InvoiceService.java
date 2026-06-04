@@ -9,6 +9,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import hotelmanagement.backend.dto.response.InvoicePageResponseDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -198,5 +204,82 @@ public class InvoiceService {
         }
 
         hoadonRepository.delete(hoadon);
+    }
+
+    public InvoicePageResponseDto getPagedInvoices(Integer year, Integer month, String search, String status, int page, int size) {
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+
+        if (year != null && month != null) {
+            startDate = LocalDate.of(year, month, 1);
+            endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+        }
+
+        String searchVal = search != null ? search.trim() : "";
+        String statusVal = status != null ? status.trim() : "";
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("ngayThanhToan").descending().and(Sort.by("id").descending()));
+
+        Page<Hoadon> hoadonPage;
+        long totalCount;
+        double paidAmount;
+        double pendingAmount;
+
+        if (startDate != null && endDate != null) {
+            hoadonPage = hoadonRepository.searchInvoicesWithDate(startDate, endDate, searchVal, statusVal, pageable);
+            totalCount = hoadonRepository.countInvoicesWithDate(startDate, endDate);
+            double totalAmount = hoadonRepository.sumTotalAmountWithDate(startDate, endDate);
+            paidAmount = hoadonRepository.sumAmountByStatusWithDate(startDate, endDate, "Đã thanh toán");
+            pendingAmount = totalAmount - paidAmount;
+        } else {
+            hoadonPage = hoadonRepository.searchInvoicesAllTime(searchVal, statusVal, pageable);
+            totalCount = hoadonRepository.countInvoicesAllTime();
+            double totalAmount = hoadonRepository.sumTotalAmountAllTime();
+            paidAmount = hoadonRepository.sumAmountByStatusAllTime("Đã thanh toán");
+            pendingAmount = totalAmount - paidAmount;
+        }
+
+        List<InvoiceResponseDto> content = hoadonPage.getContent().stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+
+        return InvoicePageResponseDto.builder()
+                .content(content)
+                .pageNumber(hoadonPage.getNumber())
+                .pageSize(hoadonPage.getSize())
+                .totalElements(hoadonPage.getTotalElements())
+                .totalPages(hoadonPage.getTotalPages())
+                .last(hoadonPage.isLast())
+                .totalCount(totalCount)
+                .paidAmount(paidAmount)
+                .pendingAmount(pendingAmount)
+                .build();
+    }
+
+    public List<InvoiceResponseDto> getFilteredInvoices(Integer year, Integer month) {
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+
+        if (year != null && month != null) {
+            startDate = LocalDate.of(year, month, 1);
+            endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+        }
+
+        List<Hoadon> list;
+        if (startDate != null && endDate != null) {
+            list = hoadonRepository.findByNgayThanhToanBetween(startDate, endDate);
+        } else {
+            list = hoadonRepository.findAll();
+        }
+
+        return list.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<InvoiceResponseDto> getInvoicesInPeriod(LocalDate start, LocalDate end) {
+        return hoadonRepository.findByNgayThanhToanBetween(start, end).stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 }
