@@ -6,6 +6,7 @@ import hotelmanagement.backend.dto.response.DichvuResponseDto;
 import hotelmanagement.backend.service.DichvuService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class DichvuController {
     }
 
     @PostMapping
-    public ApiResponse<DichvuResponseDto> create(@RequestBody DichvuRequestDto dto) {
+    public ApiResponse<DichvuResponseDto> create(@Valid @RequestBody DichvuRequestDto dto) {
         return ApiResponse.<DichvuResponseDto>builder()
                 .code(201)
                 .message("Tạo dịch vụ thành công")
@@ -41,7 +42,7 @@ public class DichvuController {
     @PutMapping("/{id}")
     public ApiResponse<DichvuResponseDto> update(
             @PathVariable Integer id,
-            @RequestBody DichvuRequestDto dto){
+            @Valid @RequestBody DichvuRequestDto dto){
         return ApiResponse.<DichvuResponseDto>builder()
                 .message("Cập nhật dịch vụ thành công")
                 .result(dichvuService.update(id, dto))
