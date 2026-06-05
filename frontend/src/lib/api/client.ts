@@ -34,7 +34,13 @@ export async function apiClient<T>(endpoint: string, options: FetchOptions = {})
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.message ?? `Lỗi ${response.status}`);
+      throw {
+              isApiError: true,
+              status: response.status,
+              code: errorData.code || response.status,
+              message: errorData.message || `Lỗi ${response.status}`,
+              result: errorData.result || null
+            };
     }
 
     // DELETE trả về 204 No Content
@@ -43,17 +49,20 @@ export async function apiClient<T>(endpoint: string, options: FetchOptions = {})
     }
 
     return response.json();
-  } catch (error) {
-    if (error instanceof Error) {
-      if (
-        error.name === "TypeError" ||
-        error.message.includes("fetch") ||
-        error.message.includes("Load failed")
-      ) {
-        throw new Error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng hoặc database!");
+  } catch (error: any) {
+        if (error && error.isApiError) {
+          throw error;
+        }
+        if (error instanceof Error) {
+          if (
+            error.name === "TypeError" ||
+            error.message.includes("fetch") ||
+            error.message.includes("Load failed")
+          ) {
+            throw new Error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng hoặc database!");
+          }
+          throw error;
+        }
+        throw new Error("Đã xảy ra lỗi không xác định!");
       }
-      throw error;
     }
-    throw new Error("Đã xảy ra lỗi không xác định!");
-  }
-}
