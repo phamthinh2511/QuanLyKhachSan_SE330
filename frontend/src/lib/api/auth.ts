@@ -1,27 +1,23 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+/**
+ * @file API calls for Authentication.
+ * This file uses apiClient but returns the full ApiResponse
+ * so the login component can react to different codes and messages.
+ */
+import { apiClient, ApiResponse } from "./client";
 
 export interface LoginPayload {
   username: string;
   password: string;
 }
 
-export interface LoginResponse {
-  code: number;
-  message: string;
-  result: string; // JWT token
-}
+// The response for a login request is the full ApiResponse containing the token.
+export type LoginResponse = ApiResponse<string>;
 
 export async function loginApi(payload: LoginPayload): Promise<LoginResponse> {
-  const res = await fetch(`${API_URL}/api/auth/login`, {
+  // We call apiClient but expect the full ApiResponse, not just the result.
+  const response = await apiClient<LoginResponse>("/api/auth/login", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error.message ?? "Đăng nhập thất bại");
-  }
-
-  return res.json();
+  return response;
 }

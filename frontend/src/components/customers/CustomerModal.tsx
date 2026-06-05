@@ -6,9 +6,8 @@ import { Customer, CustomerStatus } from "@/types/customer";
 
 interface Props {
   customer: Customer | null;
-  onSave: (data: Customer) => void;
+  onSave: (data: Omit<Customer, "id">) => void; // Sửa lại kiểu dữ liệu mong đợi
   onClose: () => void;
-  onView?: (data: Customer) => void;
 }
 
 const emptyForm: Omit<Customer, "id"> = {
@@ -20,12 +19,20 @@ export default function CustomerModal({ customer, onSave, onClose }: Props) {
   const [form, setForm] = useState<Omit<Customer, "id">>(emptyForm);
 
   useEffect(() => {
-    setForm(customer ? { ...customer } : emptyForm);
+    // Khi chỉnh sửa, loại bỏ 'id' khỏi object customer để khớp với kiểu 'form'
+    if (customer) {
+      const { id, ...formData } = customer;
+      setForm(formData);
+    } else {
+      setForm(emptyForm);
+    }
   }, [customer]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ ...form, id: customer?.id ?? 0 });
+    // Gửi object 'form' đi, không cần thêm 'id' ở đây nữa.
+    // Component cha (page.tsx) sẽ quyết định đó là tạo mới hay cập nhật.
+    onSave(form);
   };
 
   const inputClass = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";

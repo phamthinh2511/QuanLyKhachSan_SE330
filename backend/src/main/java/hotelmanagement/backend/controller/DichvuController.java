@@ -17,43 +17,33 @@ public class DichvuController {
     private final DichvuService dichvuService;
 
     @GetMapping
-    public ApiResponse<List<DichvuResponseDto>> getAll() { 
-        return ApiResponse.<List<DichvuResponseDto>>builder()
-                .result(dichvuService.getAll())
-                .build(); 
+    public ApiResponse<List<DichvuResponseDto>> getAll() {
+        return ApiResponse.success(dichvuService.getAll());
     }
 
     @GetMapping("/{id}")
     public ApiResponse<DichvuResponseDto> getById(@PathVariable Integer id) {
-        return ApiResponse.<DichvuResponseDto>builder()
-                .result(dichvuService.getById(id))
-                .build();
+        return ApiResponse.success(dichvuService.getById(id));
     }
 
     @PostMapping
     public ApiResponse<DichvuResponseDto> create(@Valid @RequestBody DichvuRequestDto dto) {
-        return ApiResponse.<DichvuResponseDto>builder()
-                .code(201)
-                .message("Tạo dịch vụ thành công")
-                .result(dichvuService.create(dto))
-                .build();
+        DichvuResponseDto created = dichvuService.create(dto);
+        ApiResponse<DichvuResponseDto> response = ApiResponse.success(created, "Tạo dịch vụ thành công");
+        response.setCode(201);
+        return response;
     }
 
     @PutMapping("/{id}")
     public ApiResponse<DichvuResponseDto> update(
             @PathVariable Integer id,
             @Valid @RequestBody DichvuRequestDto dto){
-        return ApiResponse.<DichvuResponseDto>builder()
-                .message("Cập nhật dịch vụ thành công")
-                .result(dichvuService.update(id, dto))
-                .build();
+        return ApiResponse.success(dichvuService.update(id, dto), "Cập nhật dịch vụ thành công");
     }
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable Integer id) {
         dichvuService.delete(id);
-        return ApiResponse.<Void>builder()
-                .message("Xóa dịch vụ thành công")
-                .build();
+        return ApiResponse.success(null, "Xóa dịch vụ thành công");
     }
 }

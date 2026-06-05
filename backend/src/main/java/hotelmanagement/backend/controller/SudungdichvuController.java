@@ -21,27 +21,22 @@ public class SudungdichvuController {
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
     public ApiResponse<List<SudungdichvuResponseDto>> getAll() {
-        return ApiResponse.<List<SudungdichvuResponseDto>>builder()
-                .result(sudungdichvuService.getAll())
-                .build();
+        return ApiResponse.success(sudungdichvuService.getAll());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
     public ApiResponse<SudungdichvuResponseDto> getById(@PathVariable Integer id) {
-        return ApiResponse.<SudungdichvuResponseDto>builder()
-                .result(sudungdichvuService.getById(id))
-                .build();
+        return ApiResponse.success(sudungdichvuService.getById(id));
     }
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
     public ApiResponse<SudungdichvuResponseDto> create(@Valid @RequestBody SudungdichvuRequestDto dto) {
-        return ApiResponse.<SudungdichvuResponseDto>builder()
-                .code(201)
-                .message("Tạo lượt sử dụng dịch vụ thành công")
-                .result(sudungdichvuService.create(dto))
-                .build();
+        SudungdichvuResponseDto created = sudungdichvuService.create(dto);
+        ApiResponse<SudungdichvuResponseDto> response = ApiResponse.success(created, "Tạo lượt sử dụng dịch vụ thành công");
+        response.setCode(201);
+        return response;
     }
 
     @PutMapping("/{id}")
@@ -49,18 +44,13 @@ public class SudungdichvuController {
     public ApiResponse<SudungdichvuResponseDto> update(
             @PathVariable Integer id,
             @Valid @RequestBody SudungdichvuRequestDto dto) {
-        return ApiResponse.<SudungdichvuResponseDto>builder()
-                .message("Cập nhật lượt sử dụng dịch vụ thành công")
-                .result(sudungdichvuService.update(id, dto))
-                .build();
+        return ApiResponse.success(sudungdichvuService.update(id, dto), "Cập nhật lượt sử dụng dịch vụ thành công");
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
     public ApiResponse<Void> delete(@PathVariable Integer id) {
         sudungdichvuService.delete(id);
-        return ApiResponse.<Void>builder()
-                .message("Xóa lượt sử dụng dịch vụ thành công")
-                .build();
+        return ApiResponse.success(null, "Xóa lượt sử dụng dịch vụ thành công");
     }
 }

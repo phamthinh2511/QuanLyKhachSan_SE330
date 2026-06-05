@@ -22,36 +22,29 @@ public class TaikhoanController {
     @GetMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<List<TaikhoanResponseDto>> getAll() {
-        return ApiResponse.<List<TaikhoanResponseDto>>builder()
-                .result(taikhoanService.getAll())
-                .build();
+        return ApiResponse.success(taikhoanService.getAll());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<TaikhoanResponseDto> getById(@PathVariable Integer id) {
-        return ApiResponse.<TaikhoanResponseDto>builder()
-                .result(taikhoanService.getById(id))
-                .build();
+        return ApiResponse.success(taikhoanService.getById(id));
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<TaikhoanResponseDto> create(@jakarta.validation.Valid @RequestBody TaikhoanRequestDto dto) {
-        return ApiResponse.<TaikhoanResponseDto>builder()
-                .code(201)
-                .message("Tạo tài khoản thành công")
-                .result(taikhoanService.create(dto))
-                .build();
+        TaikhoanResponseDto created = taikhoanService.create(dto);
+        ApiResponse<TaikhoanResponseDto> response = ApiResponse.success(created, "Tạo tài khoản thành công");
+        response.setCode(201);
+        return response;
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<Void> delete(@PathVariable Integer id) {
         taikhoanService.delete(id);
-        return ApiResponse.<Void>builder()
-                .message("Xóa tài khoản thành công")
-                .build();
+        return ApiResponse.success(null, "Xóa tài khoản thành công");
     }
 
     @PutMapping("/me/password")
@@ -60,12 +53,7 @@ public class TaikhoanController {
             Principal principal,
             @jakarta.validation.Valid
             @RequestBody ChangePasswordRequestDto dto) {
-
-
         taikhoanService.changePassword(principal.getName(), dto);
-
-        return ApiResponse.<Void>builder()
-                .message("Đổi mật khẩu thành công")
-                .build();
+        return ApiResponse.success(null, "Đổi mật khẩu thành công");
     }
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Plus } from "lucide-react";
-import { employeesApi } from "@/lib/api/employees";
+import { useEmployees } from "@/hooks/useEmployees"; // 1. Import the new hook
 import { Employee } from "@/types/employee";
 import EmployeeStatCards from "@/components/employees/EmployeeStatCards";
 import EmployeeTable from "@/components/employees/EmployeeTable";
@@ -12,10 +12,17 @@ import EmployeeViewModal from "@/components/employees/EmployeeViewModal";
 const PAGE_SIZE = 10;
 
 export default function EmployeesPage() {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // 2. Use the hook to get data and functions
+  const {
+    employees,
+    loading,
+    error,
+    createEmployee,
+    updateEmployee,
+    deleteEmployee,
+  } = useEmployees();
 
+  // State for UI controls remains in the component
   const [search, setSearch] = useState("");
   const [filterPosition, setFilterPosition] = useState("Tất cả");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -23,23 +30,7 @@ export default function EmployeesPage() {
   const [editing, setEditing] = useState<Employee | null>(null);
   const [viewing, setViewing] = useState<Employee | null>(null);
 
-  const fetchEmployees = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await employeesApi.getAll();
-      if (res.result) setEmployees(res.result);
-    } catch (err: any) {
-      setError(err.message || "Lỗi tải danh sách nhân viên");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
-
+  // Filtering logic remains in the component
   const filtered = employees.filter((e) => {
     const matchSearch =
       e.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -55,14 +46,14 @@ export default function EmployeesPage() {
   const handleSearch = (val: string) => { setSearch(val); setVisibleCount(PAGE_SIZE); };
   const handleFilter = (val: string) => { setFilterPosition(val); setVisibleCount(PAGE_SIZE); };
 
+  // 3. handleSave now uses functions from the hook
   const handleSave = async (data: Employee) => {
     try {
       if (editing) {
-        await employeesApi.update(editing.id, data);
+        await updateEmployee(editing.id, data);
       } else {
-        await employeesApi.create(data);
+        await createEmployee(data);
       }
-      await fetchEmployees();
       setModalOpen(false);
       setEditing(null);
     } catch (err: any) {
@@ -72,11 +63,11 @@ export default function EmployeesPage() {
 
   const handleEdit = (emp: Employee) => { setEditing(emp); setModalOpen(true); };
 
+  // 4. handleDelete now uses the function from the hook
   const handleDelete = async (id: number) => {
     if (confirm("Bạn có chắc muốn xóa nhân viên này?")) {
       try {
-        await employeesApi.delete(id);
-        await fetchEmployees();
+        await deleteEmployee(id);
       } catch (err: any) {
         alert("Lỗi khi xóa nhân viên: " + (err.message || "Không xác định"));
       }

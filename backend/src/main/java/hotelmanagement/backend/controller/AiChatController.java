@@ -28,18 +28,11 @@ public class AiChatController {
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
     public ResponseEntity<ApiResponse<String>> chat(@RequestBody ChatRequest request) {
         if (request.question() == null || request.question().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(ApiResponse.<String>builder()
-                    .code(400)
-                    .message("Câu hỏi không được để trống!")
-                    .build());
+            return ResponseEntity.badRequest().body(ApiResponse.error(400, "Câu hỏi không được để trống!"));
         }
 
         String answer = aiChatService.generateChatResponse(request.question());
         
-        return ResponseEntity.ok(ApiResponse.<String>builder()
-                .code(200)
-                .message("Thành công")
-                .result(answer)
-                .build());
+        return ResponseEntity.ok(ApiResponse.success(answer, "Thành công"));
     }
 }

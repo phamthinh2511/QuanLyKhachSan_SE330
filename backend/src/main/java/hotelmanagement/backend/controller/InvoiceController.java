@@ -1,12 +1,11 @@
 package hotelmanagement.backend.controller;
 
 import hotelmanagement.backend.dto.request.InvoiceRequestDto;
+import hotelmanagement.backend.dto.response.ApiResponse;
 import hotelmanagement.backend.dto.response.InvoiceResponseDto;
 import hotelmanagement.backend.dto.response.InvoicePageResponseDto;
 import hotelmanagement.backend.service.InvoiceService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -29,20 +28,20 @@ public class InvoiceController {
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<List<InvoiceResponseDto>> getAll() {
-        return ResponseEntity.ok(invoiceService.getAll());
+    public ApiResponse<List<InvoiceResponseDto>> getAll() {
+        return ApiResponse.success(invoiceService.getAll());
     }
 
     @GetMapping("/paged")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<InvoicePageResponseDto> getPaged(
+    public ApiResponse<InvoicePageResponseDto> getPaged(
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(invoiceService.getPagedInvoices(year, month, search, status, page, size));
+        return ApiResponse.success(invoiceService.getPagedInvoices(year, month, search, status, page, size));
     }
 
     @GetMapping("/export")
@@ -55,7 +54,6 @@ public class InvoiceController {
         response.setHeader("Content-Disposition", "attachment; filename=invoices.csv");
 
         java.io.OutputStream os = response.getOutputStream();
-        // Write UTF-8 BOM so Excel opens it with correct Vietnamese accents
         os.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
 
         PrintWriter writer = new PrintWriter(new java.io.OutputStreamWriter(os, java.nio.charset.StandardCharsets.UTF_8), true);
@@ -108,7 +106,6 @@ public class InvoiceController {
         response.setHeader("Content-Disposition", String.format("attachment; filename=revenue_report_%s_%d_%s.csv", type, year, value != null ? value : ""));
 
         java.io.OutputStream os = response.getOutputStream();
-        // Write UTF-8 BOM
         os.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
 
         PrintWriter writer = new PrintWriter(new java.io.OutputStreamWriter(os, java.nio.charset.StandardCharsets.UTF_8), true);
@@ -116,12 +113,10 @@ public class InvoiceController {
 
         List<InvoiceResponseDto> list = invoiceService.getInvoicesInPeriod(startDate, endDate);
         
-        // Group by Date
         Map<LocalDate, List<InvoiceResponseDto>> grouped = list.stream()
                 .filter(dto -> dto.getCreatedAt() != null)
                 .collect(Collectors.groupingBy(InvoiceResponseDto::getCreatedAt));
 
-        // Sort dates ascending
         List<LocalDate> sortedDates = grouped.keySet().stream().sorted().collect(Collectors.toList());
 
         for (LocalDate date : sortedDates) {
@@ -143,28 +138,31 @@ public class InvoiceController {
     }
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<InvoiceResponseDto> getById(@PathVariable Integer id) {
-        return ResponseEntity.ok(invoiceService.getById(id));
+    public ApiResponse<InvoiceResponseDto> getById(@PathVariable Integer id) {
+        return ApiResponse.success(invoiceService.getById(id));
     }
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<InvoiceResponseDto> create(@Valid @RequestBody InvoiceRequestDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(invoiceService.create(dto));
+    public ApiResponse<InvoiceResponseDto> create(@Valid @RequestBody InvoiceRequestDto dto) {
+        InvoiceResponseDto created = invoiceService.create(dto);
+        ApiResponse<InvoiceResponseDto> response = ApiResponse.success(created, "Tạo hóa đơn thành công");
+        response.setCode(201);
+        return response;
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<InvoiceResponseDto> update(
+    public ApiResponse<InvoiceResponseDto> update(
             @PathVariable Integer id,
             @RequestBody InvoiceResponseDto dto) {
-        return ResponseEntity.ok(invoiceService.update(id, dto));
+        return ApiResponse.success(invoiceService.update(id, dto), "Cập nhật hóa đơn thành công");
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ApiResponse<Void> delete(@PathVariable Integer id) {
         invoiceService.delete(id);
-        return ResponseEntity.noContent().build();
+        return ApiResponse.success(null, "Xóa hóa đơn thành công");
     }
 }

@@ -20,63 +20,40 @@ public class GlobalExceptionHandler {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
-            if (error instanceof FieldError) {
-                fieldName = ((FieldError) error).getField();
-            } else {
-                String code = error.getCode();
-                if ("AssertTrue".equals(code) && error.getObjectName().contains("bookingRequest")) {
-                    fieldName = "ngayTra";
-                } else {
-                    fieldName = error.getObjectName();
-                }
-            }
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        ApiResponse<Map<String, String>> response = ApiResponse.<Map<String, String>>builder()
-                .code(422)
-                .message("Dữ liệu đầu vào không hợp lệ, vui lòng kiểm tra lại!")
-                .result(errors)
-                .build();
+        
+        ApiResponse<Map<String, String>> response = new ApiResponse<>();
+        response.setCode(422);
+        response.setMessage("Dữ liệu đầu vào không hợp lệ, vui lòng kiểm tra lại!");
+        response.setResult(errors);
 
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
     }
+
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalStateException(IllegalStateException ex) {
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
-                .code(409)
-                .message("Xung đột nghiệp vụ: " + ex.getMessage())
-                .build();
+        ApiResponse<Void> response = ApiResponse.error(409, "Xung đột nghiệp vụ: " + ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
-                .code(403)
-                .message("Bạn không có quyền thực hiện chức năng này!")
-                .build();
+        ApiResponse<Void> response = ApiResponse.error(403, "Bạn không có quyền thực hiện chức năng này!");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex) {
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
-                .code(400)
-                .message(ex.getMessage())
-                .build();
+        ApiResponse<Void> response = ApiResponse.error(400, ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception ex) {
         ex.printStackTrace();
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
-                .code(500)
-                .message("Lỗi server: " + ex.getMessage())
-                .build();
+        ApiResponse<Void> response = ApiResponse.error(500, "Lỗi server: " + ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
-
-
-
 }

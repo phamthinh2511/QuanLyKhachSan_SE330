@@ -20,27 +20,22 @@ public class NhanvienController {
     @GetMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<List<NhanvienResponseDto>> getAll() {
-        return ApiResponse.<List<NhanvienResponseDto>>builder()
-                .result(nhanvienService.getAll())
-                .build();
+        return ApiResponse.success(nhanvienService.getAll());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<NhanvienResponseDto> getById(@PathVariable Integer id) {
-        return ApiResponse.<NhanvienResponseDto>builder()
-                .result(nhanvienService.getById(id))
-                .build();
+        return ApiResponse.success(nhanvienService.getById(id));
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<NhanvienResponseDto> create(@jakarta.validation.Valid @RequestBody NhanvienRequestDto dto) {
-        return ApiResponse.<NhanvienResponseDto>builder()
-                .code(201)
-                .message("Tạo nhân viên thành công")
-                .result(nhanvienService.create(dto))
-                .build();
+        NhanvienResponseDto created = nhanvienService.create(dto);
+        ApiResponse<NhanvienResponseDto> response = ApiResponse.success(created, "Tạo nhân viên thành công");
+        response.setCode(201);
+        return response;
     }
 
     @PutMapping("/{id}")
@@ -49,18 +44,13 @@ public class NhanvienController {
             @PathVariable Integer id,
             @jakarta.validation.Valid
             @RequestBody NhanvienRequestDto dto) {
-        return ApiResponse.<NhanvienResponseDto>builder()
-                .message("Cập nhật thông tin nhân viên thành công")
-                .result(nhanvienService.update(id, dto))
-                .build();
+        return ApiResponse.success(nhanvienService.update(id, dto), "Cập nhật thông tin nhân viên thành công");
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<Void> delete(@PathVariable Integer id) {
         nhanvienService.delete(id);
-        return ApiResponse.<Void>builder()
-                .message("Xóa nhân viên thành công")
-                .build();
+        return ApiResponse.success(null, "Xóa nhân viên thành công");
     }
 }

@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { mockCustomers } from "@/lib/data/customers";
-import { useCustomers } from "@/hooks/useCustomers";
+import { useCustomers } from "@/hooks/useCustomers"; // 1. Import the new hook
 import { Customer } from "@/types/customer";
 import CustomerTable from "@/components/customers/CustomerTable";
 import CustomerModal from "@/components/customers/CustomerModal";
@@ -13,8 +12,17 @@ import CustomerDeleteModal from "@/components/customers/CustomerDeleteModal";
 const PAGE_SIZE = 50;
 
 export default function CustomersPage() {
-  const { customers, loading, error, handleCreate, handleUpdate, handleDelete } = useCustomers();
+  // 2. Use the hook and get the correct function names
+  const {
+    customers,
+    loading,
+    error,
+    addCustomer,
+    editCustomer,
+    removeCustomer,
+  } = useCustomers();
   
+  // UI state remains in the component
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Tất cả");
   const [modalOpen, setModalOpen] = useState(false);
@@ -32,6 +40,7 @@ export default function CustomersPage() {
     }, 3000);
   };
 
+  // Filtering logic remains in the component
   const filtered = customers.filter((c) => {
     const matchSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -41,20 +50,20 @@ export default function CustomersPage() {
     return matchSearch && matchFilter;
   });
 
-  const visibleCustomers = filtered.slice(0, visibleCount); // 👈 thêm
-  const hasMore = visibleCount < filtered.length;           // 👈 thêm
+  const visibleCustomers = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
 
-  // Reset về 10 khi search/filter thay đổi
   const handleSearch = (val: string) => { setSearch(val); setVisibleCount(PAGE_SIZE); };
   const handleFilter = (val: string) => { setFilter(val); setVisibleCount(PAGE_SIZE); };
 
-   const handleSave = async (data: Customer) => {
+  // 3. handleSave now uses the correct functions from the hook
+  const handleSave = async (data: Omit<Customer, "id">) => {
     try {
       if (editing) {
-        await handleUpdate(data.id, data);
+        await editCustomer(editing.id, data);
         showToast("Cập nhật thông tin khách hàng thành công!");
       } else {
-        await handleCreate(data);
+        await addCustomer(data);
         showToast("Thêm mới khách hàng thành công!");
       }
       setModalOpen(false);
@@ -64,10 +73,11 @@ export default function CustomersPage() {
     }
   };
 
+  // 4. handleDeleteConfirm now uses the correct function from the hook
   const handleDeleteConfirm = async () => {
     if (!deletingCustomer) return;
     try {
-      await handleDelete(deletingCustomer.id);
+      await removeCustomer(deletingCustomer.id);
       showToast(`Đã xóa khách hàng ${deletingCustomer.name} thành công!`);
       setDeletingCustomer(null);
     } catch (err) {
@@ -87,7 +97,7 @@ export default function CustomersPage() {
     );
   }
 
-if (error) {
+  if (error) {
     return (
       <div className="p-6 flex items-center justify-center min-h-64">
         <div className="text-center space-y-3">
@@ -101,15 +111,7 @@ if (error) {
     );
   }
 
-  const handleEdit = (customer: Customer) => {
-    setEditing(customer);
-    setModalOpen(true);
-  };
-
-  const handleView = (customer: Customer) => {
-    setViewing(customer);
-  }
-return (
+  return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
@@ -148,7 +150,7 @@ return (
       <CustomerTable
         customers={visibleCustomers}
         onEdit={(c) => { setEditing(c); setModalOpen(true); }}
-        onView={handleView}
+        onView={(c) => setViewing(c)}
         onDelete={(id) => {
           const c = customers.find((item) => item.id === id);
           if (c) setDeletingCustomer(c);
@@ -225,5 +227,4 @@ return (
       </div>
     </div>
   );
-  
 }

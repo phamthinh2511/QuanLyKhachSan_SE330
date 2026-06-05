@@ -1,11 +1,10 @@
 package hotelmanagement.backend.controller;
 
 import hotelmanagement.backend.dto.request.KhachhangRequestDto;
+import hotelmanagement.backend.dto.response.ApiResponse;
 import hotelmanagement.backend.dto.response.KhachhangResponseDto;
 import hotelmanagement.backend.service.KhachhangService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,35 +19,38 @@ public class KhachhangController {
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<List<KhachhangResponseDto>> getAll() {
-        return ResponseEntity.ok(khachhangService.getAll());
+    public ApiResponse<List<KhachhangResponseDto>> getAll() {
+        return ApiResponse.success(khachhangService.getAll());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<KhachhangResponseDto> getById(@PathVariable Integer id) {
-        return ResponseEntity.ok(khachhangService.getById(id));
+    public ApiResponse<KhachhangResponseDto> getById(@PathVariable Integer id) {
+        return ApiResponse.success(khachhangService.getById(id));
     }
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<KhachhangResponseDto> create(@jakarta.validation.Valid @RequestBody KhachhangRequestDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(khachhangService.create(dto));
+    public ApiResponse<KhachhangResponseDto> create(@jakarta.validation.Valid @RequestBody KhachhangRequestDto dto) {
+        KhachhangResponseDto created = khachhangService.create(dto);
+        ApiResponse<KhachhangResponseDto> response = ApiResponse.success(created, "Tạo khách hàng thành công");
+        response.setCode(201);
+        return response;
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<KhachhangResponseDto> update(
+    public ApiResponse<KhachhangResponseDto> update(
             @PathVariable Integer id,
             @jakarta.validation.Valid
             @RequestBody KhachhangRequestDto dto) {
-        return ResponseEntity.ok(khachhangService.update(id, dto));
+        return ApiResponse.success(khachhangService.update(id, dto), "Cập nhật khách hàng thành công");
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
+    public ApiResponse<Void> delete(@PathVariable Integer id) {
         khachhangService.delete(id);
-        return ResponseEntity.noContent().build();
+        return ApiResponse.success(null, "Xóa khách hàng thành công");
     }
 }

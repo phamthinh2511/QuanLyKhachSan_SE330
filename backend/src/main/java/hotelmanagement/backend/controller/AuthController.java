@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
 @RestController
 @RequestMapping("api/auth")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -25,29 +26,18 @@ public class AuthController {
 
     @PostMapping("/login")
     public ApiResponse<String> login(@jakarta.validation.Valid @RequestBody LoginRequest request) {
-
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
 
-
             UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
             String token = jwtService.generateToken(userDetails);
 
-            ApiResponse<String> response = new ApiResponse<>();
-            response.setCode(200);
-            response.setMessage("Đăng nhập thành công!");
-            response.setResult(token);
-
-            return response;
+            return ApiResponse.success(token, "Đăng nhập thành công!");
 
         } catch (Exception e) {
-            ApiResponse<String> errorResponse = new ApiResponse<>();
-            errorResponse.setCode(401);
-            errorResponse.setMessage("Đăng nhập thất bại!");
-            return errorResponse;
+            return ApiResponse.error(401, "Đăng nhập thất bại!");
         }
-
     }
 }
