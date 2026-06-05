@@ -44,7 +44,13 @@ export default function RentalsPage() {
     return s;
   };
 
-  const filteredRentals = rentals.filter((r) => {
+  const actualRentals = Array.isArray(rentals)
+    ? rentals
+    : (rentals && typeof rentals === 'object' && 'result' in rentals && Array.isArray((rentals as any).result))
+      ? (rentals as any).result
+      : [];
+
+  const filteredRentals = actualRentals.filter((r) => {
     const norm = getNormalizedStatus(r.status);
 
     // Chỉ chấp nhận những phiếu đang ở hoặc đã trả phòng hoàn tất
@@ -144,7 +150,7 @@ export default function RentalsPage() {
       </div>
 
       {/* Table List */}
-      {loading && rentals.length === 0 ? (
+      {loading && (!rentals || actualRentals.length === 0) ? (
         <div className="p-12 text-center text-gray-400 text-sm bg-white border border-gray-100 rounded-2xl shadow-sm">
           Đang đồng bộ dữ liệu phiếu thuê phòng...
         </div>
