@@ -20,6 +20,16 @@ public class GlobalExceptionHandler {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
+            if (error instanceof FieldError) {
+                fieldName = ((FieldError) error).getField();
+            } else {
+                String code = error.getCode();
+                if ("AssertTrue".equals(code) && error.getObjectName().contains("bookingRequest")) {
+                    fieldName = "ngayTra";
+                } else {
+                    fieldName = error.getObjectName();
+                }
+            }
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });

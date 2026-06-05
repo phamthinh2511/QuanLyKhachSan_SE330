@@ -1,5 +1,6 @@
 package hotelmanagement.backend.controller;
 
+import hotelmanagement.backend.dto.response.ApiResponse;
 import hotelmanagement.backend.dto.response.PhieuthuephongResponseDto;
 import hotelmanagement.backend.service.PhieuthuephongService;
 import lombok.RequiredArgsConstructor;
@@ -18,20 +19,36 @@ public class PhieuthuephongController {
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<List<PhieuthuephongResponseDto>> getAll() {
-        return ResponseEntity.ok(phieuthuephongService.getAll());
+    public ApiResponse<List<PhieuthuephongResponseDto>> getAll() {
+        List<PhieuthuephongResponseDto> list = phieuthuephongService.getAll();
+
+        return ApiResponse.<List<PhieuthuephongResponseDto>>builder()
+                .code(200)
+                .message("Tải danh sách phiếu thuê phòng thành công!")
+                .result(list) // Đẩy danh sách DTO vào trường result cho Frontend map dữ liệu
+                .build();
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<PhieuthuephongResponseDto> getById(@PathVariable Integer id) {
-        return ResponseEntity.ok(phieuthuephongService.getById(id));
+    public ApiResponse<PhieuthuephongResponseDto> getById(@PathVariable Integer id) {
+        PhieuthuephongResponseDto dto = phieuthuephongService.getById(id);
+
+        return ApiResponse.<PhieuthuephongResponseDto>builder()
+                .code(200)
+                .message("Tải thông tin chi tiết phiếu thuê phòng thành công!")
+                .result(dto)
+                .build();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ApiResponse<Void> delete(@PathVariable Integer id) {
         phieuthuephongService.delete(id);
-        return ResponseEntity.noContent().build();
+
+        return ApiResponse.<Void>builder()
+                .code(200)
+                .message("Xóa phiếu thuê phòng thành công!")
+                .build();
     }
 }

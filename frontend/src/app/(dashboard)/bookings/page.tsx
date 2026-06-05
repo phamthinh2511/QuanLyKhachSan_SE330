@@ -117,7 +117,17 @@ export default function BookingsPage() {
       setCustomers(customerRes);
       setRooms(roomRes);
 
-      const rawList = Array.isArray(response) ? response : [];
+      let rawList: any[] = [];
+
+      if (Array.isArray(response)) {
+        rawList = response;
+      } else if (response && typeof response === "object") {
+        if (Array.isArray((response as any).result)) {
+          rawList = (response as any).result;
+        } else if ((response as any).data && Array.isArray((response as any).data.result)) {
+          rawList = (response as any).data.result;
+        }
+      }
 
       const mappedData = rawList.map((b: any) => ({
         id: b.id,
