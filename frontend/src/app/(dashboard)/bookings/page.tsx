@@ -266,7 +266,14 @@ export default function BookingsPage() {
       setEditing(null);
     } catch (error: any) {
       console.error("Lỗi lưu dữ liệu:", error);
-      alert(error.message || "Không thể lưu thông tin. Vui lòng kiểm tra tính hợp lệ của phòng và ngày đặt!");
+      throw {
+              isApiError: true,
+              status: 422,
+              result: {
+                ngayNhan: "Ngày check-in không được ở quá khứ hoặc trước ngày hiện tại!",
+              },
+              message: error.message || "Dữ liệu đầu vào không hợp lệ!"
+            };
     } finally {
       setLoading(false);
     }

@@ -32,11 +32,10 @@ export interface CustomerResponse {
   type?: string;
 }
 
-// KHỚP CHÍNH XÁC VỚI LoaiPhongResponseDto Ở BACKEND
 export interface LoaiPhongResponseDto {
   id: number;
   tenLoaiPhong: string;
-  donGia: number; // Đổi từ giaNgay thành donGia theo DTO Java của bạn
+  donGia: number;
   moTa?: string;
   sucChuaToiDa?: number;
 }
@@ -49,15 +48,26 @@ export interface RoomResponse {
   sucChua: number;
 }
 
+// export async function submitBookingForm(payload: BookingRequestPayload): Promise<ApiResponse<void>> {
+//   return apiClient<ApiResponse<void>>("/api/bookings/submit", {
+//     method: "POST",
+//     body: JSON.stringify(payload),
+//   });
+// }
 export async function submitBookingForm(payload: BookingRequestPayload): Promise<ApiResponse<void>> {
-  return apiClient<ApiResponse<void>>("/api/bookings/submit", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  try {
+    return await apiClient<ApiResponse<void>>("/api/bookings/submit", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  } catch (error: any) {
+    if (error && typeof error === "object") throw error;
+    throw new Error(error.message || "Không thể kết nối đến máy chủ");
+  }
 }
 
-export async function getAllBookings(): Promise<Booking[]> {
-  return apiClient<Booking[]>("/api/bookings/all");
+export async function getAllBookings(): Promise<ApiResponse<Booking[]>> {
+  return apiClient<ApiResponse<Booking[]>>("/api/bookings/all");
 }
 
 export async function getAllCustomers(): Promise<CustomerResponse[]> {
@@ -72,11 +82,22 @@ export async function deleteBooking(id: number): Promise<ApiResponse<void>> {
     method: "DELETE",
   });
 }
+// export async function updateBooking(id: number, payload: BookingRequestPayload): Promise<ApiResponse<void>> {
+//   return apiClient<ApiResponse<void>>(`/api/bookings/${id}`, {
+//     method: "PUT",
+//     body: JSON.stringify(payload),
+//   });
+// }
 export async function updateBooking(id: number, payload: BookingRequestPayload): Promise<ApiResponse<void>> {
-  return apiClient<ApiResponse<void>>(`/api/bookings/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(payload),
-  });
+  try {
+    return await apiClient<ApiResponse<void>>(`/api/bookings/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  } catch (error: any) {
+    if (error && typeof error === "object") throw error;
+    throw new Error(error.message || "Không thể cập nhật thông tin phòng");
+  }
 }
 export async function checkInBooking(bookingId: number): Promise<any> {
   return apiClient<any>("/api/bookings/check-in", {
