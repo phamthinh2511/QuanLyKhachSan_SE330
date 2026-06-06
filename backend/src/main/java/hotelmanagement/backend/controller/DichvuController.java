@@ -56,4 +56,27 @@ public class DichvuController {
                 .message("Xóa dịch vụ thành công")
                 .build();
     }
+
+    @GetMapping("/trash")
+    public ApiResponse<List<DichvuResponseDto>> getTrashBin() {
+        return ApiResponse.<List<DichvuResponseDto>>builder()
+                .result(dichvuService.getTrashBin())
+                .build();
+    }
+
+    @PutMapping("/{id}/restore")
+    public ApiResponse<DichvuResponseDto> restore(@PathVariable Integer id) {
+        return ApiResponse.<DichvuResponseDto>builder()
+                .message("Khôi phục dịch vụ thành công")
+                .result(dichvuService.restore(id))
+                .build();
+    }
+
+    @DeleteMapping("/{id}/hard")
+    public ApiResponse<Void> hardDelete(@PathVariable Integer id) {
+        dichvuService.hardDelete(id);
+        return ApiResponse.<Void>builder()
+                .message("Xóa vĩnh viễn dịch vụ thành công")
+                .build();
+    }
 }

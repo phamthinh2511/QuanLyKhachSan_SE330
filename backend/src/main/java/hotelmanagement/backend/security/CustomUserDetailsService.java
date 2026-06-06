@@ -21,8 +21,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        Taikhoan taiKhoan = taiKhoanRepository.findByTenDangNhap(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy tài khoản: " + username));
+        Taikhoan taiKhoan = taiKhoanRepository.findByTenDangNhapAndIsDeletedFalse(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy hoặc tài khoản đã bị khóa/xóa: " + username));
 
         String tenQuyen = taiKhoan.getLoaiTaiKhoan().toUpperCase();
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority(tenQuyen);

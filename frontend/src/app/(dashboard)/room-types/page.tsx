@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useRoomTypes } from "@/hooks/useRoomTypes";
+import { useToast } from "@/context/ToastContext";
 import { RoomTypeModel } from "@/types/room-type";
 import RoomTypeTable from "@/components/room-types/RoomTypeTable";
 import RoomTypeModal from "@/components/room-types/RoomTypeModal";
@@ -11,6 +12,7 @@ const PAGE_SIZE = 50;
 
 export default function RoomTypesPage() {
   const { roomTypes, loading, error, handleCreate, handleUpdate, handleDelete } = useRoomTypes();
+  const { showToast } = useToast();
 
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -30,13 +32,15 @@ export default function RoomTypesPage() {
     try {
       if ("id" in data && data.id) {
         await handleUpdate(data.id, data);
+        showToast("Cập nhật loại phòng thành công!");
       } else {
         await handleCreate(data);
+        showToast("Thêm mới loại phòng thành công!");
       }
       setModalOpen(false);
       setEditing(null);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Có lỗi xảy ra");
+      showToast(err instanceof Error ? err.message : "Có lỗi xảy ra khi lưu", "error");
     }
   };
 
@@ -44,8 +48,9 @@ export default function RoomTypesPage() {
     if (!confirm("Bạn có chắc muốn xóa loại phòng này?")) return;
     try {
       await handleDelete(id);
+      showToast("Xóa loại phòng thành công!");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Không thể xóa");
+      showToast(err instanceof Error ? err.message : "Không thể xóa", "error");
     }
   };
 

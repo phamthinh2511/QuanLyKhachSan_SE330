@@ -28,3 +28,19 @@ export async function deleteRoomType(id: number): Promise<void> {
     method: "DELETE",
   });
 }
+
+export async function getRoomTypesTrash(): Promise<RoomTypeModel[]> {
+  return apiClient<RoomTypeModel[]>("/api/room-types/trash");
+}
+
+export async function restoreRoomType(id: number): Promise<RoomTypeModel> {
+  return apiClient<RoomTypeModel>(`/api/room-types/${id}/restore`, {
+    method: "PUT",
+  });
+}
+
+export async function hardDeleteRoomType(id: number): Promise<void> {
+  return apiClient<void>(`/api/room-types/${id}/hard`, {
+    method: "DELETE",
+  });
+}

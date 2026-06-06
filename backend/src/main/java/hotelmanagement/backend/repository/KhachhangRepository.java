@@ -11,4 +11,10 @@ public interface KhachhangRepository extends JpaRepository<Khachhang, Integer> {
     List<Khachhang> findByTenKhachHang(String tenKhachHang);
     boolean existsByEmail(String email);
     boolean existsByCccd(String cccd);
+
+    List<Khachhang> findByIsDeletedFalse();
+    List<Khachhang> findByIsDeletedTrue();
+    java.util.Optional<Khachhang> findByIdAndIsDeletedFalse(Integer id);
+    boolean existsByEmailAndIsDeletedFalse(String email);
+    boolean existsByCccdAndIsDeletedFalse(String cccd);
 }

@@ -76,3 +76,24 @@ export async function deleteCustomer(id: number): Promise<void> {
     method: "DELETE",
   });
 }
+
+// GET tất cả khách hàng trong thùng rác
+export async function getCustomersTrash(): Promise<Customer[]> {
+  const data = await apiClient<KhachhangApi[]>("/api/customers/trash");
+  return data.map(mapToCustomer);
+}
+
+// PUT khôi phục khách hàng
+export async function restoreCustomer(id: number): Promise<Customer> {
+  const data = await apiClient<KhachhangApi>(`/api/customers/${id}/restore`, {
+    method: "PUT",
+  });
+  return mapToCustomer(data);
+}
+
+// DELETE xóa vĩnh viễn khách hàng
+export async function hardDeleteCustomer(id: number): Promise<void> {
+  return apiClient<void>(`/api/customers/${id}/hard`, {
+    method: "DELETE",
+  });
+}

@@ -29,7 +29,7 @@ export default function CustomerTable({ customers, onEdit, onDelete, onView }: P
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-gray-400 text-xs uppercase tracking-wide">
-              {["ID", "Họ tên", "Giới tính", "Ngày sinh", "Địa chỉ", "Phone", "Email", "CMND/CCCD", "Trạng thái", "Thao tác"].map((h) => (
+              {["Mã KH", "Họ tên", "Số điện thoại", "Email", "Trạng thái", "Thao tác"].map((h) => (
                 <th key={h} className="px-4 py-3 text-left font-medium whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -37,7 +37,7 @@ export default function CustomerTable({ customers, onEdit, onDelete, onView }: P
           <tbody className="divide-y divide-gray-50">
             {customers.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-6 py-10 text-center text-gray-400">
+                <td colSpan={6} className="px-6 py-10 text-center text-gray-400">
                   Không tìm thấy khách hàng nào.
                 </td>
               </tr>
@@ -46,12 +46,8 @@ export default function CustomerTable({ customers, onEdit, onDelete, onView }: P
                 <tr key={c.id} className="hover:bg-gray-50 transition">
                   <td className="px-4 py-4 font-semibold text-gray-700">{c.id}</td>
                   <td className="px-4 py-4 font-medium text-gray-800 whitespace-nowrap">{c.name}</td>
-                  <td className="px-4 py-4 text-gray-600">{c.gender}</td>
-                  <td className="px-4 py-4 text-gray-600 whitespace-nowrap">{c.birthday}</td>
-                  <td className="px-4 py-4 text-gray-600 max-w-[180px] truncate">{c.address}</td>
                   <td className="px-4 py-4 text-gray-600 whitespace-nowrap">{c.phone}</td>
                   <td className="px-4 py-4 text-gray-600">{c.email}</td>
-                  <td className="px-4 py-4 text-gray-600">{c.idCard}</td>
                   <td className="px-4 py-4">
                     <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap", statusStyle[c.status])}>
                       {c.status}

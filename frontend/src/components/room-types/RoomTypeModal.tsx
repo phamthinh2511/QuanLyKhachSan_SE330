@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { RoomTypeModel } from "@/types/room-type";
+import { isNotEmpty, isNonNegativeNumber, isPositiveInteger } from "@/lib/validation";
 
 interface Props {
   roomType: RoomTypeModel | null;
@@ -18,26 +19,71 @@ const emptyForm: Omit<RoomTypeModel, "id"> = {
 };
 
 export default function RoomTypeModal({ roomType, onSave, onClose }: Props) {
-  const [form, setForm] = useState<Omit<RoomTypeModel, "id">>(emptyForm);
+  const [form, setForm] = useState<Omit<RoomTypeModel, "id" | "donGia" | "sucChuaToiDa"> & { donGia: number | ""; sucChuaToiDa: number | "" }>({
+    ...emptyForm,
+    donGia: roomType ? roomType.donGia : "",
+    sucChuaToiDa: roomType ? roomType.sucChuaToiDa : "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (roomType) {
       setForm({ ...roomType });
     } else {
-      setForm(emptyForm);
+      setForm(emptyForm as any);
     }
+    setErrors({});
   }, [roomType]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (roomType) {
-      onSave({ ...form, id: roomType.id });
-    } else {
-      onSave(form);
+  const handleChange = (field: keyof Omit<RoomTypeModel, "id">, value: any) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
     }
   };
 
-  const inputClass = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!isNotEmpty(form.tenLoaiPhong)) newErrors.tenLoaiPhong = "Tên loại phòng không được để trống";
+    if (form.donGia === "" || form.donGia === undefined || form.donGia === null || !isNonNegativeNumber(form.donGia)) {
+      newErrors.donGia = "Đơn giá phải là số không âm";
+    }
+    if (!form.sucChuaToiDa || !isPositiveInteger(form.sucChuaToiDa)) {
+      newErrors.sucChuaToiDa = "Sức chứa tối đa phải lớn hơn hoặc bằng 1";
+    }
+    if (!isNotEmpty(form.moTa)) newErrors.moTa = "Mô tả không được để trống";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+    const dataToSave = {
+      ...form,
+      donGia: form.donGia === "" ? 0 : form.donGia,
+      sucChuaToiDa: form.sucChuaToiDa === "" ? 1 : form.sucChuaToiDa,
+    };
+    if (roomType) {
+      onSave({ ...dataToSave, id: roomType.id } as any);
+    } else {
+      onSave(dataToSave as any);
+    }
+  };
+
+  const getInputClass = (fieldName: string) => {
+    const baseClass = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800 transition duration-150";
+    if (errors[fieldName]) {
+      return `${baseClass} border-red-500 focus:ring-red-200 focus:border-red-500`;
+    }
+    return baseClass;
+  };
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -51,17 +97,17 @@ export default function RoomTypeModal({ roomType, onSave, onClose }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tên loại phòng</label>
             <input 
               type="text" 
               value={form.tenLoaiPhong} 
-              onChange={(e) => setForm({ ...form, tenLoaiPhong: e.target.value })} 
-              className={inputClass} 
-              required 
+              onChange={(e) => handleChange("tenLoaiPhong", e.target.value)} 
+              className={getInputClass("tenLoaiPhong")} 
               placeholder="VD: Phòng Gia Đình"
             />
+            {errors.tenLoaiPhong && <p className="text-red-500 text-xs mt-1 font-medium">{errors.tenLoaiPhong}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -69,23 +115,27 @@ export default function RoomTypeModal({ roomType, onSave, onClose }: Props) {
               <label className="block text-sm font-medium text-gray-700 mb-1">Đơn giá (VNĐ)</label>
               <input 
                 type="number" 
-                value={form.donGia} 
-                onChange={(e) => setForm({ ...form, donGia: Number(e.target.value) })} 
-                className={inputClass} 
-                required 
-                min={0}
+                value={form.donGia ?? ""} 
+                onChange={(e) => {
+                  const val = e.target.value;
+                  handleChange("donGia", val === "" ? "" : parseFloat(val));
+                }} 
+                className={getInputClass("donGia")} 
               />
+              {errors.donGia && <p className="text-red-500 text-xs mt-1 font-medium">{errors.donGia}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Sức chứa tối đa</label>
               <input 
                 type="number" 
-                value={form.sucChuaToiDa} 
-                onChange={(e) => setForm({ ...form, sucChuaToiDa: Number(e.target.value) })} 
-                className={inputClass} 
-                required 
-                min={1}
+                value={form.sucChuaToiDa ?? ""} 
+                onChange={(e) => {
+                  const val = e.target.value;
+                  handleChange("sucChuaToiDa", val === "" ? "" : parseInt(val, 10));
+                }} 
+                className={getInputClass("sucChuaToiDa")} 
               />
+              {errors.sucChuaToiDa && <p className="text-red-500 text-xs mt-1 font-medium">{errors.sucChuaToiDa}</p>}
             </div>
           </div>
 
@@ -93,12 +143,12 @@ export default function RoomTypeModal({ roomType, onSave, onClose }: Props) {
             <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
             <textarea 
               value={form.moTa} 
-              onChange={(e) => setForm({ ...form, moTa: e.target.value })} 
-              className={inputClass} 
-              required
+              onChange={(e) => handleChange("moTa", e.target.value)} 
+              className={getInputClass("moTa")} 
               rows={3}
               placeholder="Mô tả tiện ích, không gian..."
             />
+            {errors.moTa && <p className="text-red-500 text-xs mt-1 font-medium">{errors.moTa}</p>}
           </div>
 
           <div className="flex gap-3 pt-2">

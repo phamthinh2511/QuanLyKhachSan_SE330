@@ -5,6 +5,7 @@ import hotelmanagement.backend.dto.request.TaikhoanRequestDto;
 import hotelmanagement.backend.dto.response.TaikhoanResponseDto;
 import hotelmanagement.backend.entity.Taikhoan;
 import hotelmanagement.backend.repository.TaikhoanRepository;
+import hotelmanagement.backend.repository.NhanvienRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,8 @@ import java.util.stream.Collectors;
 public class TaikhoanService {
 
     private final TaikhoanRepository taikhoanRepository;
-    private final PasswordEncoder passwordEncoder; // Tự động inject công cụ băm mật khẩu
+    private final NhanvienRepository nhanvienRepository;
+    private final PasswordEncoder passwordEncoder;
 
     private TaikhoanResponseDto toResponseDto(Taikhoan tk) {
         return TaikhoanResponseDto.builder()
@@ -30,20 +32,20 @@ public class TaikhoanService {
     }
 
     public List<TaikhoanResponseDto> getAll() {
-        return taikhoanRepository.findAll()
+        return taikhoanRepository.findByIsDeletedFalse()
                 .stream()
                 .map(this::toResponseDto)
                 .collect(Collectors.toList());
     }
 
     public TaikhoanResponseDto getById(Integer id) {
-        Taikhoan tk = taikhoanRepository.findById(id)
+        Taikhoan tk = taikhoanRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay tai khoan id: " + id));
         return toResponseDto(tk);
     }
 
     public TaikhoanResponseDto create(TaikhoanRequestDto dto) {
-        if (taikhoanRepository.existsByTenDangNhap(dto.getUsername())) {
+        if (taikhoanRepository.existsByTenDangNhapAndIsDeletedFalse(dto.getUsername())) {
             throw new RuntimeException("Ten dang nhap da ton tai trong he thong");
         }
 
@@ -57,10 +59,10 @@ public class TaikhoanService {
     }
 
     public TaikhoanResponseDto update(Integer id, TaikhoanRequestDto dto) {
-        Taikhoan tk = taikhoanRepository.findById(id)
+        Taikhoan tk = taikhoanRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay tai khoan id: " + id));
 
-        if (!tk.getTenDangNhap().equals(dto.getUsername()) && taikhoanRepository.existsByTenDangNhap(dto.getUsername())) {
+        if (!tk.getTenDangNhap().equals(dto.getUsername()) && taikhoanRepository.existsByTenDangNhapAndIsDeletedFalse(dto.getUsername())) {
             throw new RuntimeException("Ten dang nhap da ton tai trong he thong");
         }
         tk.setTenDangNhap(dto.getUsername());
@@ -74,20 +76,48 @@ public class TaikhoanService {
     }
 
     public void delete(Integer id) {
-        if (!taikhoanRepository.existsById(id)) {
-            throw new RuntimeException("Khong tim thay tai khoan id: " + id);
+        Taikhoan tk = taikhoanRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay tai khoan id: " + id));
+        tk.setIsDeleted(true);
+        tk.setDeletedAt(java.time.LocalDateTime.now());
+        taikhoanRepository.save(tk);
+    }
+
+    public List<TaikhoanResponseDto> getTrashBin() {
+        return taikhoanRepository.findByIsDeletedTrue()
+                .stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    public TaikhoanResponseDto restore(Integer id) {
+        Taikhoan tk = taikhoanRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay tai khoan id: " + id));
+        if (!tk.getIsDeleted()) {
+            throw new RuntimeException("Tai khoan khong nam trong thung rac");
         }
-        taikhoanRepository.deleteById(id);
+        tk.setIsDeleted(false);
+        tk.setDeletedAt(null);
+        return toResponseDto(taikhoanRepository.save(tk));
+    }
+
+    public void hardDelete(Integer id) {
+        Taikhoan tk = taikhoanRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay tai khoan id: " + id));
+
+        if (nhanvienRepository.existsByTaikhoanId(id)) {
+            throw new RuntimeException("Khong the xoa vinh vien tai khoan nay vi dang lien ket voi nhan vien trong he thong");
+        }
+
+        taikhoanRepository.delete(tk);
     }
 
     public void changePassword(String tenDangNhap, ChangePasswordRequestDto dto) {
-        // Kiểm tra mật khẩu xác nhận có khớp không
         if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
             throw new RuntimeException("Mật khẩu xác nhận không khớp");
         }
 
-        // Tìm tài khoản theo tên đăng nhập (lấy từ Token)
-        Taikhoan tk = taikhoanRepository.findByTenDangNhap(tenDangNhap)
+        Taikhoan tk = taikhoanRepository.findByTenDangNhapAndIsDeletedFalse(tenDangNhap)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
 
         if (!passwordEncoder.matches(dto.getOldPassword(), tk.getMatKhau())) {

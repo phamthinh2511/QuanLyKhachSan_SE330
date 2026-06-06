@@ -21,4 +21,7 @@ public interface SudungdichvuRepository extends JpaRepository<Sudungdichvu, Inte
      */
     @Query("SELECT COALESCE(SUM(s.thanhTien), 0) FROM Sudungdichvu s WHERE s.maPhieuThue.id = ?1")
     Double getTotalServiceCost(Integer maPhieuThue);
+
+    boolean existsByMaPhongId(Integer roomId);
+    boolean existsByMaDichVuId(Integer serviceId);
 }
