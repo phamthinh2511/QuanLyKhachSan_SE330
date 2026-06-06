@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useServices } from "@/hooks/useServices";
 import { Service } from "@/types/service";
+import { useToast } from "@/context/ToastContext";
 import ServiceStatCards from "@/components/services/ServiceStatCards";
 import ServiceGrid from "@/components/services/ServiceGrid";
 import ServiceTable from "@/components/services/ServiceTable";
@@ -16,6 +17,7 @@ export default function ServicesPage() {
     services, loading, error,
     handleCreate, handleUpdate, handleDelete, // ← từ hook
   } = useServices();
+  const { showToast } = useToast();
 
   const [search, setSearch] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -40,13 +42,15 @@ export default function ServicesPage() {
       const { id, serviceCode, ...rest } = data;
       if (editing) {
         await handleUpdate(editing.id, rest);
+        showToast("Cập nhật dịch vụ thành công!");
       } else {
         await handleCreate(rest);
+        showToast("Thêm mới dịch vụ thành công!");
       }
       setModalOpen(false);
       setEditing(null);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Có lỗi xảy ra");
+      showToast(err instanceof Error ? err.message : "Có lỗi xảy ra khi lưu", "error");
     }
   };
 
@@ -54,8 +58,9 @@ export default function ServicesPage() {
     if (!confirm("Bạn có chắc muốn xóa dịch vụ này?")) return;
     try {
       await handleDelete(id); // ← dùng handleDelete từ hook
+      showToast("Xóa dịch vụ thành công!");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Không thể xóa");
+      showToast(err instanceof Error ? err.message : "Không thể xóa", "error");
     }
   };
 

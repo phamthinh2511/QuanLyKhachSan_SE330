@@ -54,6 +54,32 @@ public class TaikhoanController {
                 .build();
     }
 
+    @GetMapping("/trash")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<List<TaikhoanResponseDto>> getTrashBin() {
+        return ApiResponse.<List<TaikhoanResponseDto>>builder()
+                .result(taikhoanService.getTrashBin())
+                .build();
+    }
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<TaikhoanResponseDto> restore(@PathVariable Integer id) {
+        return ApiResponse.<TaikhoanResponseDto>builder()
+                .message("Khôi phục tài khoản thành công")
+                .result(taikhoanService.restore(id))
+                .build();
+    }
+
+    @DeleteMapping("/{id}/hard")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<Void> hardDelete(@PathVariable Integer id) {
+        taikhoanService.hardDelete(id);
+        return ApiResponse.<Void>builder()
+                .message("Xóa vĩnh viễn tài khoản thành công")
+                .build();
+    }
+
     @PutMapping("/me/password")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Void> changePassword(

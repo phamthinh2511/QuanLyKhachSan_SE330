@@ -78,4 +78,6 @@ public interface HoadonRepository extends JpaRepository<Hoadon, Integer> {
 
     @Query("SELECT COALESCE(SUM(pt.soKhach), 0L) FROM Hoadon h JOIN h.maPhieuThue pt")
     long sumGuestsAllTime();
+
+    boolean existsByMaNhanVienId(Integer employeeId);
 }

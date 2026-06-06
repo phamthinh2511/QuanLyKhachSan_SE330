@@ -21,4 +21,7 @@ public interface PhieuthuephongRepository extends JpaRepository<Phieuthuephong, 
             "AND ct.maPhieuThue.ngayTraPhong > :checkIn")
     List<Integer> findDirectRentedRoomIds(@org.springframework.data.repository.query.Param("checkIn") java.time.LocalDate checkIn,
                                           @org.springframework.data.repository.query.Param("checkOut") java.time.LocalDate checkOut);
+
+    boolean existsByMaKhachHangId(Integer customerId);
+    boolean existsByMaNhanVienId(Integer employeeId);
 }

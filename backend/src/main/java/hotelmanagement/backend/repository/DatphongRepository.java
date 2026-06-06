@@ -20,4 +20,5 @@ public interface DatphongRepository extends JpaRepository<Datphong, Integer> {
     List<Integer> findBookedRoomIds(@Param("checkIn") LocalDate checkIn,
     @Param("checkOut") LocalDate checkOut);
 
+    boolean existsByMaKhachHangId(Integer customerId);
 }

@@ -8,6 +8,7 @@ import { getCustomers, createCustomer } from "@/lib/api/customers";
 import { getRooms } from "@/lib/api/rooms";
 import { Customer } from "@/types/customer";
 import { Room } from "@/types/room";
+import { isNotEmpty, isValidEmail, isValidPhone, isValidIdCard, isPastDate, isPositiveInteger } from "@/lib/validation";
 
 interface Props {
   booking: Booking | null;
@@ -30,7 +31,7 @@ export interface ExtendedForm {
   roomNumber: string;
   checkIn: string;
   checkOut: string;
-  guests: number;
+  guests: number | "";
   amount: number;
   status: BookingStatus;
 }
@@ -288,25 +289,75 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
     });
   };
 
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!isAutoFilled && !form.customerId) {
+      if (!isNotEmpty(form.customerName)) {
+        newErrors.customerName = "Tên khách hàng không được để trống";
+      }
+      if (!isNotEmpty(form.customerPhone)) {
+        newErrors.customerPhone = "Số điện thoại không được để trống";
+      } else if (!isValidPhone(form.customerPhone)) {
+        newErrors.customerPhone = "Số điện thoại không hợp lệ (9-11 chữ số, bắt đầu bằng 0 hoặc +84)";
+      }
+      if (!isNotEmpty(form.customerEmail)) {
+        newErrors.customerEmail = "Email không được để trống";
+      } else if (!isValidEmail(form.customerEmail)) {
+        newErrors.customerEmail = "Email không đúng định dạng";
+      }
+      if (!isNotEmpty(form.customerIdCard)) {
+        newErrors.customerIdCard = "CCCD không được để trống";
+      } else if (!isValidIdCard(form.customerIdCard)) {
+        newErrors.customerIdCard = "CCCD phải gồm 9 hoặc 12 chữ số";
+      }
+      if (!isNotEmpty(form.customerBirthday)) {
+        newErrors.customerBirthday = "Ngày sinh không được để trống";
+      } else if (!isPastDate(form.customerBirthday)) {
+        newErrors.customerBirthday = "Ngày sinh phải là ngày trong quá khứ";
+      }
+      if (!isNotEmpty(form.customerAddress)) {
+        newErrors.customerAddress = "Địa chỉ không được để trống";
+      }
+    }
+
+    if (!isNotEmpty(form.roomNumber)) {
+      newErrors.maPhongId = "Vui lòng chọn phòng";
+    } else {
+      const selectedRoom = rooms.find((r) => r.roomNumber === form.roomNumber);
+      if (selectedRoom) {
+        const capacity = selectedRoom.capacity || 0;
+        if (capacity > 0 && form.guests !== "" && form.guests > capacity) {
+          newErrors.soKhach = `Phòng này chỉ chứa tối đa ${capacity} người`;
+        }
+      }
+    }
+
+    if (!isNotEmpty(form.checkIn)) {
+      newErrors.ngayNhan = "Vui lòng chọn ngày check-in";
+    }
+    if (!isNotEmpty(form.checkOut)) {
+      newErrors.ngayTra = "Vui lòng chọn ngày check-out";
+    } else if (form.checkIn && new Date(form.checkOut) <= new Date(form.checkIn)) {
+      newErrors.ngayTra = "Ngày check-out phải sau ngày check-in";
+    }
+
+    if (!form.guests || !isPositiveInteger(form.guests)) {
+      newErrors.soKhach = "Số lượng khách phải lớn hơn hoặc bằng 1";
+    }
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
 
     const bookingType = form.status === "Đang sử dụng" ? "THUE_TRUC_TIEP" : "DAT_TRUOC";
     const selectedRoom = rooms.find((r) => r.roomNumber === form.roomNumber);
 
-    if (!selectedRoom) {
-      alert("Vui lòng chọn phòng!");
-      return;
-    }
-    if (!form.checkOut) {
-      alert("Vui lòng chọn ngày check-out!");
-      return;
-    }
-    const phongSucChua = selectedRoom.capacity || 0;
-    if (phongSucChua > 0 && form.guests > phongSucChua) {
-      alert(`Thao tác thất bại: Phòng này chỉ chứa tối đa ${phongSucChua} người, đơn của bạn có ${form.guests} khách!`);
-      return;
-    }
+    if (!selectedRoom) return;
 
     let customerId = form.customerId;
     let customerName = form.customerName;
@@ -346,7 +397,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
         roomNumber: selectedRoom.roomNumber,
         checkIn: form.checkIn,
         checkOut: form.checkOut,
-        guests: form.guests,
+        guests: form.guests === "" ? 1 : form.guests,
         amount: form.amount,
         status: form.status.trim()
       });
@@ -705,9 +756,10 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                     type="number"
                     id="soKhach"
                     min={1}
-                    value={form.guests}
+                    value={form.guests ?? ""}
                     onChange={(e) => {
-                      setForm({ ...form, guests: parseInt(e.target.value) || 1 });
+                      const val = e.target.value;
+                      setForm({ ...form, guests: val === "" ? "" : parseInt(val, 10) });
                       if (fieldErrors.soKhach) setFieldErrors(p => { const c = { ...p }; delete c.soKhach; return c; });
                     }}
                     className={getInputStyle("soKhach")}

@@ -29,5 +29,11 @@ public class Dichvu {
     @Column(name = "MoTa", nullable = false, length = 200)
     private String moTa;
 
+    @NotNull
+    @Column(name = "is_deleted", nullable = false, columnDefinition = "boolean default false")
+    private Boolean isDeleted = false;
+
+    @Column(name = "deleted_at")
+    private java.time.LocalDateTime deletedAt;
 
 }

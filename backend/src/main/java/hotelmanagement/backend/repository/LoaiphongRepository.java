@@ -9,4 +9,8 @@ import java.util.List;
 @Repository
 public interface LoaiphongRepository extends JpaRepository<Loaiphong,Integer> {
     List<Loaiphong> findById(Loaiphong loaiPhong);
+
+    List<Loaiphong> findByIsDeletedFalse();
+    List<Loaiphong> findByIsDeletedTrue();
+    java.util.Optional<Loaiphong> findByIdAndIsDeletedFalse(Integer id);
 }

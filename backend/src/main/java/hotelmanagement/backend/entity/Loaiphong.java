@@ -34,5 +34,11 @@ public class Loaiphong {
     @Column(name = "SucChuaToiDa", nullable = false)
     private Integer sucChuaToiDa;
 
+    @NotNull
+    @Column(name = "is_deleted", nullable = false, columnDefinition = "boolean default false")
+    private Boolean isDeleted = false;
+
+    @Column(name = "deleted_at")
+    private java.time.LocalDateTime deletedAt;
 
 }

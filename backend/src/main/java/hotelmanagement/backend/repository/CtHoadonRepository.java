@@ -11,4 +11,7 @@ import java.util.List;
 @Repository
 public interface CtHoadonRepository extends JpaRepository<CtHoadon, Integer> {
     List<CtHoadon> findByMaHoaDon(Hoadon maHoaDon);
+
+    boolean existsByMaPhongId(Integer roomId);
+    boolean existsByMaDichVuId(Integer serviceId);
 }

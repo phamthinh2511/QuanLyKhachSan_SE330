@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Service } from "@/types/service";
+import { isNotEmpty, isNonNegativeNumber } from "@/lib/validation";
 
 interface Props {
   service: Service | null;
@@ -15,23 +16,58 @@ const emptyForm: Omit<Service, "id" | "serviceCode"> = {
 };
 
 export default function ServiceModal({ service, onSave, onClose }: Props) {
-  const [form, setForm] = useState<Omit<Service, "id" | "serviceCode">>(emptyForm);
+  const [form, setForm] = useState<Omit<Service, "id" | "serviceCode" | "price"> & { price: number | "" }>({
+    ...emptyForm,
+    price: service ? service.price : "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (service) {
       const { id, serviceCode, ...rest } = service;
       setForm(rest);
     } else {
-      setForm(emptyForm);
+      setForm(emptyForm as any);
     }
+    setErrors({});
   }, [service]);
+
+  const handleChange = (field: keyof Omit<Service, "id" | "serviceCode">, value: any) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!isNotEmpty(form.name)) newErrors.name = "Tên dịch vụ không được để trống";
+    if (form.price === "" || form.price === undefined || form.price === null || !isNonNegativeNumber(form.price)) {
+      newErrors.price = "Giá dịch vụ phải là số không âm";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ ...form, id: service?.id ?? 0, serviceCode: service?.serviceCode ?? "" });
+    if (!validate()) return;
+    onSave({ ...form, price: form.price === "" ? 0 : form.price, id: service?.id ?? 0, serviceCode: service?.serviceCode ?? "" } as any);
   };
 
-  const inputClass = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const getInputClass = (fieldName: string) => {
+    const baseClass = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800 transition duration-150";
+    if (errors[fieldName]) {
+      return `${baseClass} border-red-500 focus:ring-red-200 focus:border-red-500`;
+    }
+    return baseClass;
+  };
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -48,7 +84,7 @@ export default function ServiceModal({ service, onSave, onClose }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
           {/* Tên dịch vụ */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tên dịch vụ</label>
@@ -56,10 +92,10 @@ export default function ServiceModal({ service, onSave, onClose }: Props) {
               type="text"
               placeholder="vd. Breakfast Buffet"
               value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className={inputClass}
-              required
+              onChange={(e) => handleChange("name", e.target.value)}
+              className={getInputClass("name")}
             />
+            {errors.name && <p className="text-red-500 text-xs mt-1 font-medium">{errors.name}</p>}
           </div>
 
           {/* Giá */}
@@ -67,13 +103,15 @@ export default function ServiceModal({ service, onSave, onClose }: Props) {
             <label className="block text-sm font-medium text-gray-700 mb-1">Giá (VNĐ)</label>
             <input
               type="number"
-              min={0}
               placeholder="25000"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: +e.target.value })}
-              className={inputClass}
-              required
+              value={form.price ?? ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                handleChange("price", val === "" ? "" : parseFloat(val));
+              }}
+              className={getInputClass("price")}
             />
+            {errors.price && <p className="text-red-500 text-xs mt-1 font-medium">{errors.price}</p>}
           </div>
 
           {/* Mô tả */}
@@ -83,8 +121,8 @@ export default function ServiceModal({ service, onSave, onClose }: Props) {
               rows={3}
               placeholder="Nhập mô tả dịch vụ"
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className={inputClass + " resize-none"}
+              onChange={(e) => handleChange("description", e.target.value)}
+              className={getInputClass("description") + " resize-none"}
             />
           </div>
 
