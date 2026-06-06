@@ -105,4 +105,28 @@ export const employeesApi = {
       method: "DELETE",
     });
   },
+
+  getTrashBin: async (): Promise<ApiResponse<Employee[]>> => {
+    const res = await apiClient<ApiResponse<EmployeeResponseDto[]>>("/api/employees/trash");
+    return {
+      ...res,
+      result: (res.result || []).map(mapToEmployee),
+    };
+  },
+
+  restore: async (id: number): Promise<ApiResponse<Employee>> => {
+    const res = await apiClient<ApiResponse<EmployeeResponseDto>>(`/api/employees/${id}/restore`, {
+      method: "PUT",
+    });
+    return {
+      ...res,
+      result: mapToEmployee(res.result),
+    };
+  },
+
+  hardDelete: async (id: number): Promise<ApiResponse<void>> => {
+    return apiClient<ApiResponse<void>>(`/api/employees/${id}/hard`, {
+      method: "DELETE",
+    });
+  },
 };

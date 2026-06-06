@@ -7,6 +7,7 @@ import hotelmanagement.backend.repository.LoaiphongRepository;
 import hotelmanagement.backend.repository.PhongRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -53,11 +54,20 @@ public class LoaiphongService {
         return toResponseDto(loaiphongRepository.save(loaiphong));
     }
 
+    @Transactional
     public LoaiPhongResponseDto update(Integer id, LoaiPhongRequestDto dto) {
         Loaiphong loaiphong = loaiphongRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy loại phòng với id: " + id));
+        
+        Integer oldSucChua = loaiphong.getSucChuaToiDa();
         applyRequestDtoToEntity(loaiphong, dto);
-        return toResponseDto(loaiphongRepository.save(loaiphong));
+        Loaiphong saved = loaiphongRepository.save(loaiphong);
+
+        if (dto.getSucChuaToiDa() != null && !dto.getSucChuaToiDa().equals(oldSucChua)) {
+            phongRepository.updateSucChuaByMaLoaiPhongId(dto.getSucChuaToiDa(), id);
+        }
+
+        return toResponseDto(saved);
     }
 
     public void delete(Integer id) {

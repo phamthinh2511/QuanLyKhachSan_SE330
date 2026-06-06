@@ -8,7 +8,7 @@ import {
   createServiceUsage,
   updateServiceUsage,
   deleteServiceUsage,
-  SudungdichvuRequestDto,
+  ServiceUsageRequestPayload,
 } from "@/lib/api/service-usages";
 
 export function useServiceUsages() {
@@ -33,7 +33,7 @@ export function useServiceUsages() {
     fetchServiceUsages();
   }, [fetchServiceUsages]);
 
-  const addServiceUsage = async (payload: SudungdichvuRequestDto) => {
+  const addServiceUsage = async (payload: ServiceUsageRequestPayload) => {
     try {
       const newUsage = await createServiceUsage(payload);
       setServiceUsages((prev) => [...prev, newUsage]);
@@ -44,7 +44,7 @@ export function useServiceUsages() {
     }
   };
 
-  const editServiceUsage = async (id: number, payload: SudungdichvuRequestDto) => {
+  const editServiceUsage = async (id: number, payload: ServiceUsageRequestPayload) => {
     try {
       const updatedUsage = await updateServiceUsage(id, payload);
       setServiceUsages((prev) =>

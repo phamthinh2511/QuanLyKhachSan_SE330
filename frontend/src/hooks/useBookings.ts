@@ -10,7 +10,7 @@ import {
   updateBooking,
   checkInBooking,
   checkOutBooking,
-  BookingRequestDto,
+  BookingRequestPayload,
 } from "@/lib/api/bookings";
 
 export function useBookings() {
@@ -23,7 +23,7 @@ export function useBookings() {
       setLoading(true);
       setError(null);
       const data = await getAllBookings();
-      setBookings(data);
+      setBookings(data.result || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Có lỗi xảy ra khi tải danh sách đặt phòng");
     } finally {
@@ -35,7 +35,7 @@ export function useBookings() {
     fetchBookings();
   }, [fetchBookings]);
 
-  const createBooking = async (bookingData: BookingRequestDto) => {
+  const createBooking = async (bookingData: BookingRequestPayload) => {
     try {
       await submitBookingForm(bookingData);
       // After a successful action, refetch the entire list to ensure data consistency
@@ -46,7 +46,7 @@ export function useBookings() {
     }
   };
 
-  const editBooking = async (id: number, bookingData: BookingRequestDto) => {
+  const editBooking = async (id: number, bookingData: BookingRequestPayload) => {
     try {
       await updateBooking(id, bookingData);
       await fetchBookings();

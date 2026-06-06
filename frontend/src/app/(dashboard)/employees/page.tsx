@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
+import { useToast } from "@/context/ToastContext";
 import { employeesApi } from "@/lib/api/employees";
 import { Employee } from "@/types/employee";
 import EmployeeStatCards from "@/components/employees/EmployeeStatCards";
@@ -15,6 +16,7 @@ export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   const [search, setSearch] = useState("");
   const [filterPosition, setFilterPosition] = useState("Tất cả");
@@ -59,14 +61,16 @@ export default function EmployeesPage() {
     try {
       if (editing) {
         await employeesApi.update(editing.id, data);
+        showToast("Cập nhật thông tin nhân viên thành công!");
       } else {
         await employeesApi.create(data);
+        showToast("Thêm mới nhân viên thành công!");
       }
       await fetchEmployees();
       setModalOpen(false);
       setEditing(null);
     } catch (err: any) {
-      alert("Lỗi khi lưu nhân viên: " + (err.message || "Không xác định"));
+      showToast(err.message || "Không thể lưu thông tin nhân viên", "error");
     }
   };
 
@@ -77,8 +81,9 @@ export default function EmployeesPage() {
       try {
         await employeesApi.delete(id);
         await fetchEmployees();
+        showToast("Xóa nhân viên thành công!");
       } catch (err: any) {
-        alert("Lỗi khi xóa nhân viên: " + (err.message || "Không xác định"));
+        showToast(err.message || "Không thể xóa nhân viên", "error");
       }
     }
   };

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useServiceUsage } from "@/hooks/useServiceUsage";
+import { useToast } from "@/context/ToastContext";
 import { ServiceUsage, ServiceUsageStatus } from "@/types/serviceUsage";
 import ServiceUsageStatCards from "@/components/serviceusages/ServiceUsageStatCards";
 import ServiceUsageTodayTable from "@/components/serviceusages/ServiceUsageTodayTable";
@@ -14,6 +15,7 @@ const PAGE_SIZE = 50;
 
 export default function ServiceUsagePage() {
   const { usages, loading, error, saveUsage, removeUsage } = useServiceUsage();
+  const { showToast } = useToast();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("Tất cả");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -53,8 +55,9 @@ export default function ServiceUsagePage() {
     };
     try {
       await saveUsage(id, payload);
+      showToast("Cập nhật trạng thái thành công!");
     } catch (err: any) {
-      alert(err.message || "Không thể cập nhật trạng thái");
+      showToast(err.message || "Không thể cập nhật trạng thái", "error");
     }
   };
 
@@ -91,10 +94,11 @@ export default function ServiceUsagePage() {
     };
     try {
       await saveUsage(editing ? editing.id : null, payload);
+      showToast(editing ? "Cập nhật sử dụng dịch vụ thành công!" : "Ghi nhận sử dụng dịch vụ thành công!");
       setModalOpen(false);
       setEditing(null);
     } catch (err: any) {
-      alert(err.message || "Không thể lưu thông tin sử dụng dịch vụ");
+      showToast(err.message || "Không thể lưu thông tin sử dụng dịch vụ", "error");
     }
   };
 
@@ -107,8 +111,9 @@ export default function ServiceUsagePage() {
     if (confirm("Bạn có chắc muốn xóa bản ghi này?")) {
       try {
         await removeUsage(id);
+        showToast("Xóa bản ghi sử dụng dịch vụ thành công!");
       } catch (err: any) {
-        alert(err.message || "Không thể xóa bản ghi sử dụng dịch vụ");
+        showToast(err.message || "Không thể xóa bản ghi sử dụng dịch vụ", "error");
       }
     }
   };

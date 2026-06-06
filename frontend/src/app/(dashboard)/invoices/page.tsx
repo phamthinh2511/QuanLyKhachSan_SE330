@@ -9,6 +9,7 @@ import InvoiceEditModal from "@/components/invoices/InvoiceEditModal";
 import CheckoutModal from "@/components/invoices/CheckoutModal";
 import { getPagedInvoices, deleteInvoice, updateInvoice, exportInvoices } from "@/lib/api/invoices";
 import { Download, Calendar, Search, ChevronDown } from "lucide-react";
+import { useToast } from "@/context/ToastContext";
 
 const PAGE_SIZE = 15;
 
@@ -35,6 +36,7 @@ export default function InvoicesPage() {
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [checkoutInvoice, setCheckoutInvoice] = useState<Invoice | null>(null);
+  const { showToast } = useToast();
 
   // Generate list of years for selector (from 5 years ago to 5 years in the future)
   const years = Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - 5 + i);
@@ -144,11 +146,11 @@ export default function InvoicesPage() {
   const handleUpdate = async (updatedInvoice: Invoice) => {
     try {
       await updateInvoice(updatedInvoice.id, updatedInvoice);
-      alert("Cập nhật hóa đơn thành công!");
+      showToast("Cập nhật hóa đơn thành công!");
       handleRefresh();
       setEditingInvoice(null);
     } catch (err: any) {
-      alert(err.message || "Cập nhật hóa đơn thất bại!");
+      showToast(err.message || "Cập nhật hóa đơn thất bại!", "error");
     }
   };
 
@@ -156,10 +158,10 @@ export default function InvoicesPage() {
     if (confirm("Bạn có chắc muốn xóa hóa đơn này?")) {
       try {
         await deleteInvoice(id);
-        alert("Xóa hóa đơn thành công!");
+        showToast("Xóa hóa đơn thành công!");
         handleRefresh();
       } catch (err: any) {
-        alert(err.message || "Xóa hóa đơn thất bại!");
+        showToast(err.message || "Xóa hóa đơn thất bại!", "error");
       }
     }
   };
@@ -178,7 +180,7 @@ export default function InvoicesPage() {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (err: any) {
-      alert(err.message || "Xuất file Excel thất bại!");
+      showToast(err.message || "Xuất file Excel thất bại!", "error");
     } finally {
       setLoading(false);
     }
@@ -357,7 +359,7 @@ export default function InvoicesPage() {
           maNhanVien={1}
           khachHang={checkoutInvoice.customerName}
           onSuccess={(result) => {
-            alert(`Checkout thành công! Mã hóa đơn: #${result.maHoaDon}`);
+            showToast(`Checkout thành công! Mã hóa đơn: #${result.maHoaDon}`);
             handleRefresh();
             setCheckoutInvoice(null);
           }}

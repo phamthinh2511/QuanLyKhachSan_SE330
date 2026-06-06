@@ -69,3 +69,19 @@ export async function updateService(
 export async function deleteService(id: number): Promise<void> {
   await apiClient<ApiResponse<void>>(`/api/services/${id}`, { method: "DELETE" });
 }
+
+export async function getServicesTrash(): Promise<Service[]> {
+  const data = await apiClient<ApiResponse<DichvuApi[]>>("/api/services/trash");
+  return (data.result || []).map(mapToService);
+}
+
+export async function restoreService(id: number): Promise<Service> {
+  const data = await apiClient<ApiResponse<DichvuApi>>(`/api/services/${id}/restore`, {
+    method: "PUT",
+  });
+  return mapToService(data.result);
+}
+
+export async function hardDeleteService(id: number): Promise<void> {
+  await apiClient<ApiResponse<void>>(`/api/services/${id}/hard`, { method: "DELETE" });
+}
