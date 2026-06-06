@@ -64,7 +64,9 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Đồng bộ chuỗi chặn ngày quá khứ theo mốc thời gian thực tại của hệ thống (Năm 2026)
-  const todayStr = "2026-06-05";
+  const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000)
+      .toISOString()
+      .split("T")[0];
 
   const filteredCustomers = searchQuery.trim() === ""
     ? customers
@@ -339,13 +341,14 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
 
     try {
       await onSave({
+          id: booking ? booking.id : null,
         bookingType,
         customerId: String(customerId),
         customerName: customerName,
         roomId: String(selectedRoom.id),
         roomNumber: selectedRoom.roomNumber,
-        checkIn: form.checkIn,
-        checkOut: form.checkOut,
+      ngayNhan: form.checkIn,
+        ngayTra: form.checkOut,
         guests: form.guests,
         amount: form.amount,
         status: form.status.trim()
@@ -685,7 +688,17 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                   <input
                     type="date"
                     id="ngayTra"
-                    min={form.checkIn || todayStr}
+                    min={
+                                          form.checkIn
+                                            ? (() => {
+                                                const nextDay = new Date(form.checkIn);
+                                                nextDay.setDate(nextDay.getDate() + 1);
+                                                const offset = nextDay.getTimezoneOffset();
+                                                const localNextDay = new Date(nextDay.getTime() - offset * 60 * 1000);
+                                                return localNextDay.toISOString().split("T")[0];
+                                              })()
+                                            : todayStr
+                                        }
                     value={form.checkOut}
                     onChange={(e) => {
                       setForm({ ...form, checkOut: e.target.value });
