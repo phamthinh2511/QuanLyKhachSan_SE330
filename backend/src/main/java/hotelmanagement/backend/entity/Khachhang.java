@@ -59,4 +59,11 @@ public class Khachhang {
     @Column(name = "LoaiKhachHang", nullable = false, length = 50)
     private String loaiKhachHang;
 
+    @NotNull
+    @Column(name = "is_deleted", nullable = false, columnDefinition = "boolean default false")
+    private Boolean isDeleted = false;
+
+    @Column(name = "deleted_at")
+    private java.time.LocalDateTime deletedAt;
+
 }

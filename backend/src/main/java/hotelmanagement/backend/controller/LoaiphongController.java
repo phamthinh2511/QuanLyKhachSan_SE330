@@ -43,4 +43,20 @@ public class LoaiphongController {
         loaiphongService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/trash")
+    public ResponseEntity<List<LoaiPhongResponseDto>> getTrashBin() {
+        return ResponseEntity.ok(loaiphongService.getTrashBin());
+    }
+
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<LoaiPhongResponseDto> restore(@PathVariable Integer id) {
+        return ResponseEntity.ok(loaiphongService.restore(id));
+    }
+
+    @DeleteMapping("/{id}/hard")
+    public ResponseEntity<Void> hardDelete(@PathVariable Integer id) {
+        loaiphongService.hardDelete(id);
+        return ResponseEntity.noContent().build();
+    }
 }

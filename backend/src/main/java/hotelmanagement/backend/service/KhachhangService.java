@@ -4,6 +4,8 @@ import hotelmanagement.backend.dto.request.KhachhangRequestDto;
 import hotelmanagement.backend.dto.response.KhachhangResponseDto;
 import hotelmanagement.backend.entity.Khachhang;
 import hotelmanagement.backend.repository.KhachhangRepository;
+import hotelmanagement.backend.repository.DatphongRepository;
+import hotelmanagement.backend.repository.PhieuthuephongRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,8 @@ import java.util.stream.Collectors;
 public class KhachhangService {
 
     private final KhachhangRepository khachhangRepository;
+    private final DatphongRepository datphongRepository;
+    private final PhieuthuephongRepository phieuthuephongRepository;
 
     private KhachhangResponseDto toResponseDto(Khachhang kh) {
         return KhachhangResponseDto.builder()
@@ -43,23 +47,23 @@ public class KhachhangService {
     }
 
     public List<KhachhangResponseDto> getAll() {
-        return khachhangRepository.findAll()
+        return khachhangRepository.findByIsDeletedFalse()
                 .stream()
                 .map(this::toResponseDto)
                 .collect(Collectors.toList());
     }
 
     public KhachhangResponseDto getById(Integer id) {
-        Khachhang kh = khachhangRepository.findById(id)
+        Khachhang kh = khachhangRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay khach hang voi id: " + id));
         return toResponseDto(kh);
     }
 
     public KhachhangResponseDto create(KhachhangRequestDto dto) {
-        if (khachhangRepository.existsByEmail(dto.getEmail())) {
+        if (khachhangRepository.existsByEmailAndIsDeletedFalse(dto.getEmail())) {
             throw new RuntimeException("Email da ton tai trong he thong");
         }
-        if (khachhangRepository.existsByCccd(dto.getIdCard())) {
+        if (khachhangRepository.existsByCccdAndIsDeletedFalse(dto.getIdCard())) {
             throw new RuntimeException("CCCD da ton tai trong he thong");
         }
 
@@ -69,16 +73,46 @@ public class KhachhangService {
     }
 
     public KhachhangResponseDto update(Integer id, KhachhangRequestDto dto) {
-        Khachhang kh = khachhangRepository.findById(id)
+        Khachhang kh = khachhangRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay khach hang voi id: " + id));
         applyRequestDto(kh, dto);
         return toResponseDto(khachhangRepository.save(kh));
     }
 
     public void delete(Integer id) {
-        if (!khachhangRepository.existsById(id)) {
-            throw new RuntimeException("Khong tim thay khach hang voi id: " + id);
+        Khachhang kh = khachhangRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay khach hang voi id: " + id));
+        kh.setIsDeleted(true);
+        kh.setDeletedAt(java.time.LocalDateTime.now());
+        khachhangRepository.save(kh);
+    }
+
+    public List<KhachhangResponseDto> getTrashBin() {
+        return khachhangRepository.findByIsDeletedTrue()
+                .stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    public KhachhangResponseDto restore(Integer id) {
+        Khachhang kh = khachhangRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay khach hang voi id: " + id));
+        if (!kh.getIsDeleted()) {
+            throw new RuntimeException("Khach hang khong nam trong thung rac");
         }
-        khachhangRepository.deleteById(id);
+        kh.setIsDeleted(false);
+        kh.setDeletedAt(null);
+        return toResponseDto(khachhangRepository.save(kh));
+    }
+
+    public void hardDelete(Integer id) {
+        Khachhang kh = khachhangRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay khach hang voi id: " + id));
+
+        if (datphongRepository.existsByMaKhachHangId(id) || phieuthuephongRepository.existsByMaKhachHangId(id)) {
+            throw new RuntimeException("Khong the xoa vinh vien khach hang nay vi ho da co giao dich trong he thong");
+        }
+
+        khachhangRepository.delete(kh);
     }
 }

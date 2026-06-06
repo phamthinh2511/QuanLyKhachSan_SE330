@@ -8,6 +8,11 @@ import hotelmanagement.backend.entity.Phong;
 import hotelmanagement.backend.entity.Loaiphong;
 import hotelmanagement.backend.repository.PhongRepository;
 import hotelmanagement.backend.repository.LoaiphongRepository;
+import hotelmanagement.backend.repository.CtDatphongRepository;
+import hotelmanagement.backend.repository.CtPhieuthuephongRepository;
+import hotelmanagement.backend.repository.CtHoadonRepository;
+import hotelmanagement.backend.repository.SudungdichvuRepository;
+import hotelmanagement.backend.repository.KiemkephongRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +24,11 @@ import java.util.stream.Collectors;
 public class PhongService {
     private final LoaiphongRepository loaiphongRepository;
     private final PhongRepository phongRepository;
+    private final CtDatphongRepository ctDatphongRepository;
+    private final CtPhieuthuephongRepository ctPhieuthuephongRepository;
+    private final CtHoadonRepository ctHoadonRepository;
+    private final SudungdichvuRepository sudungdichvuRepository;
+    private final KiemkephongRepository kiemkephongRepository;
 
     // Entity -> DTO
     private LoaiPhongResponseDto toLoaiPhongResponseDto(Loaiphong loaiphong){
@@ -67,14 +77,15 @@ public class PhongService {
     }
 
     public List<PhongResponseDto> getAll() {
-        return phongRepository.findAll()
+        return phongRepository.findByIsDeletedFalse()
                 .stream()
                 .map(this::toResponseDto)
                 .collect(Collectors.toList());
     }
 
     public PhongResponseDto getById(Integer id) {
-        Phong phong = phongRepository.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy phòng với id: " + id));
+        Phong phong = phongRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng với id: " + id));
         return toResponseDto(phong);
     }
 
@@ -86,16 +97,50 @@ public class PhongService {
     }
 
     public PhongResponseDto update(Integer id, PhongRequestDto dto) {
-        Phong p = phongRepository.findById(id)
+        Phong p = phongRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng với id: " + id));
         applyRequestDtoToEntity(p, dto);
         return toResponseDto(phongRepository.save(p));
     }
 
     public void delete(Integer id) {
-        if (!phongRepository.existsById(id)) {
-            throw new RuntimeException("Không tìm thấy phòng với id: " + id);
+        Phong p = phongRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng với id: " + id));
+        p.setIsDeleted(true);
+        p.setDeletedAt(java.time.LocalDateTime.now());
+        phongRepository.save(p);
+    }
+
+    public List<PhongResponseDto> getTrashBin() {
+        return phongRepository.findByIsDeletedTrue()
+                .stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    public PhongResponseDto restore(Integer id) {
+        Phong p = phongRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng với id: " + id));
+        if (!p.getIsDeleted()) {
+            throw new RuntimeException("Phòng không nằm trong thùng rác");
         }
-        phongRepository.deleteById(id);
+        p.setIsDeleted(false);
+        p.setDeletedAt(null);
+        return toResponseDto(phongRepository.save(p));
+    }
+
+    public void hardDelete(Integer id) {
+        Phong p = phongRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng với id: " + id));
+
+        if (ctDatphongRepository.existsByMaPhongId(id) ||
+            ctPhieuthuephongRepository.existsByMaPhongId(id) ||
+            ctHoadonRepository.existsByMaPhongId(id) ||
+            sudungdichvuRepository.existsByMaPhongId(id) ||
+            kiemkephongRepository.existsByMaPhongId(id)) {
+            throw new RuntimeException("Không thể xóa vĩnh viễn phòng này vì đã có dữ liệu giao dịch liên quan");
+        }
+
+        phongRepository.delete(p);
     }
 }

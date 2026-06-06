@@ -19,4 +19,6 @@ public interface CtPhieuthuephongRepository extends JpaRepository<CtPhieuthuepho
      */
     @Query("SELECT c FROM CtPhieuthuephong c WHERE c.maPhieuThue.id = ?1")
     List<CtPhieuthuephong> findByPhieuThueId(Integer maPhieuThue);
+
+    boolean existsByMaPhongId(Integer roomId);
 }

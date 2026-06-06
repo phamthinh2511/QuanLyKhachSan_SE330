@@ -18,4 +18,9 @@ public interface PhongRepository extends JpaRepository<Phong, Integer> {
 
     @Query("SELECT p FROM Phong p JOIN FETCH p.maLoaiPhong")
     List<Phong> findAllWithLoaiPhong();
+
+    List<Phong> findByIsDeletedFalse();
+    List<Phong> findByIsDeletedTrue();
+    java.util.Optional<Phong> findByIdAndIsDeletedFalse(Integer id);
+    boolean existsByMaLoaiPhongId(Integer maLoaiPhongId);
 }

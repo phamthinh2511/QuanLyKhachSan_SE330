@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface CtDatphongRepository extends JpaRepository<CtDatphong, Integer> {
     List<CtDatphong> findByMaDatPhong(Datphong datphong);
+
+    boolean existsByMaPhongId(Integer roomId);
 }

@@ -10,4 +10,10 @@ import java.util.List;
 public interface NhanvienRepository extends JpaRepository<Nhanvien, Integer> {
     boolean existsBySoDienThoai(String soDienThoai);
     List<Nhanvien> findByTrangThaiNot(String trangThai);
+
+    List<Nhanvien> findByIsDeletedFalse();
+    List<Nhanvien> findByIsDeletedTrue();
+    java.util.Optional<Nhanvien> findByIdAndIsDeletedFalse(Integer id);
+    boolean existsBySoDienThoaiAndIsDeletedFalse(String soDienThoai);
+    boolean existsByTaikhoanId(Integer taikhoanId);
 }
