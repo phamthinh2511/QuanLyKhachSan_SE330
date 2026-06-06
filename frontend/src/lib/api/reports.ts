@@ -2,8 +2,14 @@
  * @file API calls for Reports.
  * This file follows the standard API layer architecture.
  */
-import { apiClient, ApiResponse } from "./client";
+import { apiClient } from "./client";
 import { getToken } from "@/lib/auth";
+
+export interface ApiResponse<T> {
+  code: number;
+  message: string;
+  result: T;
+}
 
 // --- DTO Definition ---
 // Matches ReportResponseDto.java

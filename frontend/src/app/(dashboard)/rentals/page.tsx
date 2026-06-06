@@ -8,6 +8,7 @@ import { RentalSlip } from "@/lib/api/rentals";
 import { checkOutBooking } from "@/lib/api/bookings"; // Import API xử lý Check-out chuyển trạng thái sang Đã trả phòng & Tạo hóa đơn
 import RentalDetailModal from "@/components/rentals/RentalDetailModal";
 import clsx from "clsx";
+import { useToast } from "@/context/ToastContext";
 
 const PAGE_SIZE = 50;
 
@@ -23,6 +24,7 @@ const statusStyle: Record<string, string> = {
 
 export default function RentalsPage() {
   const { rentals, loading, error, removeRental } = useRentals();
+  const { showToast } = useToast();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("Tất cả");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -50,7 +52,7 @@ export default function RentalsPage() {
       ? (rentals as any).result
       : [];
 
-  const filteredRentals = actualRentals.filter((r) => {
+  const filteredRentals = actualRentals.filter((r: RentalSlip) => {
     const norm = getNormalizedStatus(r.status);
 
     // Chỉ chấp nhận những phiếu đang ở hoặc đã trả phòng hoàn tất
@@ -74,19 +76,20 @@ export default function RentalsPage() {
       if (confirm(`Bạn có chắc chắn muốn hủy phiếu thuê phòng ${code}? Điều này sẽ giải phóng trạng thái phòng về trống.`)) {
         try {
           await removeRental(id);
-          alert(`Đã hủy phiếu thuê phòng ${code} thành công!`);
+          showToast(`Đã hủy phiếu thuê phòng ${code} thành công!`);
         } catch (err: any) {
           const errorMessage = (err.message || "").toLowerCase();
 
           // Kiểm tra lỗi khóa ngoại ràng buộc dữ liệu với dịch vụ phòng
           if (errorMessage.includes("sudungdichvu") || errorMessage.includes("foreign key")) {
-            alert(
+            showToast(
               `Không thể hủy phiếu thuê ${code}!\n\n` +
-              `Lý do: Phiếu thuê này đang có dữ liệu sử dụng dịch vụ đi kèm (gọi đồ ăn, nước uống, dịch vụ khác...). ` +
-              `Vui lòng vào mục "Yêu Cầu Dịch Vụ" để xóa hết các dịch vụ của phòng này trước khi thực hiện hủy phiếu.`
+              `Lý do: Phiếu thuê này đang có dữ liệu sử dụng dịch vụ đi kèm. ` +
+              `Vui lòng vào mục "Yêu Cầu Dịch Vụ" để xóa hết các dịch vụ của phòng này trước khi thực hiện hủy phiếu.`,
+              "error"
             );
           } else {
-            alert(err.message || "Không thể hủy phiếu thuê phòng do trục trặc từ hệ thống.");
+            showToast(err.message || "Không thể hủy phiếu thuê phòng do trục trặc từ hệ thống.", "error");
           }
         }
       }
@@ -101,10 +104,10 @@ export default function RentalsPage() {
       setActionLoading(true);
       // Thực hiện đổi trạng thái sang "Đã trả phòng" đồng thời đẩy dữ liệu kết xuất qua hóa đơn
       await checkOutBooking(bookingId, "");
-            alert(`Trả phòng thành công! Phiếu ${rentalCode} đã chuyển sang trạng thái 'Đã trả phòng' và khởi tạo hóa đơn (Chưa thanh toán).`);
+      showToast(`Trả phòng thành công! Phiếu ${rentalCode} đã chuyển sang trạng thái 'Đã trả phòng' và khởi tạo hóa đơn (Chưa thanh toán).`);
       window.location.reload();
     } catch (err: any) {
-      alert(err.message || "Xử lý thủ tục trả phòng thất bại!");
+      showToast(err.message || "Xử lý thủ tục trả phòng thất bại!", "error");
     } finally {
       setActionLoading(false);
     }
@@ -183,7 +186,7 @@ export default function RentalsPage() {
                     </td>
                   </tr>
                 ) : (
-                  visibleRentals.map((r) => {
+                  visibleRentals.map((r: RentalSlip) => {
                     const normStatus = getNormalizedStatus(r.status);
                     return (
                       <tr key={r.id} className="hover:bg-gray-50 transition group">

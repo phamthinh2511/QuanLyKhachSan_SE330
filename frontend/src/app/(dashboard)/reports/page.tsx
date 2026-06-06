@@ -5,12 +5,14 @@ import { Download, ChevronDown, Calendar } from "lucide-react";
 import ReportStatCards from "@/components/reports/ReportStatCards";
 import ReportTabs from "@/components/reports/ReportTabs";
 import { getReportData, exportRevenueReport, ReportData } from "@/lib/api/invoices";
+import { useToast } from "@/context/ToastContext";
 
 export type Period = string;
 export type ReportTab = "Phân tích doanh thu" | "Tỉ lệ bận phòng" | "Sử dụng dịch vụ" | "Năng suất phòng";
 
 export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState<ReportTab>("Phân tích doanh thu");
+  const { showToast } = useToast();
   const reportRef = useRef<HTMLDivElement>(null);
 
   // Dynamic filter state
@@ -104,8 +106,9 @@ export default function ReportsPage() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+      showToast("Xuất báo cáo doanh thu thành công!");
     } catch (err: any) {
-      alert(err.message || "Xuất báo cáo doanh thu thất bại!");
+      showToast(err.message || "Xuất báo cáo doanh thu thất bại!", "error");
     } finally {
       setLoading(false);
     }
