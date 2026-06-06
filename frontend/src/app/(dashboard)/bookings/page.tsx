@@ -115,7 +115,11 @@ export default function BookingsPage() {
       ]);
 
       setCustomers(customerRes);
-      setRooms(roomRes);
+      if (Array.isArray(roomRes)) {
+            setRooms(roomRes);
+          } else if (roomRes && typeof roomRes === 'object' && Array.isArray((roomRes as any).result)) {
+            setRooms((roomRes as any).result);
+          }
 
       let rawList: any[] = [];
 

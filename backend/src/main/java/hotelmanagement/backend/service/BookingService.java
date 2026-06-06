@@ -507,17 +507,21 @@ public List<DatPhongResponse> getAllBookings() {
         String reqStatus = request.getTrangThai();
         if (reqStatus != null) {
             String cleanStatus = reqStatus.trim();
-            if ("Đã hủy".equals(cleanStatus) || "Đã trả phòng".equals(cleanStatus) || "Checked-out".equals(cleanStatus) || "CANCELLED".equals(cleanStatus)) {
-                phong.setTrangThai("Trống");
-            } else if ("Đang sử dụng".equals(cleanStatus) || "Checked-in".equals(cleanStatus) || "Đã nhận phòng tại quầy".equals(cleanStatus) || "Đã nhận phòng".equals(cleanStatus)) {
-                phong.setTrangThai("Đang sử dụng");
-            } else {
-                phong.setTrangThai("Đã đặt");
-            }
+        if ("Đã hủy".equals(cleanStatus) || "Đã trả phòng".equals(cleanStatus) ||
+                "Checked-out".equals(cleanStatus) || "CANCELLED".equals(cleanStatus) || "Trống".equals(cleanStatus)) {
+            phong.setTrangThai("Trống");
+        } else if ("Đang sử dụng".equals(cleanStatus) || "Checked-in".equals(cleanStatus) ||
+                "Đã nhận phòng tại quầy".equals(cleanStatus) || "Đã nhận phòng".equals(cleanStatus)) {
+            phong.setTrangThai("Đang sử dụng");
+        } else if ("Chưa nhận".equals(cleanStatus) || "Đã đặt".equals(cleanStatus) || "Đặt trước".equals(cleanStatus)) {
+            phong.setTrangThai("Đã đặt");
         } else {
             phong.setTrangThai("Đã đặt");
         }
-        phongRepository.save(phong);
+    } else {
+        phong.setTrangThai("Đã đặt");
+    }
+phongRepository.save(phong);
 
         return savedDp;
     }

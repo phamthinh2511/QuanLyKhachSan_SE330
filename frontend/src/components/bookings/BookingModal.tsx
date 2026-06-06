@@ -208,31 +208,43 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
   };
 
   const handleCheckInChange = (val: string) => {
-    if (fieldErrors.ngayNhan) {
-      setFieldErrors((prev) => {
-        const c = { ...prev };
-        delete c.ngayNhan;
-        return c;
+      if (fieldErrors.ngayNhan) {
+        setFieldErrors((prev) => {
+          const c = { ...prev };
+          delete c.ngayNhan;
+          return c;
+        });
+      }
+      if (!val) {
+        setForm((prev) => ({ ...prev, checkIn: val }));
+        return;
+      }
+
+      setForm((prev) => {
+        // ✅ Nếu có ngày Check-out cũ và ngày Check-out đó vẫn lớn hơn Check-in mới, giữ nguyên lịch Check-out
+        if (prev.checkOut && prev.checkOut > val) {
+          return {
+            ...prev,
+            checkIn: val,
+          };
+        }
+
+        // Ngược lại, tự động tăng thêm 1 ngày cho ngày check-out
+        const checkInDate = new Date(val);
+        const nextDay = new Date(checkInDate);
+        nextDay.setDate(checkInDate.getDate() + 1);
+
+        const offset = nextDay.getTimezoneOffset();
+        const localNextDay = new Date(nextDay.getTime() - offset * 60 * 1000);
+        const checkOutStr = localNextDay.toISOString().split("T")[0];
+
+        return {
+          ...prev,
+          checkIn: val,
+          checkOut: checkOutStr,
+        };
       });
-    }
-    if (!val) {
-      setForm((prev) => ({ ...prev, checkIn: val }));
-      return;
-    }
-    const checkInDate = new Date(val);
-    const nextDay = new Date(checkInDate);
-    nextDay.setDate(checkInDate.getDate() + 1);
-
-    const offset = nextDay.getTimezoneOffset();
-    const localNextDay = new Date(nextDay.getTime() - offset * 60 * 1000);
-    const checkOutStr = localNextDay.toISOString().split("T")[0];
-
-    setForm((prev) => ({
-      ...prev,
-      checkIn: val,
-      checkOut: checkOutStr,
-    }));
-  };
+    };
 
   const resetCustomerForm = () => {
     setIsAutoFilled(false);
@@ -262,7 +274,10 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
 
     return !bookings.some((b) => {
       if (b.roomNumber !== roomNumber) return false;
-      if (b.status === "Đã hủy" || b.status === "Đã trả phòng") return false;
+      if (b.status === "Đã hủy" ||
+                b.status === "Đã trả phòng" ||
+                b.status === "Đã nhận phòng" ||
+                b.status === "Đã nhận phòng tại quầy") return false;
       if (booking && b.id === booking.id) return false;
 
       const bIn = new Date(b.checkIn);
@@ -617,7 +632,16 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                   >
                     <option value="">Chọn phòng</option>
                     {rooms
-                      .filter((r) => r.status !== "Bảo trì" && (r.roomNumber === booking?.roomNumber || isRoomAvailable(r.roomNumber)))
+                        .filter((r) => {
+                          // 1. Loại bỏ các phòng đang bảo trì
+                          if (r.status === "Bảo trì") return false;
+
+                          // 2. Nếu là phòng đang sửa của chính đơn này thì luôn hiển thị
+                          if (booking && r.roomNumber === booking.roomNumber) return true;
+
+                          // 3. Nếu người dùng chọn trạng thái tạo mới là "Đặt trước", kiểm tra lịch trùng
+                          return isRoomAvailable(r.roomNumber);
+                        })
                       .map((r) => (
                         <option key={r.id} value={r.roomNumber}>
                           Phòng {r.roomNumber} — {r.type} ({r.pricePerNight.toLocaleString("vi-VN")} VND/đêm)
