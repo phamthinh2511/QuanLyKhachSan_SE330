@@ -93,44 +93,77 @@ export default function RoomsPage() {
     fetchBookings();
   }, [fetchBookings]);
 
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts((prev) => [...prev, { id, type, message }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3000);
+  };
+
+
   const roomsWithDynamicStatus = rooms.map((room) => {
-    if (room.status === "Bảo trì") {
+    if (room.status === "Bảo trì" || (room as any).trangThai === "Bảo trì") {
       return room;
     }
+
+    const dbStatus = room.status || (room as any).trangThai || "Trống";
+
+    // 1. Chuyển đổi Ngày đến / Ngày đi từ thanh công cụ FE thành đối tượng Date
+    const filterStart = new Date(startDate);
+    const filterEnd = new Date(endDate);
+
+    // Đặt mốc giờ về 00:00:00 để so sánh chính xác theo "Ngày"
+    filterStart.setHours(0, 0, 0, 0);
+    filterEnd.setHours(0, 0, 0, 0);
 
     const activeBooking = bookings.find((b) => {
       if (b.status === "Đã hủy" || b.status === "Đã trả phòng") {
         return false;
       }
-      const hasRoom = b.roomNumber === String(room.id);
-      if (!hasRoom) return false;
 
-      const checkIn = b.checkIn;
-      const checkOut = b.checkOut;
-      
-      if (!checkIn || !checkOut) return false;
+      // ✅ ĐÃ KHẮC PHỤC: Lấy Số phòng chuẩn chỉnh từ room.roomNumber hoặc room.id
+      const bookingRoomStr = String(b.roomNumber).trim();
+            const hasRoom =
+              bookingRoomStr === String(room.roomNumber).trim() ||
+              bookingRoomStr === String(room.id).trim();
 
-      if (startDate === endDate) {
-        return startDate >= checkIn && startDate < checkOut;
-      } else {
-        return checkIn < endDate && startDate < checkOut;
-      }
+            if (!hasRoom) return false;
+      // 2. Chuyển đổi ngày checkIn/checkOut của Đơn đặt phòng thành đối tượng Date
+      if (!b.checkIn || !b.checkOut) return false;
+      const bookingIn = new Date(b.checkIn);
+      const bookingOut = new Date(b.checkOut);
+
+      bookingIn.setHours(0, 0, 0, 0);
+      bookingOut.setHours(0, 0, 0, 0);
+
+      // 3. Logic so sánh khoảng ngày giao nhau
+      return filterStart < bookingOut && filterEnd > bookingIn;
     });
 
-    let computedStatus: RoomStatus = "Trống";
+    // Quyết định trạng thái hiển thị
+    let computedStatus: RoomStatus = dbStatus;
+
     if (activeBooking) {
       if (activeBooking.status === "Đang sử dụng") {
         computedStatus = "Đang sử dụng";
       } else {
         computedStatus = "Đã đặt";
       }
+    } else {
+      const hômNayStr = new Date().toISOString().split("T")[0];
+      if (startDate === hômNayStr) {
+        computedStatus = dbStatus as RoomStatus;
+      }
     }
 
     return {
       ...room,
+      roomNumber: String(room.roomNumber || room.id),
       status: computedStatus,
     };
   });
+
 
   const filtered = roomsWithDynamicStatus.filter((r) => {
     const matchSearch = r.roomNumber.includes(search) || r.type.toLowerCase().includes(search.toLowerCase());
@@ -237,28 +270,8 @@ export default function RoomsPage() {
           <option>Đã đặt</option>
           <option>Bảo trì</option>
         </select>
-        <div className="flex items-center gap-4 border border-gray-200 rounded-xl px-3 py-2 bg-gray-50">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">Ngày đến:</span>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => handleStartDateChange(e.target.value)}
-              className="text-sm text-gray-700 font-medium bg-transparent focus:outline-none"
-            />
-          </div>
-          <div className="h-4 w-px bg-gray-300" />
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">Ngày đi:</span>
-            <input
-              type="date"
-              value={endDate}
-              min={startDate}
-              onChange={(e) => handleEndDateChange(e.target.value)}
-              className="text-sm text-gray-700 font-medium bg-transparent focus:outline-none"
-            />
-          </div>
-        </div>
+
+
         <div className="flex border border-gray-200 rounded-xl overflow-hidden">
           <button onClick={() => setViewMode("list")}
             className={`p-2.5 transition ${viewMode === "list" ? "bg-gray-800 text-white" : "text-gray-400 hover:bg-gray-50"}`}>

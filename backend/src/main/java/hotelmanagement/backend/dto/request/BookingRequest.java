@@ -29,7 +29,6 @@ private String role;
     private Integer maNhanVienId;
 
     @NotNull(message = "Ngày nhận phòng không được để trống")
-    @FutureOrPresent(message = "Ngày nhận phòng phải là ngày hôm nay hoặc các ngày trong tương lai")
     private LocalDate ngayNhan;
     @NotNull(message = "Ngày trả phòng không được để trống")
     private LocalDate ngayTra;
@@ -37,6 +36,18 @@ private String role;
     private Double donGia;
     private Integer soKhach;
     private String trangThai;
+    @AssertTrue(message = "Ngày nhận phòng không được ở quá khứ hoặc trước ngày hiện tại!")
+    public boolean isNgayNhanHopLe() {
+        if (ngayNhan == null) {
+            return true;
+        }
+        if (id != null) {
+            return true;
+        }
+        java.time.ZoneId zoneVietnam = java.time.ZoneId.of("Asia/Ho_Chi_Minh");
+        LocalDate homNayVietnam = LocalDate.now(zoneVietnam);
+        return !ngayNhan.isBefore(homNayVietnam);
+    }
     @AssertTrue(message = "Ngày trả phòng phải sau ngày nhận phòng ít nhất 1 ngày!")
     public boolean isNgayTraHopLe() {
         if (ngayNhan == null || ngayTra == null) {

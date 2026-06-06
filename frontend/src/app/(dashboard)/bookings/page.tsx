@@ -117,7 +117,11 @@ export default function BookingsPage() {
       ]);
 
       setCustomers(customerRes);
-      setRooms(roomRes);
+      if (Array.isArray(roomRes)) {
+            setRooms(roomRes);
+          } else if (roomRes && typeof roomRes === 'object' && Array.isArray((roomRes as any).result)) {
+            setRooms((roomRes as any).result);
+          }
 
       let rawList: any[] = [];
 
@@ -225,7 +229,6 @@ export default function BookingsPage() {
   };
 
 
-
   const handleSave = async (formData: any) => {
     try {
       setLoading(true);
@@ -247,8 +250,8 @@ export default function BookingsPage() {
         maKhachHangId: parseInt(formData.customerId),
         maPhongId: parseInt(formData.roomId),
         maNhanVienId: 1,
-        ngayNhan: formData.checkIn,
-        ngayTra: formData.checkOut,
+        ngayNhan: formData.ngayNhan,
+        ngayTra: formData.ngayTra,
         donGia: dbStatus === "Đã hủy" ? 0.0 : (parseFloat(formData.amount) || parseFloat(formData.roomPrice) || 300000.0),
         trangThai: dbStatus,
         soKhach: parseInt(formData.guests) || 1
@@ -268,14 +271,20 @@ export default function BookingsPage() {
       setEditing(null);
     } catch (error: any) {
       console.error("Lỗi lưu dữ liệu:", error);
-      throw {
-              isApiError: true,
-              status: 422,
-              result: {
-                ngayNhan: "Ngày check-in không được ở quá khứ hoặc trước ngày hiện tại!",
-              },
-              message: error.message || "Dữ liệu đầu vào không hợp lệ!"
-            };
+      if (error && error.response && error.response.status === 422) {
+              throw {
+                isApiError: true,
+                status: 422,
+                result: error.response.data.result || error.response.data,
+                message: error.message || "Dữ liệu đầu vào không hợp lệ!"
+              };
+            }alert("Thao tác thất bại: " + (error.message || "Lỗi kết nối Server API. Vui lòng kiểm tra Console log!"));
+                   throw {
+                     isApiError: true,
+                     status: 422,
+                     result: {},
+                     message: error.message
+                   };
     } finally {
       setLoading(false);
     }
