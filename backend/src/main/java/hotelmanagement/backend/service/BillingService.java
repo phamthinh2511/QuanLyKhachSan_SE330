@@ -167,6 +167,12 @@ public class BillingService {
             hoadon.setMaNhanVien(nhanvien);
             hoadon.setNgayThanhToan(LocalDate.now());
             hoadon.setTongTien(tongTien);
+            // Lưu phương thức thanh toán do người dùng chọn (mặc định "Tiền mặt" nếu không chọn)
+            String phuongThuc = (request.getPhuongThucThanhToan() != null && !request.getPhuongThucThanhToan().isBlank())
+                    ? request.getPhuongThucThanhToan()
+                    : "Tiền mặt";
+            hoadon.setPhuongThucThanhToan(phuongThuc);
+            hoadon.setTrangThai("Đã thanh toán");
             
             Hoadon savedHoadon = hoadonRepository.save(hoadon);
             
@@ -196,8 +202,8 @@ public class BillingService {
                         .build());
             }
             
-            // Chi tiết từ dịch vụ phát sinh
-            List<Sudungdichvu> danhSachDichVu = sudungdichvuRepository.findByPhieuThueId(maPhieuThue);
+            // Chi tiết từ dịch vụ phát sinh (Đã sử dụng + Chờ sử dụng, bỏ Đã hủy)
+            List<Sudungdichvu> danhSachDichVu = sudungdichvuRepository.findBillableByPhieuThueId(maPhieuThue);
             for (Sudungdichvu sv : danhSachDichVu) {
                 CtHoadon ctDichVu = new CtHoadon();
                 ctDichVu.setMaHoaDon(savedHoadon);
@@ -246,7 +252,20 @@ public class BillingService {
                             .build());
                 }
             }
-            
+
+            // 7. Cập nhật trạng thái phiếu thuê → "Đã trả phòng"
+            phieuThue.setTrangThai("Đã trả phòng");
+            phieuthuephongRepository.save(phieuThue);
+
+            // 8. Giải phóng phòng → "Trống"
+            List<CtPhieuthuephong> ctList = ctPhieuthuephongRepository.findByPhieuThueId(maPhieuThue);
+            for (CtPhieuthuephong ct : ctList) {
+                if (ct.getMaPhong() != null) {
+                    ct.getMaPhong().setTrangThai("Trống");
+                    phongRepository.save(ct.getMaPhong());
+                }
+            }
+
             // Trả về response
             return CheckoutResponse.builder()
                     .maHoaDon(savedHoadon.getId())

@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, ShoppingCart, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { X, Banknote, CreditCard, ArrowLeftRight, CheckCircle2, LogOut } from "lucide-react";
 import { useBilling } from "@/hooks/useBilling";
 import { CheckoutRequest } from "@/lib/api/billing";
-import AddServiceModal from "./AddServiceModal";
-import RecordInspectionModal from "./RecordInspectionModal";
 
 interface Props {
   maPhieuThue: number;
@@ -25,6 +23,27 @@ interface CheckoutSummary {
   chiTietHoaDon: Array<{ loaiChiPhi: string; thanhTien: number }>;
 }
 
+const PAYMENT_METHODS = [
+  {
+    value: "Tiền mặt",
+    label: "Tiền mặt",
+    icon: Banknote,
+    desc: "Thanh toán tại quầy",
+  },
+  {
+    value: "Thẻ",
+    label: "Thẻ ngân hàng",
+    icon: CreditCard,
+    desc: "Visa, Mastercard, ATM",
+  },
+  {
+    value: "Chuyển khoản",
+    label: "Chuyển khoản",
+    icon: ArrowLeftRight,
+    desc: "Chuyển qua tài khoản",
+  },
+];
+
 export default function CheckoutModal({
   maPhieuThue,
   maPhong,
@@ -33,25 +52,21 @@ export default function CheckoutModal({
   onSuccess,
   onClose,
 }: Props) {
-  const [showAddService, setShowAddService] = useState(false);
-  const [showInspection, setShowInspection] = useState(false);
   const [checkoutSummary, setCheckoutSummary] = useState<CheckoutSummary | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
   const [showError, setShowError] = useState<string | null>(null);
-  const [hasPerformedInspection, setHasPerformedInspection] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
   const { performCheckout, loading, error, clearError } = useBilling();
 
-  // Thực hiện checkout
   const handleCheckout = async () => {
-    if (!hasPerformedInspection) {
-      setShowError("Vui lòng hoàn thành kiểm kê phòng trước khi checkout");
+    if (!selectedPaymentMethod) {
+      setShowError("Vui lòng chọn phương thức thanh toán");
       return;
     }
-
     try {
       const request: CheckoutRequest = {
         maPhieuThue,
         maNhanVien,
+        phuongThucThanhToan: selectedPaymentMethod,
       };
       const result = await performCheckout(request);
       if (result) {
@@ -60,93 +75,57 @@ export default function CheckoutModal({
         onSuccess?.(result);
       }
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : "Lỗi checkout không xác định";
+      const errMsg = err instanceof Error ? err.message : "Lỗi không xác định";
       setShowError(errMsg);
     }
   };
 
-  const handleServiceAdded = () => {
-    // Refresh để tải lại dữ liệu
-    setRefreshKey((prev) => prev + 1);
-  };
-
-  const handleInspectionDone = () => {
-    setHasPerformedInspection(true);
-    setShowError(null);
-  };
-
-  // Nếu checkout thành công
+  // --- Màn hình thành công ---
   if (checkoutSummary) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b bg-green-50">
-            <h2 className="text-xl font-bold text-green-900">✓ Checkout Thành Công</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <X className="w-5 h-5" />
-            </button>
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+          <div className="flex items-center gap-3 p-6 border-b bg-green-50 rounded-t-2xl">
+            <CheckCircle2 className="w-6 h-6 text-green-600" />
+            <h2 className="text-lg font-bold text-green-900">Trả phòng thành công!</h2>
           </div>
 
-          <div className="p-6 space-y-6">
-            {/* Invoice number */}
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-              <div className="text-sm text-green-600">Mã Hóa đơn</div>
-              <div className="text-2xl font-bold text-green-900">
-                #{checkoutSummary.maHoaDon}
-              </div>
+          <div className="p-6 space-y-4">
+            <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+              <p className="text-xs text-green-600 mb-0.5">Mã hóa đơn</p>
+              <p className="text-2xl font-bold text-green-900">#{checkoutSummary.maHoaDon}</p>
             </div>
 
-            {/* Details */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               {checkoutSummary.chiTietHoaDon.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex justify-between items-center pb-3 border-b"
-                >
-                  <span className="text-gray-700">{item.loaiChiPhi}</span>
-                  <span className="font-semibold text-gray-900">
-                    {new Intl.NumberFormat("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    }).format(item.thanhTien)}
+                <div key={idx} className="flex justify-between text-sm pb-2 border-b border-gray-100 last:border-0">
+                  <span className="text-gray-600">{item.loaiChiPhi}</span>
+                  <span className="font-semibold text-gray-800">
+                    {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(item.thanhTien)}
                   </span>
                 </div>
               ))}
             </div>
 
-            {/* Total */}
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-gray-900">Tổng cộng:</span>
-                <span className="text-2xl font-bold text-blue-600">
-                  {new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(checkoutSummary.tongTien)}
-                </span>
-              </div>
+            <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 flex justify-between items-center">
+              <span className="font-bold text-gray-800">Tổng cộng</span>
+              <span className="text-xl font-bold text-blue-600">
+                {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(checkoutSummary.tongTien)}
+              </span>
             </div>
 
-            {/* Payment info */}
-            <div className="bg-gray-50 p-4 rounded-lg text-sm">
-              <p className="text-gray-600">
-                Khách hàng: <span className="font-semibold">{khachHang || "N/A"}</span>
-              </p>
-              <p className="text-gray-600 mt-1">
-                Phòng: <span className="font-semibold">{maPhong}</span>
-              </p>
+            <div className="bg-gray-50 p-3 rounded-xl text-sm space-y-1 text-gray-600">
+              <p>Khách hàng: <span className="font-semibold">{khachHang || "N/A"}</span></p>
+              <p>Phòng: <span className="font-semibold">{maPhong}</span></p>
+              <p>Phương thức: <span className="font-semibold text-green-700">{selectedPaymentMethod}</span></p>
+              <p>Trạng thái: <span className="font-semibold text-green-700">Đã thanh toán</span></p>
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="flex gap-3 p-6 border-t bg-gray-50">
+          <div className="p-6 border-t rounded-b-2xl">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium text-sm transition"
             >
               Đóng
             </button>
@@ -156,191 +135,86 @@ export default function CheckoutModal({
     );
   }
 
+  // --- Màn hình chọn phương thức thanh toán ---
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b bg-blue-50">
+        <div className="flex items-center justify-between p-6 border-b bg-orange-50 rounded-t-2xl">
           <div className="flex items-center gap-3">
-            <ShoppingCart className="w-6 h-6 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-900">Checkout</h2>
+            <LogOut className="w-5 h-5 text-orange-600" />
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Trả phòng</h2>
+              <p className="text-xs text-gray-500">Phiếu thuê #{maPhieuThue} · Khách: {khachHang || "N/A"}</p>
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <X className="w-5 h-5" />
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition">
+            <X className="w-4 h-4 text-gray-500" />
           </button>
         </div>
 
-        {/* Error message */}
-        {(showError || error) && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 m-4 rounded flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <div className="font-medium">{showError || error}</div>
-              <div className="text-sm mt-1">
-                {!hasPerformedInspection
-                  ? "Vui lòng hoàn thành kiểm kê phòng trước"
-                  : "Kiểm tra lại thông tin và thử lại"}
-              </div>
+        <div className="p-6 space-y-5">
+          {/* Lỗi */}
+          {(showError || error) && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center justify-between text-sm">
+              <span>{showError || error}</span>
+              <button onClick={() => { setShowError(null); clearError(); }}>
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <button
-              onClick={() => {
-                setShowError(null);
-                clearError();
-              }}
-              className="text-red-500 hover:text-red-700"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+          )}
 
-        <div className="p-6 space-y-6">
-          {/* Booking info */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <div className="text-gray-600">Mã phiếu thuê:</div>
-                <div className="font-semibold text-gray-900">{maPhieuThue}</div>
-              </div>
-              <div>
-                <div className="text-gray-600">Mã phòng:</div>
-                <div className="font-semibold text-gray-900">{maPhong}</div>
-              </div>
-              <div>
-                <div className="text-gray-600">Khách hàng:</div>
-                <div className="font-semibold text-gray-900">{khachHang || "N/A"}</div>
-              </div>
-              <div>
-                <div className="text-gray-600">Nhân viên:</div>
-                <div className="font-semibold text-gray-900">{maNhanVien}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Checklist */}
-          <div className="space-y-3">
-            <h3 className="font-semibold text-gray-900">Bước Checkout:</h3>
-
-            {/* Step 1: Add services */}
-            <div className="p-4 border border-gray-200 rounded-lg hover:bg-blue-50 transition">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-gray-900">
-                    Bước 1: Thêm Dịch vụ Phát sinh
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    (Nếu khách gọi thêm đồ ăn, giặt ủi, v.v.)
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowAddService(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm"
-                >
-                  Thêm dịch vụ
-                </button>
-              </div>
-            </div>
-
-            {/* Step 2: Room inspection */}
-            <div
-              className={`p-4 border rounded-lg transition ${
-                hasPerformedInspection
-                  ? "border-green-300 bg-green-50"
-                  : "border-gray-200 hover:bg-blue-50"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-gray-900 flex items-center gap-2">
-                    Bước 2: Kiểm kê Phòng
-                    {hasPerformedInspection && (
-                      <span className="text-green-600 text-sm">✓ Hoàn thành</span>
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    (Kiểm tra hỏng hóc, mất đồ dùng, v.v.)
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowInspection(true)}
-                  disabled={hasPerformedInspection}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm ${
-                    hasPerformedInspection
-                      ? "bg-green-600 text-white"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
-                >
-                  {hasPerformedInspection ? "✓ Đã kiểm kê" : "Kiểm kê"}
-                </button>
-              </div>
-            </div>
-
-            {/* Step 3: Final checkout */}
-            <div
-              className={`p-4 border rounded-lg transition ${
-                !hasPerformedInspection
-                  ? "border-gray-200 bg-gray-50 opacity-50"
-                  : "border-blue-200 bg-blue-50 hover:bg-blue-100"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-gray-900">
-                    Bước 3: Hoàn Tất Checkout
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    Xuất hóa đơn và kết thúc đơn thuê
-                  </div>
-                </div>
-                <button
-                  onClick={handleCheckout}
-                  disabled={!hasPerformedInspection || loading}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm ${
-                    !hasPerformedInspection || loading
-                      ? "bg-gray-400 text-white cursor-not-allowed"
-                      : "bg-green-600 text-white hover:bg-green-700"
-                  }`}
-                >
-                  {loading ? "Đang xử lý..." : "Checkout"}
-                </button>
-              </div>
+          {/* Chọn phương thức thanh toán */}
+          <div>
+            <p className="text-sm font-semibold text-gray-700 mb-3">Chọn phương thức thanh toán</p>
+            <div className="grid grid-cols-3 gap-3">
+              {PAYMENT_METHODS.map((pm) => {
+                const Icon = pm.icon;
+                const isSelected = selectedPaymentMethod === pm.value;
+                return (
+                  <button
+                    key={pm.value}
+                    type="button"
+                    onClick={() => { setSelectedPaymentMethod(pm.value); setShowError(null); }}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition text-center ${
+                      isSelected
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/40"
+                    }`}
+                  >
+                    <Icon className={`w-6 h-6 ${isSelected ? "text-blue-600" : "text-gray-400"}`} />
+                    <span className={`text-xs font-semibold ${isSelected ? "text-blue-700" : "text-gray-600"}`}>
+                      {pm.label}
+                    </span>
+                    <span className="text-[10px] text-gray-400 leading-tight">{pm.desc}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 border-t bg-gray-50">
+        <div className="flex gap-3 p-6 border-t rounded-b-2xl">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-medium"
+            className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
           >
             Hủy
           </button>
+          <button
+            onClick={handleCheckout}
+            disabled={!selectedPaymentMethod || loading}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition ${
+              !selectedPaymentMethod || loading
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-700 text-white shadow-sm"
+            }`}
+          >
+            {loading ? "Đang xử lý..." : "Xác nhận trả phòng"}
+          </button>
         </div>
       </div>
-
-      {/* Modals */}
-      {showAddService && (
-        <AddServiceModal
-          key={refreshKey}
-          maPhieuThue={maPhieuThue}
-          maPhong={maPhong}
-          onSuccess={handleServiceAdded}
-          onClose={() => setShowAddService(false)}
-        />
-      )}
-      {showInspection && (
-        <RecordInspectionModal
-          maPhieuThue={maPhieuThue}
-          maPhong={maPhong}
-          maNhanVien={maNhanVien}
-          onSuccess={handleInspectionDone}
-          onClose={() => setShowInspection(false)}
-        />
-      )}
     </div>
   );
 }

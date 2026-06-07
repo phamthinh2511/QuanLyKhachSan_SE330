@@ -1,6 +1,6 @@
 import { ServiceUsage } from "./serviceUsage";
 
-export type InvoiceStatus  = "Đã thanh toán" | "Chờ thanh toán" | "Một phần";
+export type InvoiceStatus  = "Đã thanh toán" | "Chờ thanh toán";
 export type PaymentMethod  = "Thẻ" | "Tiền mặt" | "Chuyển khoản" | "";
 
 export interface Invoice {

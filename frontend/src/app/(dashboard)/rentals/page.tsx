@@ -2,11 +2,11 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, Trash2, Search, Filter, Pencil } from "lucide-react"; // Đã thêm Pencil
+import { Eye, Trash2, Search, Filter, LogOut } from "lucide-react";
 import { useRentals } from "@/hooks/useRentals";
 import { RentalSlip } from "@/lib/api/rentals";
-import { checkOutBooking } from "@/lib/api/bookings"; // Import API xử lý Check-out chuyển trạng thái sang Đã trả phòng & Tạo hóa đơn
 import RentalDetailModal from "@/components/rentals/RentalDetailModal";
+import CheckoutModal from "@/components/invoices/CheckoutModal";
 import clsx from "clsx";
 import { useToast } from "@/context/ToastContext";
 
@@ -29,7 +29,8 @@ export default function RentalsPage() {
   const [filterStatus, setFilterStatus] = useState("Tất cả");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [selectedRental, setSelectedRental] = useState<RentalSlip | null>(null);
-  const [actionLoading, setActionLoading] = useState(false); // Quản lý trạng thái khi đang gọi API trả phòng
+  // Phiếu thuê đang được chọn để trả phòng (mở CheckoutModal)
+  const [checkoutRental, setCheckoutRental] = useState<RentalSlip | null>(null);
 
   const getNormalizedStatus = (status: string) => {
     if (!status) return "Chưa xác định";
@@ -46,6 +47,7 @@ export default function RentalsPage() {
     return s;
   };
 
+  // Array safety: xử lý trường hợp API trả về object thay vì array (từ main)
   const actualRentals = Array.isArray(rentals)
     ? rentals
     : (rentals && typeof rentals === 'object' && 'result' in rentals && Array.isArray((rentals as any).result))
@@ -55,7 +57,6 @@ export default function RentalsPage() {
   const filteredRentals = actualRentals.filter((r: RentalSlip) => {
     const norm = getNormalizedStatus(r.status);
 
-    // Chỉ chấp nhận những phiếu đang ở hoặc đã trả phòng hoàn tất
     const isCorrectType = norm === "Đang sử dụng" || norm === "Đã trả phòng";
     if (!isCorrectType) return false;
 
@@ -73,44 +74,32 @@ export default function RentalsPage() {
   const hasMore = visibleCount < filteredRentals.length;
 
   const handleDelete = async (id: number, code: string) => {
-      if (confirm(`Bạn có chắc chắn muốn hủy phiếu thuê phòng ${code}? Điều này sẽ giải phóng trạng thái phòng về trống.`)) {
-        try {
-          await removeRental(id);
-          showToast(`Đã hủy phiếu thuê phòng ${code} thành công!`);
-        } catch (err: any) {
-          const errorMessage = (err.message || "").toLowerCase();
-
-          // Kiểm tra lỗi khóa ngoại ràng buộc dữ liệu với dịch vụ phòng
-          if (errorMessage.includes("sudungdichvu") || errorMessage.includes("foreign key")) {
-            showToast(
-              `Không thể hủy phiếu thuê ${code}!\n\n` +
-              `Lý do: Phiếu thuê này đang có dữ liệu sử dụng dịch vụ đi kèm. ` +
-              `Vui lòng vào mục "Yêu Cầu Dịch Vụ" để xóa hết các dịch vụ của phòng này trước khi thực hiện hủy phiếu.`,
-              "error"
-            );
-          } else {
-            showToast(err.message || "Không thể hủy phiếu thuê phòng do trục trặc từ hệ thống.", "error");
-          }
+    if (confirm(`Bạn có chắc chắn muốn hủy phiếu thuê phòng ${code}? Điều này sẽ giải phóng trạng thái phòng về trống.`)) {
+      try {
+        await removeRental(id);
+        // Dùng showToast thay alert (từ main)
+        showToast(`Đã hủy phiếu thuê phòng ${code} thành công!`);
+      } catch (err: any) {
+        const errorMessage = (err.message || "").toLowerCase();
+        // Kiểm tra lỗi khóa ngoại ràng buộc dữ liệu với dịch vụ phòng
+        if (errorMessage.includes("sudungdichvu") || errorMessage.includes("foreign key")) {
+          showToast(
+            `Không thể hủy phiếu thuê ${code}!\n\n` +
+            `Lý do: Phiếu thuê này đang có dữ liệu sử dụng dịch vụ đi kèm (gọi đồ ăn, nước uống, dịch vụ khác...). ` +
+            `Vui lòng vào mục "Yêu Cầu Dịch Vụ" để xóa hết các dịch vụ của phòng này trước khi thực hiện hủy phiếu.`,
+            "error"
+          );
+        } else {
+          showToast(err.message || "Không thể hủy phiếu thuê phòng do trục trặc từ hệ thống.", "error");
         }
       }
-    };
-
-  // Hàm xử lý đổi trạng thái sang Đã trả phòng & Tạo hóa đơn thông qua API checkOutBooking
-  const handleCheckOutRental = async (bookingId: number, rentalCode: string) => {
-    const isConfirmed = window.confirm(`Bạn có chắc chắn muốn làm thủ tục Trả phòng (Check-out) và xuất hóa đơn cho phiếu ${rentalCode} không?`);
-    if (!isConfirmed) return;
-
-    try {
-      setActionLoading(true);
-      // Thực hiện đổi trạng thái sang "Đã trả phòng" đồng thời đẩy dữ liệu kết xuất qua hóa đơn
-      await checkOutBooking(bookingId, "");
-      showToast(`Trả phòng thành công! Phiếu ${rentalCode} đã chuyển sang trạng thái 'Đã trả phòng' và khởi tạo hóa đơn (Chưa thanh toán).`);
-      window.location.reload();
-    } catch (err: any) {
-      showToast(err.message || "Xử lý thủ tục trả phòng thất bại!", "error");
-    } finally {
-      setActionLoading(false);
     }
+  };
+
+  // Khi checkout thành công → đóng modal và reload trang
+  const handleCheckoutSuccess = () => {
+    setCheckoutRental(null);
+    window.location.reload();
   };
 
   return (
@@ -213,14 +202,13 @@ export default function RentalsPage() {
                               <Eye className="w-3.5 h-3.5" /> Xem
                             </button>
 
-                            {/* Nút Sửa (Check-out): Chỉ hiển thị khi trạng thái là "Đang sử dụng" */}
+                            {/* Nút Trả phòng: Chỉ hiển thị khi đang sử dụng → mở CheckoutModal */}
                             {normStatus === "Đang sử dụng" && (
                               <button
-                                onClick={() => handleCheckOutRental(r.id, r.rentalCode)}
-                                disabled={actionLoading}
-                                className="flex items-center gap-1.5 border border-blue-200 bg-blue-50 text-blue-600 hover:border-blue-300 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-medium transition disabled:opacity-50"
+                                onClick={() => setCheckoutRental(r)}
+                                className="flex items-center gap-1.5 border border-orange-200 bg-orange-50 text-orange-600 hover:border-orange-300 hover:bg-orange-100 px-3 py-1.5 rounded-lg text-xs font-medium transition"
                               >
-                                <Pencil className="w-3.5 h-3.5" /> Trả phòng
+                                <LogOut className="w-3.5 h-3.5" /> Trả phòng
                               </button>
                             )}
 
@@ -263,6 +251,18 @@ export default function RentalsPage() {
         <RentalDetailModal
           rental={selectedRental}
           onClose={() => setSelectedRental(null)}
+        />
+      )}
+
+      {/* Checkout Modal - mở khi nhấn nút Trả phòng */}
+      {checkoutRental && (
+        <CheckoutModal
+          maPhieuThue={checkoutRental.id}
+          maPhong={parseInt(checkoutRental.roomNumber) || 0}
+          maNhanVien={1} // TODO: lấy từ session đăng nhập
+          khachHang={checkoutRental.customerName}
+          onSuccess={handleCheckoutSuccess}
+          onClose={() => setCheckoutRental(null)}
         />
       )}
     </div>

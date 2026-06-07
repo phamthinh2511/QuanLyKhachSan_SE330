@@ -59,6 +59,7 @@ export interface InvoiceDetail {
 export interface CheckoutRequest {
   maPhieuThue: number;
   maNhanVien: number;
+  phuongThucThanhToan?: string; // "Tiền mặt" | "Thẻ" | "Chuyển khoản"
 }
 
 /**

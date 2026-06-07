@@ -296,7 +296,6 @@ export default function InvoicesPage() {
             <option value="Tất cả">Trạng thái: Tất cả</option>
             <option value="Đã thanh toán">Đã thanh toán</option>
             <option value="Chờ thanh toán">Chờ thanh toán</option>
-            <option value="Một phần">Một phần</option>
           </select>
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
         </div>
