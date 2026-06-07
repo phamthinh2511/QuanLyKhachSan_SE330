@@ -60,6 +60,18 @@ export default function BookingsPage() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE_ALL);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Booking | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("add") === "true") {
+        setEditing(null);
+        setModalOpen(true);
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
+  }, []);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;

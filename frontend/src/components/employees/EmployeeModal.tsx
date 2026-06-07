@@ -15,7 +15,7 @@ const emptyForm: Omit<Employee, "id" | "employeeCode"> = {
   name: "", birthday: "", email: "", phone: "",
   position: "Lễ Tân", department: "",
   joinDate: "", status: "Đang làm việc",
-  username: "", password: "", role: "USER",
+  username: "", password: "", role: "NHAN_VIEN",
 };
 
 export default function EmployeeModal({ employee, onSave, onClose }: Props) {
@@ -83,17 +83,14 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
       } else if (form.username.length < 3) {
         newErrors.username = "Tên đăng nhập phải chứa ít nhất 3 ký tự";
       }
-      
-      if (!form.password || form.password.trim().length === 0) {
-        newErrors.password = "Mật khẩu không được để trống";
-      } else if (form.password.length < 6) {
-        newErrors.password = "Mật khẩu phải chứa ít nhất 6 ký tự";
-      }
     } else {
       if (form.username && form.username.length < 3) {
         newErrors.username = "Tên đăng nhập phải chứa ít nhất 3 ký tự";
       }
-      if (form.password && form.password.length < 6) {
+    }
+
+    if (form.password && form.password.trim().length > 0) {
+      if (form.password.length < 6) {
         newErrors.password = "Mật khẩu phải chứa ít nhất 6 ký tự";
       }
     }
@@ -272,13 +269,13 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Loại tài khoản (Quyền)</label>
               <select 
-                value={form.role || "USER"}
+                value={form.role || "NHAN_VIEN"}
                 onChange={(e) => handleChange("role", e.target.value)}
                 className={getInputClass("role")}
               >
                 <option value="ADMIN">Quản trị viên (ADMIN)</option>
                 <option value="MANAGER">Quản lý (MANAGER)</option>
-                <option value="USER">Nhân viên (USER)</option>
+                <option value="NHAN_VIEN">Nhân viên (NHAN_VIEN)</option>
               </select>
             </div>
           </div>
