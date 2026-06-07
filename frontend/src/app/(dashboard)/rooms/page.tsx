@@ -93,13 +93,7 @@ export default function RoomsPage() {
     fetchBookings();
   }, [fetchBookings]);
 
-  const showToast = (message: string, type: "success" | "error" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, type, message }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
-  };
+
 
 
   const roomsWithDynamicStatus = rooms.map((room) => {
@@ -145,11 +139,20 @@ export default function RoomsPage() {
     let computedStatus: RoomStatus = dbStatus;
 
     if (activeBooking) {
-      if (activeBooking.status === "Đang sử dụng") {
-        computedStatus = "Đang sử dụng";
-      } else {
-        computedStatus = "Đã đặt";
-      }
+          // Chuẩn hóa chuỗi trạng thái để so sánh an toàn, tránh lệch pha ký tự
+          const currentStatus = String(activeBooking.status).toLowerCase().trim();
+
+          // Kiểm tra tất cả các trường hợp có thể đại diện cho "Đang sử dụng"
+          if (
+            currentStatus === "đang sử dụng" ||
+            currentStatus === "dang_su_dung" ||
+            currentStatus === "checked-in" ||
+            currentStatus === "checked_in"
+          ) {
+            computedStatus = "Đang sử dụng";
+          } else {
+            computedStatus = "Đã đặt";
+          }
     } else {
       const hômNayStr = new Date().toISOString().split("T")[0];
       if (startDate === hômNayStr) {
