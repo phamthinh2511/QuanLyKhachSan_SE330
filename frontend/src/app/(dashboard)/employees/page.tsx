@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { employeesApi } from "@/lib/api/employees";
@@ -9,10 +10,12 @@ import EmployeeStatCards from "@/components/employees/EmployeeStatCards";
 import EmployeeTable from "@/components/employees/EmployeeTable";
 import EmployeeModal from "@/components/employees/EmployeeModal";
 import EmployeeViewModal from "@/components/employees/EmployeeViewModal";
+import { getUser } from "@/lib/auth";
 
 const PAGE_SIZE = 10;
 
 export default function EmployeesPage() {
+  const router = useRouter();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,8 +42,13 @@ export default function EmployeesPage() {
   };
 
   useEffect(() => {
+    const user = getUser();
+    if (user?.role === "NHAN_VIEN") {
+      router.replace("/dashboard");
+      return;
+    }
     fetchEmployees();
-  }, []);
+  }, [router]);
 
   const filtered = employees.filter((e) => {
     const matchSearch =

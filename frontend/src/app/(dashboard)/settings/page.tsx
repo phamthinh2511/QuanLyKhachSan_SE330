@@ -13,6 +13,7 @@ import { getRoomsTrash, restoreRoom, hardDeleteRoom } from "@/lib/api/rooms";
 import { getServicesTrash, restoreService, hardDeleteService } from "@/lib/api/services";
 import { getRoomTypesTrash, restoreRoomType, hardDeleteRoomType } from "@/lib/api/room-types";
 import { getAccountsTrash, restoreAccount, hardDeleteAccount } from "@/lib/api/accounts";
+import { getUser } from "@/lib/auth";
 
 import { Customer } from "@/types/customer";
 import { Employee } from "@/types/employee";
@@ -26,6 +27,18 @@ type TrashCategory = "customers" | "employees" | "rooms" | "services" | "room-ty
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<"profile" | "trash">("profile");
   const [activeCategory, setActiveCategory] = useState<TrashCategory>("customers");
+  const [user, setUser] = useState<{ name: string; role: string } | null>(null);
+
+  useEffect(() => {
+    setUser(getUser());
+  }, []);
+
+  // Force active tab to profile if role is NHAN_VIEN and they somehow land on trash
+  useEffect(() => {
+    if (user?.role === "NHAN_VIEN" && activeTab === "trash") {
+      setActiveTab("profile");
+    }
+  }, [user, activeTab]);
   
   // Data lists
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -206,40 +219,44 @@ export default function SettingsPage() {
             <ShieldCheck className="w-4 h-4" />
             Hồ sơ & Tài khoản
           </button>
-          <button
-            onClick={() => setActiveTab("trash")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
-              activeTab === "trash" 
-                ? "bg-blue-50 text-blue-600" 
-                : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
-            }`}
-          >
-            <Trash2 className="w-4 h-4" />
-            Thùng rác hệ thống
-          </button>
+          {user?.role !== "NHAN_VIEN" && (
+            <button
+              onClick={() => setActiveTab("trash")}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
+                activeTab === "trash" 
+                  ? "bg-blue-50 text-blue-600" 
+                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+              }`}
+            >
+              <Trash2 className="w-4 h-4" />
+              Thùng rác hệ thống
+            </button>
+          )}
         </div>
 
         {/* Settings Main Content Area */}
         <div className="flex-1 bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
           {activeTab === "profile" ? (
             <div className="p-6 space-y-6">
-              <h2 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-3">Hồ sơ Quản trị viên</h2>
+              <h2 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-3">
+                Hồ sơ {user?.role === "ADMIN" ? "Quản trị viên" : "Nhân viên"}
+              </h2>
               <div className="grid grid-cols-2 gap-6 max-w-2xl">
                 <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Tên đăng nhập</label>
-                  <input type="text" readOnly value="admin" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed font-medium" />
+                  <input type="text" readOnly value={user?.name || "..."} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed font-medium" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Vai trò hệ thống</label>
-                  <input type="text" readOnly value="ADMIN" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed font-medium" />
+                  <input type="text" readOnly value={user?.role || "..."} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed font-medium" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Họ tên nhân viên</label>
-                  <input type="text" readOnly value="Quản Trị Viên" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed font-medium" />
+                  <input type="text" readOnly value={user?.role === "ADMIN" ? "Quản Trị Viên" : "Nhân Viên Khách Sạn"} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed font-medium" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Bộ phận</label>
-                  <input type="text" readOnly value="Ban Quản Trị" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed font-medium" />
+                  <input type="text" readOnly value={user?.role === "ADMIN" ? "Ban Quản Trị" : "Bộ Phận Lễ Tân/Nghiệp Vụ"} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed font-medium" />
                 </div>
               </div>
             </div>
