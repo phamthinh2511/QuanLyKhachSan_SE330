@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { mockCustomers } from "@/lib/data/customers";
@@ -24,6 +24,18 @@ export default function CustomersPage() {
   const [deletingCustomer, setDeletingCustomer] = useState<Customer | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("add") === "true") {
+        setEditing(null);
+        setModalOpen(true);
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
+  }, []);
 
   const filtered = customers.filter((c) => {
     const matchSearch =
