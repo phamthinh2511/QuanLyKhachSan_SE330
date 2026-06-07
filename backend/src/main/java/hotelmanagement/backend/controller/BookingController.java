@@ -66,7 +66,9 @@ public ApiResponse<Void> updateBooking(@PathVariable Integer id, @Valid @Request
     request.setId(id);
     Integer maNhanVien = request.getMaNhanVienId() != null ? request.getMaNhanVienId() : 1;
 
-    bookingService.capNhatTrangThaiNghiepVu(id, request.getTrangThai(), maNhanVien);
+
+    bookingService.updateBooking(id, request);
+    // bookingService.capNhatTrangThaiNghiepVu(id, request.getTrangThai(), maNhanVien);
 
     return ApiResponse.<Void>builder()
             .code(200)
