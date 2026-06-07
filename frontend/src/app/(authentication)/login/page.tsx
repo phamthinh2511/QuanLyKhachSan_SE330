@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Hotel, Eye, EyeOff, Lock, User, AlertCircle } from "lucide-react";
 import { loginApi } from "@/lib/api/auth";
-import { saveAuth } from "@/lib/auth";
+import { saveAuth, decodeJwt } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,8 +31,12 @@ export default function LoginPage() {
         throw new Error(res.message ?? "Đăng nhập thất bại");
       }
 
-      // Lưu token từ field "result"
-      saveAuth(res.result, { name: "Admin User", role: "ADMIN" });
+      // Giải mã JWT và lưu thông tin đăng nhập thực tế
+      const decoded = decodeJwt(res.result);
+      const role = decoded?.role || "NHAN_VIEN";
+      const name = decoded?.sub || "User";
+
+      saveAuth(res.result, { name, role });
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Đăng nhập thất bại");

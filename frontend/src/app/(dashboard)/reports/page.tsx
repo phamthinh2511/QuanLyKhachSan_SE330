@@ -1,16 +1,27 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Download, ChevronDown, Calendar } from "lucide-react";
 import ReportStatCards from "@/components/reports/ReportStatCards";
 import ReportTabs from "@/components/reports/ReportTabs";
 import { getReportData, exportRevenueReport, ReportData } from "@/lib/api/invoices";
 import { useToast } from "@/context/ToastContext";
+import { getUser } from "@/lib/auth";
 
 export type Period = string;
 export type ReportTab = "Phân tích doanh thu" | "Tỉ lệ bận phòng" | "Sử dụng dịch vụ" | "Năng suất phòng";
 
 export default function ReportsPage() {
+  const router = useRouter();
+  
+  useEffect(() => {
+    const user = getUser();
+    if (user?.role === "NHAN_VIEN") {
+      router.replace("/dashboard");
+    }
+  }, [router]);
+
   const [activeTab, setActiveTab] = useState<ReportTab>("Phân tích doanh thu");
   const { showToast } = useToast();
   const reportRef = useRef<HTMLDivElement>(null);

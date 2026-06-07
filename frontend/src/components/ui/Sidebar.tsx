@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation"; // Thêm useRouter
 import {
@@ -8,6 +9,7 @@ import {
   Settings, Hotel, LogOut, ShieldCheck, Layers, ClipboardList
 } from "lucide-react";
 import clsx from "clsx";
+import { getUser, clearAuth } from "@/lib/auth";
 
 const navItems = [
   { href: "/dashboard", label: "Trang Chủ", icon: LayoutDashboard },
@@ -24,18 +26,32 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  // Khai báo Hook ở ngay dòng đầu tiên của Component
   const pathname = usePathname();
   const router = useRouter();
+  const [user, setUser] = useState<{ name: string; role: string } | null>(null);
+
+  useEffect(() => {
+    setUser(getUser());
+  }, []);
 
   // Hàm xử lý đăng xuất
   const handleLogout = () => {
     // 1. Xóa token khỏi bộ nhớ trình duyệt
     localStorage.removeItem("token");
+    clearAuth();
     
     // 2. Chuyển hướng về trang đăng nhập
     router.push("/login");
   };
+
+  const filteredNavItems = navItems.filter((item) => {
+    if (user?.role === "NHAN_VIEN") {
+      if (item.href === "/employees" || item.href === "/reports") {
+        return false;
+      }
+    }
+    return true;
+  });
 
   return (
     <aside className="w-56 min-h-screen bg-white border-r border-gray-100 flex flex-col">
@@ -49,7 +65,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {navItems.map(({ href, label, icon: Icon }) => (
+        {filteredNavItems.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
