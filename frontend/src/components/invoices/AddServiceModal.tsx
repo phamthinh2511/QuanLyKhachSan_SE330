@@ -15,7 +15,7 @@ interface Props {
 }
 
 interface ServiceWithQuantity extends Service {
-  soLuong: number;
+  soLuong: number | "";
 }
 
 export default function AddServiceModal({
@@ -41,12 +41,13 @@ export default function AddServiceModal({
   }, []);
 
   // Add service to selected list
+  // Add service to selected list
   const handleSelectService = (service: Service) => {
     const existing = selectedServices.find((s) => s.id === service.id);
     if (existing) {
       setSelectedServices(
         selectedServices.map((s) =>
-          s.id === service.id ? { ...s, soLuong: s.soLuong + 1 } : s
+          s.id === service.id ? { ...s, soLuong: (typeof s.soLuong === "number" ? s.soLuong : 0) + 1 } : s
         )
       );
     } else {
@@ -58,8 +59,9 @@ export default function AddServiceModal({
   };
 
   // Update quantity
-  const handleQuantityChange = (serviceId: number, quantity: number) => {
-    if (quantity <= 0) {
+  const handleQuantityChange = (serviceId: number, quantityVal: string) => {
+    const quantity = quantityVal === "" ? "" : parseInt(quantityVal, 10);
+    if (quantity !== "" && quantity <= 0) {
       setSelectedServices(selectedServices.filter((s) => s.id !== serviceId));
     } else {
       setSelectedServices(
@@ -82,6 +84,14 @@ export default function AddServiceModal({
       return;
     }
 
+    const hasInvalidQty = selectedServices.some(
+      (s) => s.soLuong === "" || s.soLuong <= 0
+    );
+    if (hasInvalidQty) {
+      setShowError("Số lượng dịch vụ phải lớn hơn hoặc bằng 1");
+      return;
+    }
+
     setIsLoading(true);
     try {
       for (const service of selectedServices) {
@@ -89,7 +99,7 @@ export default function AddServiceModal({
           maPhieuThue,
           maDichVu: service.id,
           maPhong,
-          soLuong: service.soLuong,
+          soLuong: service.soLuong as number,
           donGia: service.price,
         };
         await addService(request);
@@ -107,7 +117,7 @@ export default function AddServiceModal({
   };
 
   const totalAmount = selectedServices.reduce(
-    (sum, s) => sum + s.price * s.soLuong,
+    (sum, s) => sum + s.price * (typeof s.soLuong === "number" ? s.soLuong : 0),
     0
   );
 
@@ -198,11 +208,11 @@ export default function AddServiceModal({
                       <input
                         type="number"
                         min="1"
-                        value={service.soLuong}
+                        value={service.soLuong ?? ""}
                         onChange={(e) =>
                           handleQuantityChange(
                             service.id,
-                            parseInt(e.target.value) || 0
+                            e.target.value
                           )
                         }
                         className="w-16 px-2 py-1 border rounded text-center"
@@ -211,7 +221,7 @@ export default function AddServiceModal({
                         {new Intl.NumberFormat("vi-VN", {
                           style: "currency",
                           currency: "VND",
-                        }).format(service.price * service.soLuong)}
+                        }).format(service.price * (typeof service.soLuong === "number" ? service.soLuong : 0))}
                       </div>
                       <button
                         onClick={() => handleRemoveService(service.id)}

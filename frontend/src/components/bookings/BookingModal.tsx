@@ -1,304 +1,14 @@
-// "use client";
-//
-// import { useState, useEffect } from "react";
-// import { X } from "lucide-react";
-// import { Booking, BookingStatus } from "@/types/booking";
-//
-// export interface CustomerResponse {
-//   id: number;
-//   name: string;
-//   phone?: string;
-// }
-//
-// export interface LoaiPhongResponseDto {
-//   id: number;
-//   tenLoaiPhong: string;
-//   donGia: number;
-// }
-//
-// export interface RoomResponse {
-//   id: number;
-//   maLoaiPhong: LoaiPhongResponseDto;
-//   trangThai: string;
-// }
-//
-// interface Props {
-//   booking: Booking | null;
-//   customers: CustomerResponse[]; // Khai báo trong Props
-//   rooms: RoomResponse[];         // Khai báo trong Props
-//   onSave: (data: any) => void;
-//   onClose: () => void;
-// }
-//
-// const todayStr = new Date().toISOString().split("T")[0];
-//
-// const emptyForm = {
-//   customerId: "",
-//   roomId: "",
-//   customerName: "",
-//   roomNumber: "",
-//   bookingDate: todayStr,
-//   checkIn: todayStr,
-//   checkOut: "",
-//   guests: 1,
-//   roomPrice: 0,
-//   amount: 0,
-//   status: "Booked" as BookingStatus,
-// };
-//
-// // ĐỂ Ý: Đã bổ sung nhận "customers" và "rooms" ở dòng bóc tách dưới đây
-// export default function BookingModal({ booking, customers = [], rooms = [], onSave, onClose }: Props) {
-//   const [form, setForm] = useState(emptyForm);
-//
-//   useEffect(() => {
-//     if (booking) {
-//       const { id, bookingCode, ...rest } = booking as any;
-//       const currentCustomer = customers.find((c) => c.name === rest.customerName);
-//       const currentRoom = rooms.find((r) => String(r.id) === rest.roomNumber);
-//
-//       setForm({
-//         ...emptyForm,
-//         ...rest,
-//         customerId: currentCustomer ? String(currentCustomer.id) : "",
-//         roomId: currentRoom ? String(currentRoom.id) : "",
-//         roomPrice: currentRoom ? (currentRoom.maLoaiPhong?.donGia || 0) : 0,
-//         bookingDate: rest.bookingDate || todayStr,
-//         status: rest.status || "Booked"
-//       });
-//     } else {
-//       setForm(emptyForm);
-//     }
-//   }, [booking, customers, rooms]);
-//
-//   useEffect(() => {
-//     if (form.status === "Checked-in") {
-//       setForm((prev) => ({
-//         ...prev,
-//         bookingDate: todayStr,
-//         checkIn: todayStr,
-//       }));
-//     }
-//   }, [form.status]);
-// // Thêm đoạn này vào bên trong BookingModal Component của bạn
-// useEffect(() => {
-//   // Nếu có dữ liệu đơn cần sửa (booking) và danh sách phòng/khách đã load xong
-//   if (booking && customers.length > 0 && rooms.length > 0) {
-//     // Tìm ID khách hàng dựa vào tên hiển thị trên bảng dữ liệu
-//     const foundCustomer = customers.find((c) => c.name === booking.customerName);
-//     // Tìm ID phòng dựa vào số phòng hiển thị trên bảng dữ liệu
-//     const foundRoom = rooms.find((r) => String(r.id) === booking.roomNumber);
-//
-//     // Điền tự động toàn bộ thông tin chi tiết cũ vào form nhập liệu
-//     setForm({
-//       bookingType: (booking as any).loaiHinh || "DAT_TRUOC",
-//       customerId: foundCustomer ? String(foundCustomer.id) : "",
-//       roomId: foundRoom ? String(foundRoom.id) : "",
-//       checkIn: booking.checkIn,
-//       checkOut: booking.checkOut,
-//       roomPrice: foundRoom ? (foundRoom.maLoaiPhong?.donGia || 0) : 0,
-//       amount: booking.amount,
-//       guests: booking.guests,
-//       status: booking.status
-//     });
-//   } else {
-//     // Nếu bấm nút "Đặt phòng mới" (booking = null) thì reset form về trống
-//     setForm(emptyForm);
-//   }
-// }, [booking, customers, rooms]);
-//
-//   const handleRoomSelection = (roomIdStr: string) => {
-//     const selectedRoom = rooms.find((r) => String(r.id) === roomIdStr);
-//     setForm((prev) => ({
-//       ...prev,
-//       roomId: roomIdStr,
-//       roomNumber: selectedRoom ? String(selectedRoom.id) : "",
-//       roomPrice: selectedRoom ? (selectedRoom.maLoaiPhong?.donGia || 0) : 0,
-//     }));
-//   };
-//
-//   useEffect(() => {
-//     if (!form.checkIn || !form.checkOut || !form.roomId) return;
-//     const nights = Math.max(
-//       0,
-//       (new Date(form.checkOut).getTime() - new Date(form.checkIn).getTime()) / 86400000
-//     );
-//     setForm((prev) => ({ ...prev, amount: prev.roomPrice * nights }));
-//   }, [form.roomId, form.checkIn, form.checkOut, form.roomPrice]);
-//
-//   const handleSubmit = (e: React.FormEvent) => {
-//     e.preventDefault();
-//
-//     const bookingType = form.status === "Checked-in" ? "THUE_TRUC_TIEP" : "DAT_TRUOC";
-//     const selectedCustomer = customers.find((c) => String(c.id) === form.customerId);
-//     const selectedRoom = rooms.find((r) => String(r.id) === form.roomId);
-//
-//     if (!selectedCustomer) {
-//       alert("Vui lòng chọn khách hàng!");
-//       return;
-//     }
-//     if (!selectedRoom) {
-//       alert("Vui lòng chọn phòng!");
-//       return;
-//     }
-//     if (!form.checkOut) {
-//       alert("Vui lòng chọn ngày check-out!");
-//       return;
-//     }
-//
-//     onSave({
-//       bookingType,
-//       customerId: form.customerId,
-//       customerName: selectedCustomer.name,
-//       roomId: form.roomId,
-//       roomNumber: String(selectedRoom.id),
-//       checkIn: form.checkIn,
-//       checkOut: form.checkOut,
-//       bookingDate: form.bookingDate,
-//       roomPrice: form.roomPrice,
-//       guests: form.guests,
-//       amount: form.amount,
-//       status: form.status
-//     });
-//   };
-//
-//   const inputClass = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800";
-//
-//   return (
-//     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-//       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-//         <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
-//           <div>
-//             <h2 className="font-semibold text-gray-800 text-lg">
-//               {booking ? "Chỉnh sửa booking" : "Đặt phòng mới"}
-//             </h2>
-//             <p className="text-gray-400 text-xs mt-0.5">Nhập thông tin đặt phòng bên dưới</p>
-//           </div>
-//           <button type="button" onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition">
-//             <X className="w-4 h-4 text-gray-500" />
-//           </button>
-//         </div>
-//
-//         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 mb-1">Hình thức / Trạng thái</label>
-//             <select value={form.status}
-//               onChange={(e) => setForm({ ...form, status: e.target.value as BookingStatus })}
-//               className={inputClass}>
-//               <option value="Chưa nhận">Đặt phòng trước (Booked)</option>
-//               <option value="Đã nhận phòng">Thuê trực tiếp tại quầy (Checked-in)</option>
-//               <option value="Đã trả phòng">Đã trả phòng (Checked-out)</option>
-//               <option value="Đã hủy">Đã hủy (Cancelled)</option>
-//             </select>
-//           </div>
-//
-//           <div className="grid grid-cols-2 gap-4">
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 mb-1">
-//                 Khách hàng <span className="text-red-500">*</span>
-//               </label>
-//               <select
-//                 value={form.customerId}
-//                 onChange={(e) => setForm({ ...form, customerId: e.target.value })}
-//                 className={inputClass}
-//                 required
-//               >
-//                 <option value="">-- Chọn khách hàng --</option>
-//                 {Array.isArray(customers) && customers.map((c) => (
-//                   <option key={c.id} value={c.id}>
-//                     {c.name} (ID: {c.id})
-//                   </option>
-//                 ))}
-//               </select>
-//             </div>
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 mb-1">Phòng lưu trú <span className="text-red-500">*</span></label>
-//               <select
-//                 value={form.roomId}
-//                 onChange={(e) => handleRoomSelection(e.target.value)}
-//                 className={inputClass}
-//                 required
-//               >
-//                 <option value="">-- Chọn phòng --</option>
-//                 {Array.isArray(rooms) && rooms.map((r) => (
-//                   <option key={r.id} value={r.id}>
-//                     Mã P.{r.id} — {r.maLoaiPhong?.tenLoaiPhong || "Chưa rõ"} ({r.maLoaiPhong?.donGia?.toLocaleString("vi-VN")}đ)
-//                   </option>
-//                 ))}
-//               </select>
-//             </div>
-//           </div>
-//
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 mb-1">Ngày đặt đơn</label>
-//             <input
-//               type="date"
-//               value={form.bookingDate}
-//               disabled={form.status === "Checked-in"}
-//               onChange={(e) => setForm({ ...form, bookingDate: e.target.value })}
-//               className={`${inputClass} ${form.status === "Checked-in" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : ""}`}
-//               required
-//             />
-//           </div>
-//
-//           <div className="grid grid-cols-2 gap-4">
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 mb-1">Ngày check-in</label>
-//               <input type="date" value={form.checkIn}
-//                 disabled={form.status === "Checked-in"}
-//                 onChange={(e) => setForm({ ...form, checkIn: e.target.value })}
-//                 className={`${inputClass} ${form.status === "Checked-in" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : ""}`}
-//                 required />
-//             </div>
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 mb-1">Ngày check-out</label>
-//               <input type="date" value={form.checkOut}
-//                 min={form.checkIn}
-//                 onChange={(e) => setForm({ ...form, checkOut: e.target.value })}
-//                 className={inputClass} required />
-//             </div>
-//           </div>
-//
-//           <div className="grid grid-cols-2 gap-4">
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 mb-1">Số khách</label>
-//               <input type="number" min={1} value={form.guests}
-//                 onChange={(e) => setForm({ ...form, guests: parseInt(e.target.value) || 1 })}
-//                 className={inputClass} required />
-//             </div>
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 mb-1">Tổng tiền (VND)</label>
-//               <input type="text" value={form.amount.toLocaleString("vi-VN") + " đ"} readOnly
-//                 className={inputClass + " bg-gray-50 text-gray-500 cursor-not-allowed"} />
-//             </div>
-//           </div>
-//
-//           <div className="flex gap-3 pt-2">
-//             <button type="button" onClick={onClose}
-//               className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
-//               Hủy
-//             </button>
-//             <button type="submit"
-//               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-medium transition">
-//               {booking ? "Lưu thay đổi" : "Tạo booking"}
-//             </button>
-//           </div>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// }
-
 
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, User, CalendarDays, Sparkles, Key, Check } from "lucide-react";
+import { X, User, CalendarDays, Sparkles, Check } from "lucide-react";
 import { Booking, BookingStatus } from "@/types/booking";
 import { getCustomers, createCustomer } from "@/lib/api/customers";
-import { mapBookingStatus } from "@/app/(dashboard)/bookings/page";
 import { getRooms } from "@/lib/api/rooms";
 import { Customer } from "@/types/customer";
 import { Room } from "@/types/room";
+import { isNotEmpty, isValidEmail, isValidPhone, isValidIdCard, isPastDate, isPositiveInteger } from "@/lib/validation";
 
 interface Props {
   booking: Booking | null;
@@ -321,7 +31,7 @@ export interface ExtendedForm {
   roomNumber: string;
   checkIn: string;
   checkOut: string;
-  guests: number;
+  guests: number | "";
   amount: number;
   status: BookingStatus;
 }
@@ -352,6 +62,12 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Đồng bộ chuỗi chặn ngày quá khứ theo mốc thời gian thực tại của hệ thống (Năm 2026)
+  const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000)
+      .toISOString()
+      .split("T")[0];
 
   const filteredCustomers = searchQuery.trim() === ""
     ? customers
@@ -362,7 +78,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
         (c.email && c.email.toLowerCase().includes(searchQuery.toLowerCase()))
       );
 
-  // Fetch customers and rooms on load
+  // Tải dữ liệu phòng và khách hàng
   useEffect(() => {
     async function loadData() {
       try {
@@ -382,7 +98,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
     loadData();
   }, []);
 
-  // Populate form in edit mode
+  // Điền dữ liệu vào form khi ở chế độ chỉnh sửa
   useEffect(() => {
     if (booking) {
       const cust = customers.find((c) => c.name === booking.customerName);
@@ -410,9 +126,10 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
       setForm(emptyForm);
       setIsAutoFilled(false);
     }
+    setFieldErrors({});
   }, [booking, customers]);
 
-  // Calculate booking amount dynamically
+  // Tự động tính toán tổng tiền dựa vào số đêm phòng
   useEffect(() => {
     if (!form.roomNumber || !form.checkIn || !form.checkOut) return;
     const room = rooms.find((r) => r.roomNumber === form.roomNumber);
@@ -424,8 +141,14 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
     setForm((prev) => ({ ...prev, amount: room.pricePerNight * nights }));
   }, [form.roomNumber, form.checkIn, form.checkOut, rooms]);
 
-  // Watch for phone, cccd/passport, email to auto-complete existing customer details
   const handleCustomerFieldChange = (field: keyof ExtendedForm, value: string) => {
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[field];
+        return copy;
+      });
+    }
     setForm((prev) => {
       const updated = { ...prev, [field]: value };
 
@@ -488,24 +211,43 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
   };
 
   const handleCheckInChange = (val: string) => {
-    if (!val) {
-      setForm((prev) => ({ ...prev, checkIn: val }));
-      return;
-    }
-    const checkInDate = new Date(val);
-    const nextDay = new Date(checkInDate);
-    nextDay.setDate(checkInDate.getDate() + 1);
+      if (fieldErrors.ngayNhan) {
+        setFieldErrors((prev) => {
+          const c = { ...prev };
+          delete c.ngayNhan;
+          return c;
+        });
+      }
+      if (!val) {
+        setForm((prev) => ({ ...prev, checkIn: val }));
+        return;
+      }
+
+      setForm((prev) => {
+        // ✅ Nếu có ngày Check-out cũ và ngày Check-out đó vẫn lớn hơn Check-in mới, giữ nguyên lịch Check-out
+        if (prev.checkOut && prev.checkOut > val) {
+          return {
+            ...prev,
+            checkIn: val,
+          };
+        }
+
+        // Ngược lại, tự động tăng thêm 1 ngày cho ngày check-out
+        const checkInDate = new Date(val);
+        const nextDay = new Date(checkInDate);
+        nextDay.setDate(checkInDate.getDate() + 1);
 
     const offset = nextDay.getTimezoneOffset();
     const localNextDay = new Date(nextDay.getTime() - offset * 60 * 1000);
     const checkOutStr = localNextDay.toISOString().split("T")[0];
 
-    setForm((prev) => ({
-      ...prev,
-      checkIn: val,
-      checkOut: checkOutStr,
-    }));
-  };
+        return {
+          ...prev,
+          checkIn: val,
+          checkOut: checkOutStr,
+        };
+      });
+    };
 
   const resetCustomerForm = () => {
     setIsAutoFilled(false);
@@ -535,7 +277,10 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
 
     return !bookings.some((b) => {
       if (b.roomNumber !== roomNumber) return false;
-      if (b.status === "Đã hủy" || b.status === "Đã trả phòng") return false;
+      if (b.status === "Đã hủy" ||
+                b.status === "Đã trả phòng" ||
+                b.status === "Đã nhận phòng" ||
+                b.status === "Đã nhận phòng tại quầy") return false;
       if (booking && b.id === booking.id) return false;
 
       const bIn = new Date(b.checkIn);
@@ -546,26 +291,75 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
     });
   };
 
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!isAutoFilled && !form.customerId) {
+      if (!isNotEmpty(form.customerName)) {
+        newErrors.customerName = "Tên khách hàng không được để trống";
+      }
+      if (!isNotEmpty(form.customerPhone)) {
+        newErrors.customerPhone = "Số điện thoại không được để trống";
+      } else if (!isValidPhone(form.customerPhone)) {
+        newErrors.customerPhone = "Số điện thoại không hợp lệ (9-11 chữ số, bắt đầu bằng 0 hoặc +84)";
+      }
+      if (!isNotEmpty(form.customerEmail)) {
+        newErrors.customerEmail = "Email không được để trống";
+      } else if (!isValidEmail(form.customerEmail)) {
+        newErrors.customerEmail = "Email không đúng định dạng";
+      }
+      if (!isNotEmpty(form.customerIdCard)) {
+        newErrors.customerIdCard = "CCCD không được để trống";
+      } else if (!isValidIdCard(form.customerIdCard)) {
+        newErrors.customerIdCard = "CCCD phải gồm 9 hoặc 12 chữ số";
+      }
+      if (!isNotEmpty(form.customerBirthday)) {
+        newErrors.customerBirthday = "Ngày sinh không được để trống";
+      } else if (!isPastDate(form.customerBirthday)) {
+        newErrors.customerBirthday = "Ngày sinh phải là ngày trong quá khứ";
+      }
+      if (!isNotEmpty(form.customerAddress)) {
+        newErrors.customerAddress = "Địa chỉ không được để trống";
+      }
+    }
+
+    if (!isNotEmpty(form.roomNumber)) {
+      newErrors.maPhongId = "Vui lòng chọn phòng";
+    } else {
+      const selectedRoom = rooms.find((r) => r.roomNumber === form.roomNumber);
+      if (selectedRoom) {
+        const capacity = selectedRoom.capacity || 0;
+        if (capacity > 0 && form.guests !== "" && form.guests > capacity) {
+          newErrors.soKhach = `Phòng này chỉ chứa tối đa ${capacity} người`;
+        }
+      }
+    }
+
+    if (!isNotEmpty(form.checkIn)) {
+      newErrors.ngayNhan = "Vui lòng chọn ngày check-in";
+    }
+    if (!isNotEmpty(form.checkOut)) {
+      newErrors.ngayTra = "Vui lòng chọn ngày check-out";
+    } else if (form.checkIn && new Date(form.checkOut) <= new Date(form.checkIn)) {
+      newErrors.ngayTra = "Ngày check-out phải sau ngày check-in";
+    }
+
+    if (!form.guests || !isPositiveInteger(form.guests)) {
+      newErrors.soKhach = "Số lượng khách phải lớn hơn hoặc bằng 1";
+    }
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
 
-    // ĐỒNG BỘ: Phân tách hình thức dựa trên trạng thái tiếng Việt mới chọn
     const bookingType = form.status === "Đang sử dụng" ? "THUE_TRUC_TIEP" : "DAT_TRUOC";
     const selectedRoom = rooms.find((r) => r.roomNumber === form.roomNumber);
 
-    if (!selectedRoom) {
-      alert("Vui lòng chọn phòng!");
-      return;
-    }
-    if (!form.checkOut) {
-      alert("Vui lòng chọn ngày check-out!");
-      return;
-    }
-    const phongSucChua = selectedRoom.capacity || 0;
-    if (phongSucChua > 0 && form.guests > phongSucChua) {
-      alert(`Thao tác thất bại: Phòng này chỉ chứa tối đa ${phongSucChua} người, đơn của bạn có ${form.guests} khách!`);
-      return;
-    }
+    if (!selectedRoom) return;
 
     let customerId = form.customerId;
     let customerName = form.customerName;
@@ -585,27 +379,57 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
         customerId = newCustomer.id;
         customerName = newCustomer.name;
       } catch (err: any) {
-        alert("Lỗi khi thêm mới khách hàng: " + (err.message || err));
+        if (err && err.isApiError && err.result) {
+          setFieldErrors(err.result);
+          const firstErr = Object.keys(err.result)[0];
+          document.getElementById(firstErr)?.focus();
+        } else {
+          alert("Lỗi khi thêm mới khách hàng: " + (err.message || err));
+        }
         return;
       }
     }
 
-    onSave({
-      bookingType,
-      customerId: String(customerId),
-      customerName: customerName,
-      roomId: String(selectedRoom.id),
-      roomNumber: selectedRoom.roomNumber,
-      checkIn: form.checkIn,
-      checkOut: form.checkOut,
-      guests: form.guests,
-      amount: form.amount,
-      status: form.status.trim() // Gửi chuỗi tiếng Việt sạch xuống page.tsx
-    });
+    try {
+      await onSave({
+          id: booking ? booking.id : null,
+        bookingType,
+        customerId: String(customerId),
+        customerName: customerName,
+        roomId: String(selectedRoom.id),
+        roomNumber: selectedRoom.roomNumber,
+        checkIn: form.checkIn,
+        checkOut: form.checkOut,
+        guests: form.guests === "" ? 1 : form.guests,
+      ngayNhan: form.checkIn,
+        ngayTra: form.checkOut,
+        guests: form.guests,
+        amount: form.amount,
+        status: form.status.trim()
+      });
+    } catch (err: any) {
+      console.log("Modal nhận diện lỗi từ Page truyền xuống:", err);
+      if (err && err.isApiError && err.status === 422 && err.result) {
+        setFieldErrors(err.result);
+        const firstErrorField = Object.keys(err.result)[0];
+        const errorElement = document.getElementById(firstErrorField);
+        if (errorElement) {
+          errorElement.focus();
+          errorElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      } else {
+        alert(err.message || "Đã xảy ra lỗi trong quá trình xử lý đơn phòng.");
+      }
+    }
   };
 
-  const inputClass =
-    "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-400 text-gray-800 transition duration-150 ease-in-out hover:border-gray-300";
+  const getInputStyle = (fieldName: string) => {
+    const baseClass = "w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 bg-white placeholder-gray-400 text-gray-800 transition duration-150 ease-in-out";
+    if (fieldErrors[fieldName]) {
+      return `${baseClass} border-red-500 focus:ring-red-200 focus:border-red-500`;
+    }
+    return `${baseClass} border-gray-200 focus:ring-blue-500 hover:border-gray-300`;
+  };
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -634,7 +458,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
             {/* SECTION 1: CUSTOMER INFORMATION */}
             <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-5 space-y-4 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
-              
+
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-3 border-b border-slate-100">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
@@ -643,7 +467,6 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                   <h3 className="font-bold text-slate-800 text-sm tracking-wide uppercase">Thông tin khách hàng</h3>
                 </div>
 
-                {/* Searchable Combobox for selecting existing customers */}
                 <div className="relative z-20 max-w-[240px] w-full">
                   <div className="flex items-center gap-1.5 border border-slate-200 rounded-xl px-2.5 py-1.5 bg-white text-xs text-slate-700 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition">
                     <input
@@ -670,7 +493,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                   </div>
 
                   {isDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto z-30 divide-y divide-slate-50 animate-fadeIn">
+                    <div className="absolute right-0 top-full mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto z-30 divide-y divide-slate-50">
                       {filteredCustomers.length === 0 ? (
                         <div className="p-3 text-center text-xs text-slate-400">
                           Không tìm thấy khách hàng
@@ -682,7 +505,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                             type="button"
                             onClick={() => {
                               handleSelectExistingCustomer(c.id);
-                              setSearchQuery(""); // Clear search term after select
+                              setSearchQuery("");
                               setIsDropdownOpen(false);
                             }}
                             className="w-full text-left px-3.5 py-2 hover:bg-slate-50 transition text-xs flex flex-col gap-0.5"
@@ -700,9 +523,8 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                 </div>
               </div>
 
-              {/* Dynamic Auto-fill Notification Banner */}
               {isAutoFilled && form.customerId && (
-                <div className="bg-emerald-50 border border-emerald-200/60 rounded-xl p-3.5 flex items-center justify-between shadow-sm animate-fadeIn">
+                <div className="bg-emerald-50 border border-emerald-200/60 rounded-xl p-3.5 flex items-center justify-between shadow-sm">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500 text-white">
                       <Check className="w-3.5 h-3.5" />
@@ -726,25 +548,27 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                 </div>
               )}
 
-              {/* Customer details fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tên khách hàng</label>
                   <input
                     type="text"
+                    id="customerName"
                     value={form.customerName}
                     onChange={(e) => handleCustomerFieldChange("customerName", e.target.value)}
-                    className={inputClass}
+                    className={getInputStyle("customerName")}
                     required
                     placeholder="Nguyễn Văn A"
                   />
+                  {fieldErrors.customerName && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.customerName}</span>}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Giới tính</label>
                   <select
+                    id="customerGender"
                     value={form.customerGender}
                     onChange={(e) => handleCustomerFieldChange("customerGender", e.target.value)}
-                    className={inputClass}
+                    className={getInputStyle("customerGender")}
                     required
                   >
                     <option value="Nam">Nam</option>
@@ -759,23 +583,27 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Số điện thoại</label>
                   <input
                     type="tel"
+                    id="customerPhone"
                     value={form.customerPhone}
                     onChange={(e) => handleCustomerFieldChange("customerPhone", e.target.value)}
-                    className={inputClass}
+                    className={getInputStyle("customerPhone")}
                     required
                     placeholder="Nhập SĐT để tự hoàn tất..."
                   />
+                  {fieldErrors.customerPhone && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.customerPhone}</span>}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email</label>
                   <input
                     type="email"
+                    id="customerEmail"
                     value={form.customerEmail}
                     onChange={(e) => handleCustomerFieldChange("customerEmail", e.target.value)}
-                    className={inputClass}
+                    className={getInputStyle("customerEmail")}
                     required
                     placeholder="Nhập Email để tự hoàn tất..."
                   />
+                  {fieldErrors.customerEmail && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.customerEmail}</span>}
                 </div>
               </div>
 
@@ -784,20 +612,23 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">CCCD / Passport</label>
                   <input
                     type="text"
+                    id="customerIdCard"
                     value={form.customerIdCard}
                     onChange={(e) => handleCustomerFieldChange("customerIdCard", e.target.value)}
-                    className={inputClass}
+                    className={getInputStyle("customerIdCard")}
                     required
                     placeholder="Nhập CCCD để tự hoàn tất..."
                   />
+                  {fieldErrors.customerIdCard && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.customerIdCard}</span>}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Ngày sinh</label>
                   <input
                     type="date"
+                    id="customerBirthday"
                     value={form.customerBirthday}
                     onChange={(e) => handleCustomerFieldChange("customerBirthday", e.target.value)}
-                    className={inputClass}
+                    className={getInputStyle("customerBirthday")}
                     required
                   />
                 </div>
@@ -808,9 +639,10 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Địa chỉ</label>
                   <input
                     type="text"
+                    id="customerAddress"
                     value={form.customerAddress}
                     onChange={(e) => handleCustomerFieldChange("customerAddress", e.target.value)}
-                    className={inputClass}
+                    className={getInputStyle("customerAddress")}
                     required
                     placeholder="Hà Nội, Việt Nam"
                   />
@@ -818,9 +650,10 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Hạng khách hàng</label>
                   <select
+                    id="customerStatus"
                     value={form.customerStatus}
                     onChange={(e) => handleCustomerFieldChange("customerStatus", e.target.value)}
-                    className={inputClass}
+                    className={getInputStyle("customerStatus")}
                   >
                     <option value="Thường">Thường</option>
                     <option value="VIP">VIP</option>
@@ -845,21 +678,34 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Chọn phòng trống</label>
                   <select
+                    id="maPhongId"
                     value={form.roomNumber}
-                    onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
-                    className={inputClass}
+                    onChange={(e) => {
+                      setForm({ ...form, roomNumber: e.target.value });
+                      if (fieldErrors.maPhongId) setFieldErrors(p => { const c = { ...p }; delete c.maPhongId; return c; });
+                    }}
+                    className={getInputStyle("maPhongId")}
                     required
                   >
                     <option value="">Chọn phòng</option>
-                    {/* Include the current room if editing, plus all available rooms */}
                     {rooms
-                      .filter((r) => r.status !== "Bảo trì" && (r.roomNumber === booking?.roomNumber || isRoomAvailable(r.roomNumber)))
+                        .filter((r) => {
+                          // 1. Loại bỏ các phòng đang bảo trì
+                          if (r.status === "Bảo trì") return false;
+
+                          // 2. Nếu là phòng đang sửa của chính đơn này thì luôn hiển thị
+                          if (booking && r.roomNumber === booking.roomNumber) return true;
+
+                          // 3. Nếu người dùng chọn trạng thái tạo mới là "Đặt trước", kiểm tra lịch trùng
+                          return isRoomAvailable(r.roomNumber);
+                        })
                       .map((r) => (
                         <option key={r.id} value={r.roomNumber}>
                           Phòng {r.roomNumber} — {r.type} ({r.pricePerNight.toLocaleString("vi-VN")} VND/đêm)
                         </option>
                       ))}
                   </select>
+                  {fieldErrors.maPhongId && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.maPhongId}</span>}
                 </div>
 
                 <div>
@@ -867,7 +713,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                   <select
                     value={form.status}
                     onChange={(e) => setForm({ ...form, status: e.target.value as BookingStatus })}
-                    className={inputClass}
+                    className={getInputStyle("trangThai")}
                   >
                     <option value="Đặt trước">Đặt trước</option>
                     <option value="Đang sử dụng">Đang sử dụng</option>
@@ -876,42 +722,66 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                 </div>
               </div>
 
-              {/* Dates */}
+              {/* Dates Validation UI */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Ngày check-in</label>
                   <input
                     type="date"
+                    id="ngayNhan"
+                    min={todayStr}
                     value={form.checkIn}
                     onChange={(e) => handleCheckInChange(e.target.value)}
-                    className={inputClass}
+                    className={getInputStyle("ngayNhan")}
                     required
                   />
+                  {fieldErrors.ngayNhan && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.ngayNhan}</span>}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Ngày check-out</label>
                   <input
                     type="date"
+                    id="ngayTra"
+                    min={
+                                          form.checkIn
+                                            ? (() => {
+                                                const nextDay = new Date(form.checkIn);
+                                                nextDay.setDate(nextDay.getDate() + 1);
+                                                const offset = nextDay.getTimezoneOffset();
+                                                const localNextDay = new Date(nextDay.getTime() - offset * 60 * 1000);
+                                                return localNextDay.toISOString().split("T")[0];
+                                              })()
+                                            : todayStr
+                                        }
                     value={form.checkOut}
-                    onChange={(e) => setForm({ ...form, checkOut: e.target.value })}
-                    className={inputClass}
+                    onChange={(e) => {
+                      setForm({ ...form, checkOut: e.target.value });
+                      if (fieldErrors.ngayTra) setFieldErrors(p => { const c = { ...p }; delete c.ngayTra; return c; });
+                    }}
+                    className={getInputStyle("ngayTra")}
                     required
                   />
+                  {fieldErrors.ngayTra && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.ngayTra}</span>}
                 </div>
               </div>
 
-              {/* Guests and pricing */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Số lượng khách</label>
                   <input
                     type="number"
+                    id="soKhach"
                     min={1}
-                    value={form.guests}
-                    onChange={(e) => setForm({ ...form, guests: parseInt(e.target.value) || 1 })}
-                    className={inputClass}
+                    value={form.guests ?? ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setForm({ ...form, guests: val === "" ? "" : parseInt(val, 10) });
+                      if (fieldErrors.soKhach) setFieldErrors(p => { const c = { ...p }; delete c.soKhach; return c; });
+                    }}
+                    className={getInputStyle("soKhach")}
                     required
                   />
+                  {fieldErrors.soKhach && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.soKhach}</span>}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tổng tiền thanh toán</label>
@@ -922,7 +792,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                         form.amount
                       )}
                       readOnly
-                      className={`${inputClass} bg-slate-100 text-slate-500 cursor-not-allowed font-semibold`}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-slate-100 text-slate-500 cursor-not-allowed font-semibold transition duration-150 ease-in-out"
                     />
                   </div>
                 </div>
@@ -940,7 +810,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
               </button>
               <button
                 type="submit"
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-semibold shadow-md shadow-blue-500/10 transition duration-150 hover:shadow-blue-500/20 active:translate-y-[1px]"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-semibold shadow-md shadow-blue-500/10 transition duration-150"
               >
                 {booking ? "Cập nhật đặt phòng" : "Hoàn tất đặt phòng"}
               </button>

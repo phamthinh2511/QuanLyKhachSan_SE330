@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { Invoice } from "@/types/invoice";
+import { isNonNegativeNumber } from "@/lib/validation";
 
 interface Props {
   invoice: Invoice;
@@ -11,22 +12,57 @@ interface Props {
 }
 
 export default function InvoiceEditModal({ invoice, onSave, onClose }: Props) {
-  const [roomCost, setRoomCost] = useState<number>(invoice.roomCost || 0);
-  const [serviceCost, setServiceCost] = useState<number>(invoice.serviceCost || 0);
+  const [roomCost, setRoomCost] = useState<number | "">(invoice.roomCost || 0);
+  const [serviceCost, setServiceCost] = useState<number | "">(invoice.serviceCost || 0);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const total = roomCost + serviceCost;
+  const total = (typeof roomCost === "number" ? roomCost : 0) + (typeof serviceCost === "number" ? serviceCost : 0);
+
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (roomCost === "" || roomCost === undefined || roomCost === null || !isNonNegativeNumber(roomCost)) {
+      newErrors.roomCost = "Tiền phòng phải là số không âm";
+    }
+    if (serviceCost === "" || serviceCost === undefined || serviceCost === null || !isNonNegativeNumber(serviceCost)) {
+      newErrors.serviceCost = "Tiền dịch vụ phải là số không âm";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
     onSave({
       ...invoice,
-      roomCost,
-      serviceCost,
+      roomCost: roomCost === "" ? 0 : roomCost,
+      serviceCost: serviceCost === "" ? 0 : serviceCost,
       total,
     });
   };
 
-  const inputClass = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800";
+  const handleRoomCostChange = (val: string) => {
+    const parsed = val === "" ? "" : parseFloat(val);
+    setRoomCost(parsed);
+    if (errors.roomCost) {
+      setErrors((prev) => { const next = { ...prev }; delete next.roomCost; return next; });
+    }
+  };
+
+  const handleServiceCostChange = (val: string) => {
+    const parsed = val === "" ? "" : parseFloat(val);
+    setServiceCost(parsed);
+    if (errors.serviceCost) {
+      setErrors((prev) => { const next = { ...prev }; delete next.serviceCost; return next; });
+    }
+  };
+
+  const getInputClass = (fieldName: string) => {
+    const base = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800 transition duration-150";
+    return errors[fieldName]
+      ? `${base} border-red-500 focus:ring-red-200 focus:border-red-500`
+      : base;
+  };
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -41,14 +77,13 @@ export default function InvoiceEditModal({ invoice, onSave, onClose }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
           <div className="grid grid-cols-2 gap-4">
             {/* Khách hàng (Read-only) */}
             <div>
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Khách hàng</label>
               <input type="text" value={invoice.customerName} disabled className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-500 cursor-not-allowed" />
             </div>
-
             {/* Phòng (Read-only) */}
             <div>
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Phòng</label>
@@ -62,27 +97,26 @@ export default function InvoiceEditModal({ invoice, onSave, onClose }: Props) {
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tiền phòng (VND)</label>
               <input
                 type="number"
-                value={roomCost}
-                onChange={(e) => setRoomCost(parseFloat(e.target.value) || 0)}
-                className={inputClass}
-                required
+                value={roomCost ?? ""}
+                onChange={(e) => handleRoomCostChange(e.target.value)}
+                className={getInputClass("roomCost")}
               />
+              {errors.roomCost && <p className="text-red-500 text-xs mt-1 font-medium">{errors.roomCost}</p>}
             </div>
-
             {/* Tiền dịch vụ */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tiền dịch vụ (VND)</label>
               <input
                 type="number"
-                value={serviceCost}
-                onChange={(e) => setServiceCost(parseFloat(e.target.value) || 0)}
-                className={inputClass}
-                required
+                value={serviceCost ?? ""}
+                onChange={(e) => handleServiceCostChange(e.target.value)}
+                className={getInputClass("serviceCost")}
               />
+              {errors.serviceCost && <p className="text-red-500 text-xs mt-1 font-medium">{errors.serviceCost}</p>}
             </div>
           </div>
 
-          {/* Phương thức thanh toán & Trạng thái - Chỉ đọc, lấy từ dữ liệu hóa đơn */}
+          {/* Phương thức thanh toán & Trạng thái — Read-only (không cho chỉnh) */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Thanh toán</label>

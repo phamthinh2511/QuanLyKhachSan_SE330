@@ -93,3 +93,21 @@ export async function updateRoom(id: number, room: Room): Promise<Room> {
 export async function deleteRoom(id: number): Promise<void> {
   return apiClient<void>(`/api/rooms/${id}`, { method: "DELETE" });
 }
+
+export async function getRoomsTrash(): Promise<Room[]> {
+  const data = await apiClient<PhongResponseApi[]>("/api/rooms/trash");
+  return data.map(mapToRoom);
+}
+
+export async function restoreRoom(id: number): Promise<Room> {
+  const data = await apiClient<PhongResponseApi>(`/api/rooms/${id}/restore`, {
+    method: "PUT",
+  });
+  return mapToRoom(data);
+}
+
+export async function hardDeleteRoom(id: number): Promise<void> {
+  return apiClient<void>(`/api/rooms/${id}/hard`, {
+    method: "DELETE",
+  });
+}

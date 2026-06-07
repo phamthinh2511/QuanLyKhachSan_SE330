@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X, AlertTriangle } from "lucide-react";
 import { useBilling } from "@/hooks/useBilling";
 import { RecordInspectionRequest } from "@/lib/api/billing";
+import { isNonNegativeNumber } from "@/lib/validation";
 
 interface Props {
   maPhieuThue: number;
@@ -21,7 +22,8 @@ export default function RecordInspectionModal({
   onClose,
 }: Props) {
   const [tinhTrang, setTinhTrang] = useState("Phòng bình thường");
-  const [tienBoiThuong, setTienBoiThuong] = useState(0);
+  const [tienBoiThuong, setTienBoiThuong] = useState<number | "">(0);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [showError, setShowError] = useState<string | null>(null);
   const { recordInspection, loading, error, clearError } = useBilling();
 
@@ -54,16 +56,23 @@ export default function RecordInspectionModal({
     },
   ];
 
-  const handleSubmit = async () => {
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
     if (!tinhTrang) {
-      setShowError("Vui lòng chọn tình trạng phòng");
-      return;
+      newErrors.tinhTrang = "Vui lòng chọn tình trạng phòng";
     }
 
-    if (tienBoiThuong < 0) {
-      setShowError("Tiền bồi thường không thể là số âm");
-      return;
+    if (tienBoiThuong === "" || tienBoiThuong === undefined || tienBoiThuong === null || !isNonNegativeNumber(tienBoiThuong)) {
+      newErrors.tienBoiThuong = "Tiền bồi thường không thể là số âm";
     }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) return;
 
     try {
       const request: RecordInspectionRequest = {
@@ -71,7 +80,7 @@ export default function RecordInspectionModal({
         maPhong,
         maNhanVien,
         tinhTrang,
-        tienBoiThuong,
+        tienBoiThuong: tienBoiThuong === "" ? 0 : tienBoiThuong,
       };
       await recordInspection(request);
       setShowError(null);
@@ -81,6 +90,26 @@ export default function RecordInspectionModal({
       const errMsg = err instanceof Error ? err.message : "Lỗi ghi nhận kiểm kê";
       setShowError(errMsg);
     }
+  };
+
+  const handleTienBoiThuongChange = (val: string) => {
+    const parsed = val === "" ? "" : Math.max(0, parseInt(val, 10));
+    setTienBoiThuong(parsed);
+    if (errors.tienBoiThuong) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.tienBoiThuong;
+        return next;
+      });
+    }
+  };
+
+  const getInputClass = (fieldName: string) => {
+    const baseClass = "w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800 transition duration-150";
+    if (errors[fieldName]) {
+      return `${baseClass} border-red-500 focus:ring-red-200 focus:border-red-500`;
+    }
+    return baseClass;
   };
 
   return (
@@ -151,7 +180,16 @@ export default function RecordInspectionModal({
                     name="tinhTrang"
                     value={status.value}
                     checked={tinhTrang === status.value}
-                    onChange={(e) => setTinhTrang(e.target.value)}
+                    onChange={(e) => {
+                      setTinhTrang(e.target.value);
+                      if (errors.tinhTrang) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.tinhTrang;
+                          return next;
+                        });
+                      }
+                    }}
                     className="w-4 h-4 text-blue-600"
                   />
                   <span className={`ml-3 font-medium ${status.color}`}>
@@ -160,6 +198,7 @@ export default function RecordInspectionModal({
                 </label>
               ))}
             </div>
+            {errors.tinhTrang && <p className="text-red-500 text-xs mt-1 font-medium">{errors.tinhTrang}</p>}
           </div>
 
           {/* Tiền bồi thường */}
@@ -173,20 +212,20 @@ export default function RecordInspectionModal({
               </span>
               <input
                 type="number"
-                min="0"
-                value={tienBoiThuong}
-                onChange={(e) => setTienBoiThuong(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={tienBoiThuong ?? ""}
+                onChange={(e) => handleTienBoiThuongChange(e.target.value)}
+                className={getInputClass("tienBoiThuong")}
                 placeholder="0"
               />
             </div>
+            {errors.tienBoiThuong && <p className="text-red-500 text-xs mt-1 font-medium">{errors.tienBoiThuong}</p>}
             <p className="text-xs text-gray-500 mt-2">
               Nhập số tiền cần bồi thường nếu khách làm hỏng đồ dùng phòng
             </p>
           </div>
 
           {/* Tóm tắt */}
-          {tienBoiThuong > 0 && (
+          {tienBoiThuong !== "" && tienBoiThuong > 0 && (
             <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-gray-900">
@@ -196,7 +235,8 @@ export default function RecordInspectionModal({
                   {new Intl.NumberFormat("vi-VN", {
                     style: "currency",
                     currency: "VND",
-                  }).format(tienBoiThuong)}
+                    minimumFractionDigits: 0,
+                  }).format(tienBoiThuong as number)}
                 </span>
               </div>
             </div>

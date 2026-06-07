@@ -6,6 +6,22 @@ interface FetchOptions extends RequestInit {
   params?: Record<string, string>;
 }
 
+export class ApiError extends Error {
+  isApiError = true;
+  status: number;
+  code: string | number;
+  result: any;
+
+  constructor(message: string, status: number, code: string | number, result: any = null) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+    this.result = result;
+    Object.setPrototypeOf(this, ApiError.prototype);
+  }
+}
+
 export async function apiClient<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { params, ...fetchOptions } = options;
 
@@ -34,7 +50,23 @@ export async function apiClient<T>(endpoint: string, options: FetchOptions = {})
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.message ?? `Lỗi ${response.status}`);
+      let errorMessage = error.message || `Lỗi ${response.status}`;
+
+      if (response.status === 422 && error.result && typeof error.result === "object") {
+        const details = Object.values(error.result)
+          .map((reason) => `- ${reason}`)
+          .join("\n");
+        if (details) {
+          errorMessage = `${errorMessage}\n${details}`;
+        }
+      }
+
+      throw new ApiError(
+        errorMessage,
+        response.status,
+        error.code || response.status,
+        error.result || null
+      );
     }
 
     // DELETE trả về 204 No Content
@@ -43,7 +75,10 @@ export async function apiClient<T>(endpoint: string, options: FetchOptions = {})
     }
 
     return response.json();
-  } catch (error) {
+  } catch (error: any) {
+    if (error && error.isApiError) {
+      throw error;
+    }
     if (error instanceof Error) {
       if (
         error.name === "TypeError" ||

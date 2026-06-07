@@ -63,4 +63,30 @@ public class NhanvienController {
                 .message("Xóa nhân viên thành công")
                 .build();
     }
+
+    @GetMapping("/trash")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<List<NhanvienResponseDto>> getTrashBin() {
+        return ApiResponse.<List<NhanvienResponseDto>>builder()
+                .result(nhanvienService.getTrashBin())
+                .build();
+    }
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<NhanvienResponseDto> restore(@PathVariable Integer id) {
+        return ApiResponse.<NhanvienResponseDto>builder()
+                .message("Khôi phục nhân viên thành công")
+                .result(nhanvienService.restore(id))
+                .build();
+    }
+
+    @DeleteMapping("/{id}/hard")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<Void> hardDelete(@PathVariable Integer id) {
+        nhanvienService.hardDelete(id);
+        return ApiResponse.<Void>builder()
+                .message("Xóa vĩnh viễn nhân viên thành công")
+                .build();
+    }
 }

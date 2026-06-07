@@ -51,4 +51,23 @@ public class KhachhangController {
         khachhangService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/trash")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<List<KhachhangResponseDto>> getTrashBin() {
+        return ResponseEntity.ok(khachhangService.getTrashBin());
+    }
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<KhachhangResponseDto> restore(@PathVariable Integer id) {
+        return ResponseEntity.ok(khachhangService.restore(id));
+    }
+
+    @DeleteMapping("/{id}/hard")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> hardDelete(@PathVariable Integer id) {
+        khachhangService.hardDelete(id);
+        return ResponseEntity.noContent().build();
+    }
 }

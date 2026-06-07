@@ -17,6 +17,7 @@ import {
 import { Plus } from "lucide-react";
 import { Booking, BookingStatus } from "@/types/booking";
 import BookingStatCards from "@/components/bookings/BookingStatCards";
+import { useToast } from "@/context/ToastContext";
 import BookingTodayTable from "@/components/bookings/BookingTodayTable";
 import BookingAllTable from "@/components/bookings/BookingAllTable";
 import BookingModal from "@/components/bookings/BookingModal";
@@ -50,6 +51,7 @@ export const mapBookingStatus = (status: string): BookingStatus => {
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const { showToast } = useToast();
   const [customers, setCustomers] = useState<CustomerResponse[]>([]);
   const [rooms, setRooms] = useState<RoomResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,10 +73,10 @@ export default function BookingsPage() {
     try {
       setLoading(true);
       await checkInBooking(bookingId);
-      alert("Nhận phòng (Check-in) thành công! Đã tạo phiếu thuê phòng.");
+      showToast("Nhận phòng (Check-in) thành công! Đã tạo phiếu thuê phòng.");
       await fetchData();
     } catch (error: any) {
-      alert(error.message || "Nhận phòng thất bại!");
+      showToast(error.message || "Nhận phòng thất bại!", "error");
     } finally {
       setLoading(false);
     }
@@ -115,9 +117,23 @@ export default function BookingsPage() {
       ]);
 
       setCustomers(customerRes);
-      setRooms(roomRes);
+      if (Array.isArray(roomRes)) {
+            setRooms(roomRes);
+          } else if (roomRes && typeof roomRes === 'object' && Array.isArray((roomRes as any).result)) {
+            setRooms((roomRes as any).result);
+          }
 
-      const rawList = Array.isArray(response) ? response : [];
+      let rawList: any[] = [];
+
+      if (Array.isArray(response)) {
+        rawList = response;
+      } else if (response && typeof response === "object") {
+        if (Array.isArray((response as any).result)) {
+          rawList = (response as any).result;
+        } else if ((response as any).data && Array.isArray((response as any).data.result)) {
+          rawList = (response as any).data.result;
+        }
+      }
 
       const mappedData = rawList.map((b: any) => ({
         id: b.id,
@@ -197,21 +213,20 @@ export default function BookingsPage() {
       const res = await deleteBooking(id);
 
       if (res.code === 200) {
-        alert(res.message || "Đã xóa phiếu đặt phòng thành công!");
+        showToast(res.message || "Đã xóa phiếu đặt phòng thành công!");
       } else {
-        alert(res.message || "Xóa phiếu đặt phòng thành công!");
+        showToast(res.message || "Xóa phiếu đặt phòng thành công!");
       }
 
       await fetchData();
     } catch (error: any) {
       console.error("Lỗi khi thực hiện xóa phiếu phòng:", error);
-      alert("Xử lý yêu cầu xóa thất bại. Vui lòng kiểm tra lại ràng buộc dữ liệu!");
+      showToast("Xử lý yêu cầu xóa thất bại. Vui lòng kiểm tra lại ràng buộc dữ liệu!", "error");
       await fetchData();
     } finally {
       setLoading(false);
     }
   };
-
 
 
   const handleSave = async (formData: any) => {
@@ -235,8 +250,8 @@ export default function BookingsPage() {
         maKhachHangId: parseInt(formData.customerId),
         maPhongId: parseInt(formData.roomId),
         maNhanVienId: 1,
-        ngayNhan: formData.checkIn,
-        ngayTra: formData.checkOut,
+        ngayNhan: formData.ngayNhan,
+        ngayTra: formData.ngayTra,
         donGia: dbStatus === "Đã hủy" ? 0.0 : (parseFloat(formData.amount) || parseFloat(formData.roomPrice) || 300000.0),
         trangThai: dbStatus,
         soKhach: parseInt(formData.guests) || 1
@@ -245,10 +260,10 @@ export default function BookingsPage() {
       let res;
       if (editing) {
         res = await updateBooking(editing.id, bookingPayload);
-        alert(res.message || "Cập nhật trạng thái đơn thành công!");
+        showToast(res.message || "Cập nhật trạng thái đơn thành công!");
       } else {
         res = await submitBookingForm(bookingPayload);
-        alert(res.message || "Tạo mới yêu cầu phòng thành công!");
+        showToast(res.message || "Tạo mới yêu cầu phòng thành công!");
       }
 
       await fetchData();
@@ -256,7 +271,20 @@ export default function BookingsPage() {
       setEditing(null);
     } catch (error: any) {
       console.error("Lỗi lưu dữ liệu:", error);
-      alert(error.message || "Không thể lưu thông tin. Vui lòng kiểm tra tính hợp lệ của phòng và ngày đặt!");
+      if (error && error.response && error.response.status === 422) {
+              throw {
+                isApiError: true,
+                status: 422,
+                result: error.response.data.result || error.response.data,
+                message: error.message || "Dữ liệu đầu vào không hợp lệ!"
+              };
+            }alert("Thao tác thất bại: " + (error.message || "Lỗi kết nối Server API. Vui lòng kiểm tra Console log!"));
+                   throw {
+                     isApiError: true,
+                     status: 422,
+                     result: {},
+                     message: error.message
+                   };
     } finally {
       setLoading(false);
     }
@@ -420,11 +448,11 @@ export default function BookingsPage() {
                   try {
                     setLoading(true);
                     await checkOutBooking(checkoutBooking.id, checkoutPaymentMethod);
-                    alert("Trả phòng (Check-out) và kết xuất hóa đơn thành công!");
+                    showToast("Trả phòng (Check-out) và kết xuất hóa đơn thành công!");
                     setCheckoutBooking(null);
                     await fetchData();
                   } catch (error: any) {
-                    alert(error.message || "Trả phòng thất bại!");
+                    showToast(error.message || "Trả phòng thất bại!", "error");
                   } finally {
                     setLoading(false);
                   }

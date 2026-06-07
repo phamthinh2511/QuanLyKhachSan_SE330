@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Plus } from "lucide-react";
+import { useToast } from "@/context/ToastContext";
 import { Room, RoomStatus } from "@/types/room";
 import { useRooms } from "@/hooks/useRooms";
 import RoomTable from "@/components/rooms/RoomTable";
@@ -35,7 +36,7 @@ export default function RoomsPage() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
-  const [toasts, setToasts] = useState<{ id: string; type: "success" | "error"; message: string }[]>([]);
+  const { showToast } = useToast();
   const [startDate, setStartDate] = useState(() => {
     const today = new Date();
     const offset = today.getTimezoneOffset();
@@ -92,52 +93,80 @@ export default function RoomsPage() {
     fetchBookings();
   }, [fetchBookings]);
 
-  const showToast = (message: string, type: "success" | "error" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, type, message }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
-  };
+
+
 
   const roomsWithDynamicStatus = rooms.map((room) => {
-    if (room.status === "Bảo trì") {
+    if (room.status === "Bảo trì" || (room as any).trangThai === "Bảo trì") {
       return room;
     }
+
+    const dbStatus = room.status || (room as any).trangThai || "Trống";
+
+    // 1. Chuyển đổi Ngày đến / Ngày đi từ thanh công cụ FE thành đối tượng Date
+    const filterStart = new Date(startDate);
+    const filterEnd = new Date(endDate);
+
+    // Đặt mốc giờ về 00:00:00 để so sánh chính xác theo "Ngày"
+    filterStart.setHours(0, 0, 0, 0);
+    filterEnd.setHours(0, 0, 0, 0);
 
     const activeBooking = bookings.find((b) => {
       if (b.status === "Đã hủy" || b.status === "Đã trả phòng") {
         return false;
       }
-      const hasRoom = b.roomNumber === String(room.id);
-      if (!hasRoom) return false;
 
-      const checkIn = b.checkIn;
-      const checkOut = b.checkOut;
-      
-      if (!checkIn || !checkOut) return false;
+      // ✅ ĐÃ KHẮC PHỤC: Lấy Số phòng chuẩn chỉnh từ room.roomNumber hoặc room.id
+      const bookingRoomStr = String(b.roomNumber).trim();
+            const hasRoom =
+              bookingRoomStr === String(room.roomNumber).trim() ||
+              bookingRoomStr === String(room.id).trim();
 
-      if (startDate === endDate) {
-        return startDate >= checkIn && startDate < checkOut;
-      } else {
-        return checkIn < endDate && startDate < checkOut;
-      }
+            if (!hasRoom) return false;
+      // 2. Chuyển đổi ngày checkIn/checkOut của Đơn đặt phòng thành đối tượng Date
+      if (!b.checkIn || !b.checkOut) return false;
+      const bookingIn = new Date(b.checkIn);
+      const bookingOut = new Date(b.checkOut);
+
+      bookingIn.setHours(0, 0, 0, 0);
+      bookingOut.setHours(0, 0, 0, 0);
+
+      // 3. Logic so sánh khoảng ngày giao nhau
+      return filterStart < bookingOut && filterEnd > bookingIn;
     });
 
-    let computedStatus: RoomStatus = "Trống";
+    // Quyết định trạng thái hiển thị
+    let computedStatus: RoomStatus = dbStatus;
+
     if (activeBooking) {
-      if (activeBooking.status === "Đang sử dụng") {
-        computedStatus = "Đang sử dụng";
-      } else {
-        computedStatus = "Đã đặt";
+          // Chuẩn hóa chuỗi trạng thái để so sánh an toàn, tránh lệch pha ký tự
+          const currentStatus = String(activeBooking.status).toLowerCase().trim();
+
+          // Kiểm tra tất cả các trường hợp có thể đại diện cho "Đang sử dụng"
+          if (
+            currentStatus === "đang sử dụng" ||
+            currentStatus === "dang_su_dung" ||
+            currentStatus === "checked-in" ||
+            currentStatus === "checked_in"
+          ) {
+            computedStatus = "Đang sử dụng";
+          } else {
+            computedStatus = "Đã đặt";
+          }
+    } else {
+      const hômNayStr = new Date().toISOString().split("T")[0];
+      if (startDate === hômNayStr) {
+        computedStatus = dbStatus as RoomStatus;
       }
     }
 
     return {
       ...room,
+      roomNumber: String(room.roomNumber || room.id),
       status: computedStatus,
     };
   });
+
 
   const filtered = roomsWithDynamicStatus.filter((r) => {
     const matchSearch = r.roomNumber.includes(search) || r.type.toLowerCase().includes(search.toLowerCase());
@@ -244,28 +273,8 @@ export default function RoomsPage() {
           <option>Đã đặt</option>
           <option>Bảo trì</option>
         </select>
-        <div className="flex items-center gap-4 border border-gray-200 rounded-xl px-3 py-2 bg-gray-50">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">Ngày đến:</span>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => handleStartDateChange(e.target.value)}
-              className="text-sm text-gray-700 font-medium bg-transparent focus:outline-none"
-            />
-          </div>
-          <div className="h-4 w-px bg-gray-300" />
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">Ngày đi:</span>
-            <input
-              type="date"
-              value={endDate}
-              min={startDate}
-              onChange={(e) => handleEndDateChange(e.target.value)}
-              className="text-sm text-gray-700 font-medium bg-transparent focus:outline-none"
-            />
-          </div>
-        </div>
+
+
         <div className="flex border border-gray-200 rounded-xl overflow-hidden">
           <button onClick={() => setViewMode("list")}
             className={`p-2.5 transition ${viewMode === "list" ? "bg-gray-800 text-white" : "text-gray-400 hover:bg-gray-50"}`}>
@@ -307,38 +316,7 @@ export default function RoomsPage() {
         />
       )}
 
-      {/* Toast Notification Container */}
-      <div className="fixed top-6 right-6 z-50 flex flex-col gap-3 max-w-sm pointer-events-none">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={`flex items-center gap-3 p-4 rounded-xl shadow-lg border pointer-events-auto transition-all duration-300 animate-slide-in ${
-              toast.type === "success"
-                ? "bg-green-50 border-green-200 text-green-800"
-                : "bg-red-50 border-red-200 text-red-800"
-            }`}
-          >
-            {toast.type === "success" ? (
-              <svg className="w-5 h-5 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            )}
-            <span className="text-sm font-medium">{toast.message}</span>
-            <button
-              onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
-              className="ml-auto p-1 rounded-lg hover:bg-black/5 transition text-gray-500 hover:text-gray-700"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        ))}
-      </div>
+
     </div>
   );
 }

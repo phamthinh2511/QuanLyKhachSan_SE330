@@ -41,4 +41,20 @@ public class PhongController {
         phongService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/trash")
+    public ResponseEntity<List<PhongResponseDto>> getTrashBin() {
+        return ResponseEntity.ok(phongService.getTrashBin());
+    }
+
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<PhongResponseDto> restore(@PathVariable Integer id) {
+        return ResponseEntity.ok(phongService.restore(id));
+    }
+
+    @DeleteMapping("/{id}/hard")
+    public ResponseEntity<Void> hardDelete(@PathVariable Integer id) {
+        phongService.hardDelete(id);
+        return ResponseEntity.noContent().build();
+    }
 }

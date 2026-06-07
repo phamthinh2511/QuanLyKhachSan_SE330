@@ -21,4 +21,7 @@ public interface KiemkephongRepository extends JpaRepository<Kiemkephong, Intege
      */
     @Query("SELECT COALESCE(SUM(k.tienBoiThuong), 0) FROM Kiemkephong k WHERE k.maPhieuThue.id = ?1")
     Double getTotalPenaltyCost(Integer maPhieuThue);
+
+    boolean existsByMaNhanVienId(Integer employeeId);
+    boolean existsByMaPhongId(Integer roomId);
 }
