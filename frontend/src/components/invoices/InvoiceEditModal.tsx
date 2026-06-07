@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import { Invoice, PaymentMethod, InvoiceStatus } from "@/types/invoice";
+import { Invoice } from "@/types/invoice";
 
 interface Props {
   invoice: Invoice;
@@ -11,8 +11,6 @@ interface Props {
 }
 
 export default function InvoiceEditModal({ invoice, onSave, onClose }: Props) {
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(invoice.paymentMethod || "Tiền mặt");
-  const [status, setStatus] = useState<InvoiceStatus>(invoice.status || "Đã thanh toán");
   const [roomCost, setRoomCost] = useState<number>(invoice.roomCost || 0);
   const [serviceCost, setServiceCost] = useState<number>(invoice.serviceCost || 0);
 
@@ -22,8 +20,6 @@ export default function InvoiceEditModal({ invoice, onSave, onClose }: Props) {
     e.preventDefault();
     onSave({
       ...invoice,
-      paymentMethod,
-      status,
       roomCost,
       serviceCost,
       total,
@@ -63,7 +59,7 @@ export default function InvoiceEditModal({ invoice, onSave, onClose }: Props) {
           <div className="grid grid-cols-2 gap-4">
             {/* Tiền phòng */}
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tiền phòng ($)</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tiền phòng (VND)</label>
               <input
                 type="number"
                 value={roomCost}
@@ -75,7 +71,7 @@ export default function InvoiceEditModal({ invoice, onSave, onClose }: Props) {
 
             {/* Tiền dịch vụ */}
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tiền dịch vụ ($)</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tiền dịch vụ (VND)</label>
               <input
                 type="number"
                 value={serviceCost}
@@ -86,40 +82,32 @@ export default function InvoiceEditModal({ invoice, onSave, onClose }: Props) {
             </div>
           </div>
 
+          {/* Phương thức thanh toán & Trạng thái - Chỉ đọc, lấy từ dữ liệu hóa đơn */}
           <div className="grid grid-cols-2 gap-4">
-            {/* Phương thức thanh toán */}
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Thanh toán</label>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                className={inputClass}
-              >
-                <option value="Tiền mặt">Tiền mặt</option>
-                <option value="Thẻ">Thẻ</option>
-                <option value="Chuyển khoản">Chuyển khoản</option>
-              </select>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Thanh toán</label>
+              <input
+                type="text"
+                value={invoice.paymentMethod || "—"}
+                disabled
+                className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-500 cursor-not-allowed"
+              />
             </div>
-
-            {/* Trạng thái */}
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Trạng thái</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as InvoiceStatus)}
-                className={inputClass}
-              >
-                <option value="Đã thanh toán">Đã thanh toán</option>
-                <option value="Chờ thanh toán">Chờ thanh toán</option>
-                <option value="Một phần">Một phần</option>
-              </select>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Trạng thái</label>
+              <input
+                type="text"
+                value={invoice.status || "—"}
+                disabled
+                className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-500 cursor-not-allowed"
+              />
             </div>
           </div>
 
           {/* Tổng cộng */}
           <div className="bg-gray-50 rounded-xl p-4 flex justify-between items-center text-sm">
             <span className="font-semibold text-gray-600">Tổng cộng (Tự động):</span>
-            <span className="font-bold text-blue-600 text-base">${total.toLocaleString()}</span>
+            <span className="font-bold text-blue-600 text-base">{total.toLocaleString()} VND</span>
           </div>
 
           <div className="flex gap-3 pt-2">

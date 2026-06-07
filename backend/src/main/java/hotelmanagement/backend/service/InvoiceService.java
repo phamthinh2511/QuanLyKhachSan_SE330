@@ -56,7 +56,8 @@ public class InvoiceService {
                 if (ct.getMaPhong() != null) {
                     roomNumber = String.valueOf(ct.getMaPhong().getId());
                 }
-            } else if ("Tiền dịch vụ".equalsIgnoreCase(ct.getLoaiChiPhi())) {
+            } else if ("Dịch vụ".equalsIgnoreCase(ct.getLoaiChiPhi())
+                    || "Tiền dịch vụ".equalsIgnoreCase(ct.getLoaiChiPhi())) {
                 serviceCost += ct.getThanhTien();
 
                 String ctRoomNum = ct.getMaPhong() != null ? String.valueOf(ct.getMaPhong().getId()) : "";

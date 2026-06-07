@@ -19,4 +19,6 @@ public class CheckoutRequest {
 
     @NotNull(message = "Mã nhân viên không được để trống")
     private Integer maNhanVien;
+
+    private String phuongThucThanhToan; // "Tiền mặt" | "Thẻ" | "Chuyển khoản"
 }
