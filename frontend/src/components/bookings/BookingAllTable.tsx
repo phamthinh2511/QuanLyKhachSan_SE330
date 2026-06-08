@@ -5,7 +5,8 @@ import clsx from "clsx";
 interface Props {
   bookings: Booking[];
   onEdit: (b: Booking) => void;
-  onDelete: (id: number) => void;
+  // Thay đổi nhẹ định nghĩa kiểu ở Props để hỗ trợ async/await chạy đồng bộ
+  onDelete: (id: number) => Promise<void> | void;
   onRowContextMenu?: (e: React.MouseEvent, booking: Booking) => void;
 }
 
@@ -61,18 +62,24 @@ export default function BookingAllTable({ bookings, onEdit, onDelete, onRowConte
                       className="flex items-center gap-1.5 border border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600 px-3 py-1.5 rounded-lg text-xs font-medium transition">
                       <Pencil className="w-3 h-3" /> Sửa
                     </button>
+
+                    {/* Nút xóa đã được dọn rác cú pháp và thêm async/await */}
                     <button
-                                              onClick={() => {
-                                                const isConfirmed = window.confirm(`Bạn có chắc chắn muốn xóa đơn đặt phòng ${b.bookingCode} của khách ${b.customerName} không?`);
-                                                if (isConfirmed) {
-                                                  onDelete(b.id);
-                                                }
-                                              }}
-                                              title="Xóa đơn hàng"
-                                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                                            >
-                                              <Trash2 className="w-4 h-4" />
-                                            </button>
+                      onClick={async () => {
+                        const isConfirmed = window.confirm(`Bạn có chắc chắn muốn xóa đơn đặt phòng ${b.bookingCode} của khách ${b.customerName} không?`);
+                        if (isConfirmed) {
+                          try {
+                            await onDelete(b.id);
+                          } catch (e) {
+                            console.error("Nút xóa bắt được lỗi:", e);
+                          }
+                        }
+                      }}
+                      title="Xóa đơn hàng"
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </td>
               </tr>

@@ -233,8 +233,12 @@ export default function BookingsPage() {
       await fetchData();
     } catch (error: any) {
       console.error("Lỗi khi thực hiện xóa phiếu phòng:", error);
-      showToast("Xử lý yêu cầu xóa thất bại. Vui lòng kiểm tra lại ràng buộc dữ liệu!", "error");
-      await fetchData();
+      const backendMessage =
+             error.response?.data?.message ||
+             error.errorMessage ||
+             error.message ||
+             "Xử lý yêu cầu xóa thất bại. Vui lòng kiểm tra lại ràng buộc dữ liệu!";
+           showToast(backendMessage, "error");
     } finally {
       setLoading(false);
     }

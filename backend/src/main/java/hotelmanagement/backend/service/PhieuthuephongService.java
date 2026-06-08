@@ -97,8 +97,17 @@ public class PhieuthuephongService {
     public void delete(Integer id) {
         Phieuthuephong pt = phieuthuephongRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu thuê phòng với ID: " + id));
+        if ("Đang sử dụng".equals(pt.getTrangThai())) {
+            throw new IllegalStateException("Không thể xóa phiếu thuê phòng vì khách đang ở trong phòng ('Đang sử dụng')!");
+        }
 
-        // Giải phóng phòng
+        List<Sudungdichvu> sddvList = sudungdichvuRepository.findAll().stream()
+                .filter(u -> u.getMaPhieuThue() != null && u.getMaPhieuThue().getId().equals(pt.getId()))
+                .collect(Collectors.toList());
+        if (!sddvList.isEmpty()) {
+            sudungdichvuRepository.deleteAll(sddvList);
+        }
+
         List<CtPhieuthuephong> details = ctPhieuthuephongRepository.findByMaPhieuThue(pt);
         if (details != null && !details.isEmpty()) {
             for (CtPhieuthuephong ct : details) {
@@ -109,7 +118,6 @@ public class PhieuthuephongService {
             }
             ctPhieuthuephongRepository.deleteAll(details);
         }
-
         phieuthuephongRepository.delete(pt);
     }
 

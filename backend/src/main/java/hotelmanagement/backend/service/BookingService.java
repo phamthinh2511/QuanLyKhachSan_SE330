@@ -333,9 +333,30 @@ public List<DatPhongResponse> getAllBookings() {
                 .status(dp.getTrangThai())
                 .build();
     }
+
     @Transactional
     public void deleteBooking(Integer id) {
-        phieuthuephongRepository.findById(id).ifPresent(pt -> {
+        java.util.Optional<Phieuthuephong> phieuThueOpt = phieuthuephongRepository.findById(id);
+        if (phieuThueOpt.isPresent()) {
+            Phieuthuephong pt = phieuThueOpt.get();
+
+            if ("Đang sử dụng".equals(pt.getTrangThai())) {
+                throw new IllegalStateException("Không thể xóa phiếu thuê phòng vì khách đang ở trong phòng ('Đang sử dụng')!");
+            }
+            java.util.Optional<Hoadon> hoaDonOpt = hoadonRepository.findByMaPhieuThue(pt);
+            if (hoaDonOpt.isPresent()) {
+                Hoadon hd = hoaDonOpt.get();
+                hd.setMaPhieuThue(null); // Đặt mối liên kết về null để giữ lại hóa đơn lịch sử
+                hoadonRepository.save(hd);
+                hoadonRepository.flush(); // Ép database cập nhật ngay lập tức để tháo ràng buộc FK
+            }
+
+            List<Sudungdichvu> sddvList = sudungdichvuRepository.findByPhieuThueId(pt.getId());
+            if (sddvList != null && !sddvList.isEmpty()) {
+                sudungdichvuRepository.deleteAll(sddvList);
+                sudungdichvuRepository.flush(); // Ép dọn sạch dữ liệu dịch vụ ngay lập tức
+            }
+
             List<CtPhieuthuephong> ctPt = ctPhieuthuephongRepository.findByMaPhieuThue(pt);
             if (ctPt != null && !ctPt.isEmpty()) {
                 for (CtPhieuthuephong ct : ctPt) {
@@ -345,36 +366,66 @@ public List<DatPhongResponse> getAllBookings() {
                     }
                 }
                 ctPhieuthuephongRepository.deleteAll(ctPt);
+                ctPhieuthuephongRepository.flush();
             }
-            phieuthuephongRepository.delete(pt);
-        });
 
-        datphongRepository.findById(id).ifPresent(dp -> {
-            // Xóa phiếu thuê ăn theo đơn đặt phòng này nếu có (Tránh lỗi khóa ngoại của luồng check-in)
+            phieuthuephongRepository.delete(pt);
+            return; // Kết thúc xử lý phiếu thuê
+        }
+
+        java.util.Optional<Datphong> datPhongOpt = datphongRepository.findById(id);
+        if (datPhongOpt.isPresent()) {
+            Datphong dp = datPhongOpt.get();
+
+            if ("Chưa nhận".equals(dp.getTrangThai()) || "Đã đặt".equals(dp.getTrangThai())) {
+                throw new IllegalStateException("Không thể xóa đơn đặt phòng khi đang giữ chỗ! Khách chưa đến nhận phòng.");
+            }
+
             List<Phieuthuephong> phieuThues = phieuthuephongRepository.findByMaDatPhong(dp);
             if (phieuThues != null && !phieuThues.isEmpty()) {
                 for (Phieuthuephong pt : phieuThues) {
+                    if ("Đang sử dụng".equals(pt.getTrangThai())) {
+                        throw new IllegalStateException("Không thể xóa vì đơn này có phòng liên kết đang ở trạng thái 'Đang sử dụng'!");
+                    }
+                    java.util.Optional<Hoadon> hdAnTheoOpt = hoadonRepository.findByMaPhieuThue(pt);
+                    if (hdAnTheoOpt.isPresent()) {
+                        Hoadon hd = hdAnTheoOpt.get();
+                        hd.setMaPhieuThue(null);
+                        hoadonRepository.save(hd);
+                        hoadonRepository.flush();
+                    }
+                    // Dọn dẹp dịch vụ của phiếu thuê liên kết
+                    List<Sudungdichvu> sddvList = sudungdichvuRepository.findByPhieuThueId(pt.getId());
+                    if (sddvList != null && !sddvList.isEmpty()) {
+                        sudungdichvuRepository.deleteAll(sddvList);
+                        sudungdichvuRepository.flush();
+                    }
+
                     List<CtPhieuthuephong> ctPts = ctPhieuthuephongRepository.findByMaPhieuThue(pt);
                     if (ctPts != null && !ctPts.isEmpty()) {
                         ctPhieuthuephongRepository.deleteAll(ctPts);
+                        ctPhieuthuephongRepository.flush();
                     }
                 }
                 phieuthuephongRepository.deleteAll(phieuThues);
+                phieuthuephongRepository.flush();
             }
 
             List<CtDatphong> chiTiets = ctDatphongRepository.findByMaDatPhong(dp);
             if (chiTiets != null && !chiTiets.isEmpty()) {
                 for (CtDatphong ct : chiTiets) {
                     Phong phong = ct.getMaPhong();
-                    if (phong != null && ("Đã đặt".equals(phong.getTrangThai()) || "Đang sử dụng".equals(phong.getTrangThai()))) {
+                    if (phong != null) {
                         phong.setTrangThai("Trống");
                         phongRepository.save(phong);
                     }
+                    ct.setMaDatPhong(null);
                 }
                 ctDatphongRepository.deleteAll(chiTiets);
             }
+            ctDatphongRepository.flush();
             datphongRepository.delete(dp);
-        });
+        }
     }
 
     public List<Phong> getAvailableRooms(LocalDate checkIn, LocalDate checkOut) {
