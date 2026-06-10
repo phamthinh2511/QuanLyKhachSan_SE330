@@ -424,8 +424,8 @@ public List<DatPhongResponse> getAllBookings() {
         if (phieuThueOpt.isPresent()) {
             Phieuthuephong pt = phieuThueOpt.get();
 
-            if ("Đang sử dụng".equals(pt.getTrangThai()) || "Đã trả phòng".equals(pt.getTrangThai())) {
-                throw new IllegalStateException("Không thể xóa phiếu thuê phòng đang sử dụng hoặc đã trả phòng!");
+            if (!"Đã trả phòng".equalsIgnoreCase(pt.getTrangThai())) {
+                throw new IllegalStateException("Chỉ có thể xóa phiếu thuê phòng ở trạng thái 'Đã trả phòng'!");
             }
             java.util.Optional<Hoadon> hoaDonOpt = hoadonRepository.findByMaPhieuThue(pt);
             if (hoaDonOpt.isPresent()) {
@@ -461,8 +461,8 @@ public List<DatPhongResponse> getAllBookings() {
         if (datPhongOpt.isPresent()) {
             Datphong dp = datPhongOpt.get();
 
-            if ("Đã nhận phòng".equals(dp.getTrangThai()) || "Đã nhận phòng tại quầy".equals(dp.getTrangThai())) {
-                throw new IllegalStateException("Không thể xóa đơn đặt phòng đã nhận phòng!");
+            if (!"Đã hủy".equalsIgnoreCase(dp.getTrangThai())) {
+                throw new IllegalStateException("Chỉ có thể xóa các đơn đặt phòng ở trạng thái 'Đã hủy'!");
             }
 
             List<Phieuthuephong> phieuThues = phieuthuephongRepository.findByMaDatPhong(dp);

@@ -18,6 +18,7 @@ public class SudungdichvuService {
     private final DichvuRepository dichvuRepository;
     private final PhongRepository phongRepository;
     private final DatphongRepository datphongRepository;
+    private final HoadonRepository hoadonRepository;
 
     private SudungdichvuResponseDto toResponseDto(Sudungdichvu sddv) {
         String bookingCode = sddv.getMaPhieuThue() != null ? String.valueOf(sddv.getMaPhieuThue().getId()) : "";
@@ -134,9 +135,25 @@ public class SudungdichvuService {
     }
 
     public void delete(Integer id) {
-        if (!sudungdichvuRepository.existsById(id)) {
-            throw new RuntimeException("Không tìm thấy bản ghi sử dụng dịch vụ với ID: " + id);
+        Sudungdichvu sddv = sudungdichvuRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bản ghi sử dụng dịch vụ với ID: " + id));
+
+        if ("Chờ sử dụng".equalsIgnoreCase(sddv.getTrangThai())) {
+            throw new IllegalStateException("Không thể xóa phiếu sử dụng dịch vụ đang ở trạng thái 'Chờ sử dụng'!");
         }
-        sudungdichvuRepository.deleteById(id);
+
+        Phieuthuephong pt = sddv.getMaPhieuThue();
+        if (pt != null) {
+            if ("Đang sử dụng".equalsIgnoreCase(pt.getTrangThai())) {
+                throw new IllegalStateException("Không thể xóa phiếu sử dụng dịch vụ vì phiếu thuê phòng liên kết đang ở trạng thái 'Đang sử dụng'!");
+            }
+
+            java.util.Optional<Hoadon> hdOpt = hoadonRepository.findByMaPhieuThue(pt);
+            if (hdOpt.isPresent() && "Chờ thanh toán".equalsIgnoreCase(hdOpt.get().getTrangThai())) {
+                throw new IllegalStateException("Không thể xóa phiếu sử dụng dịch vụ vì hóa đơn liên kết chưa được thanh toán (đang chờ thanh toán)!");
+            }
+        }
+
+        sudungdichvuRepository.delete(sddv);
     }
 }
