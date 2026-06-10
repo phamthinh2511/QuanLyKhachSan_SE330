@@ -24,6 +24,9 @@ import java.util.Map;
 public class BookingController {
     @Autowired
     private BookingService bookingService;
+    
+    @Autowired
+    private hotelmanagement.backend.service.BillingService billingService;
 
     @PostMapping("/submit")
     public ApiResponse<Void> submitBooking(@Valid @RequestBody BookingRequest request) {
@@ -90,7 +93,11 @@ public ApiResponse<Void> updateBooking(@PathVariable Integer id, @Valid @Request
             paymentMethod = "Tiền mặt";
         }
 
-        bookingService.checkOut(bookingId, paymentMethod);
+        billingService.checkout(hotelmanagement.backend.dto.request.CheckoutRequest.builder()
+                .maPhieuThue(bookingId)
+                .maNhanVien(1)
+                .phuongThucThanhToan(paymentMethod)
+                .build());
 
         return ApiResponse.<Void>builder()
                 .code(200)

@@ -392,7 +392,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
 
     try {
       await onSave({
-          id: booking ? booking.id : null,
+        id: booking ? booking.id : null,
         bookingType,
         customerId: String(customerId),
         customerName: customerName,
@@ -401,10 +401,10 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
         checkIn: form.checkIn,
         checkOut: form.checkOut,
         guests: form.guests === "" ? 1 : form.guests,
-      ngayNhan: form.checkIn,
+        ngayNhan: form.checkIn,
         ngayTra: form.checkOut,
-        guests: form.guests,
         amount: form.amount,
+        roomPrice: selectedRoom.pricePerNight,
         status: form.status.trim()
       });
     } catch (err: any) {

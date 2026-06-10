@@ -35,6 +35,7 @@ export interface RecordInspectionRequest {
   maNhanVien: number;
   tinhTrang: string;
   tienBoiThuong: number;
+  ghiChu?: string;
 }
 
 /**

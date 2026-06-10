@@ -21,6 +21,7 @@ import { useToast } from "@/context/ToastContext";
 import BookingTodayTable from "@/components/bookings/BookingTodayTable";
 import BookingAllTable from "@/components/bookings/BookingAllTable";
 import BookingModal from "@/components/bookings/BookingModal";
+import CheckoutModal from "@/components/invoices/CheckoutModal";
 
 const today = new Date().toISOString().split("T")[0];
 const PAGE_SIZE_ALL = 50;
@@ -260,6 +261,9 @@ export default function BookingsPage() {
         dbStatus = "Đã hủy";
       }
 
+      const matchedRoom = rooms.find((r) => r.id === parseInt(formData.roomId));
+      const donGiaPhong = dbStatus === "Đã hủy" ? 0.0 : (matchedRoom?.maLoaiPhong?.donGia || parseFloat(formData.roomPrice) || parseFloat(formData.amount) || 300000.0);
+
       const bookingPayload: BookingRequestPayload = {
         role: "NHAN_VIEN",
         loaiHinh: formData.bookingType || (dbStatus === "Đang sử dụng" ? "THUE_TRUC_TIEP" : "DAT_TRUOC"),
@@ -268,7 +272,7 @@ export default function BookingsPage() {
         maNhanVienId: 1,
         ngayNhan: formData.ngayNhan,
         ngayTra: formData.ngayTra,
-        donGia: dbStatus === "Đã hủy" ? 0.0 : (parseFloat(formData.amount) || parseFloat(formData.roomPrice) || 300000.0),
+        donGia: donGiaPhong,
         trangThai: dbStatus,
         soKhach: parseInt(formData.guests) || 1
       };
@@ -425,61 +429,18 @@ export default function BookingsPage() {
       )}
 
       {checkoutBooking && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setCheckoutBooking(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
-            <div>
-              <h2 className="font-semibold text-gray-800 text-lg">Xác nhận Trả phòng</h2>
-              <p className="text-gray-400 text-xs mt-0.5">Vui lòng chọn phương thức thanh toán để hoàn tất.</p>
-            </div>
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-700">Phương thức thanh toán</label>
-              <div className="grid grid-cols-3 gap-2">
-                {["Tiền mặt", "Thẻ", "Chuyển khoản"].map((method) => (
-                  <button
-                    key={method}
-                    type="button"
-                    onClick={() => setCheckoutPaymentMethod(method)}
-                    className={`py-2 px-3 text-xs font-medium rounded-xl border transition ${
-                      checkoutPaymentMethod === method
-                        ? "border-blue-600 bg-blue-50 text-blue-600"
-                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                    }`}
-                  >
-                    {method}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setCheckoutBooking(null)}
-                className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-xs font-medium hover:bg-gray-50 transition"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    setLoading(true);
-                    await checkOutBooking(checkoutBooking.id, checkoutPaymentMethod);
-                    showToast("Trả phòng (Check-out) và kết xuất hóa đơn thành công!");
-                    setCheckoutBooking(null);
-                    await fetchData();
-                  } catch (error: any) {
-                    showToast(error.message || "Trả phòng thất bại!", "error");
-                  } finally {
-                    setLoading(false);
-                  }
-                }}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs font-medium transition"
-              >
-                Xác nhận
-              </button>
-            </div>
-          </div>
-        </div>
+        <CheckoutModal
+          maPhieuThue={checkoutBooking.id}
+          maPhong={parseInt(checkoutBooking.roomNumber) || 0}
+          maNhanVien={1}
+          khachHang={checkoutBooking.customerName}
+          onSuccess={async (result) => {
+            showToast(`Checkout thành công! Mã hóa đơn: #${result.maHoaDon}`);
+            setCheckoutBooking(null);
+            await fetchData();
+          }}
+          onClose={() => setCheckoutBooking(null)}
+        />
       )}
     </div>
   );

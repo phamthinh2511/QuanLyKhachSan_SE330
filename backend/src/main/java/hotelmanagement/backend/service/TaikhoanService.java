@@ -53,7 +53,7 @@ public class TaikhoanService {
         tk.setTenDangNhap(dto.getUsername());
         tk.setMatKhau(passwordEncoder.encode(dto.getPassword()));
         tk.setLoaiTaiKhoan(dto.getRole());
-        tk.setNgayTao(LocalDate.now());
+        tk.setNgayTao(LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")));
 
         return toResponseDto(taikhoanRepository.save(tk));
     }

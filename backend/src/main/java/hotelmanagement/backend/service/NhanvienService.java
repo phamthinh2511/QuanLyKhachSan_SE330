@@ -85,7 +85,7 @@ public class NhanvienService {
             tk.setTenDangNhap(dto.getTenDangNhap());
             tk.setMatKhau(passwordEncoder.encode(dto.getMatKhau() != null && !dto.getMatKhau().isEmpty() ? dto.getMatKhau() : "123456"));
             tk.setLoaiTaiKhoan(dto.getLoaiTaiKhoan() != null ? dto.getLoaiTaiKhoan() : "USER");
-            tk.setNgayTao(LocalDate.now());
+            tk.setNgayTao(LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")));
             tk = taikhoanRepository.save(tk);
         }
 
@@ -109,7 +109,7 @@ public class NhanvienService {
                 }
                 tk = new Taikhoan();
                 tk.setTenDangNhap(dto.getTenDangNhap());
-                tk.setNgayTao(LocalDate.now());
+                tk.setNgayTao(LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")));
                 nv.setTaikhoan(tk);
             } else {
                 if (!tk.getTenDangNhap().equals(dto.getTenDangNhap()) && taikhoanRepository.existsByTenDangNhapAndIsDeletedFalse(dto.getTenDangNhap())) {

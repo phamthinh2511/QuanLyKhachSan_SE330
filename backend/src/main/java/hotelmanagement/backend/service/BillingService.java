@@ -42,6 +42,10 @@ public class BillingService {
             Phieuthuephong phieuThue = phieuthuephongRepository.findById(request.getMaPhieuThue())
                     .orElseThrow(() -> new RuntimeException("Phiếu thuê phòng không tồn tại"));
             
+            if (!"Đang sử dụng".equals(phieuThue.getTrangThai())) {
+                throw new IllegalStateException("Phiếu thuê phòng không còn hoạt động (Trạng thái: " + phieuThue.getTrangThai() + "), không thể sử dụng thêm dịch vụ!");
+            }
+            
             Dichvu dichVu = dichvuRepository.findById(request.getMaDichVu())
                     .orElseThrow(() -> new RuntimeException("Dịch vụ không tồn tại"));
             
@@ -56,7 +60,7 @@ public class BillingService {
             sudungdichvu.setSoLuong(request.getSoLuong());
             sudungdichvu.setDonGia(request.getDonGia());
             sudungdichvu.setThanhTien(request.getSoLuong() * request.getDonGia());
-            sudungdichvu.setNgaySuDung(request.getNgaySuDung() != null ? request.getNgaySuDung() : LocalDate.now());
+            sudungdichvu.setNgaySuDung(request.getNgaySuDung() != null ? request.getNgaySuDung() : LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")));
             
             Sudungdichvu saved = sudungdichvuRepository.save(sudungdichvu);
             
@@ -89,6 +93,10 @@ public class BillingService {
             Phieuthuephong phieuThue = phieuthuephongRepository.findById(request.getMaPhieuThue())
                     .orElseThrow(() -> new RuntimeException("Phiếu thuê phòng không tồn tại"));
             
+            if (!"Đang sử dụng".equals(phieuThue.getTrangThai())) {
+                throw new IllegalStateException("Phiếu thuê phòng không còn hoạt động (Trạng thái: " + phieuThue.getTrangThai() + "), không thể ghi nhận kiểm kê phòng!");
+            }
+            
             Nhanvien nhanvien = nhanvienRepository.findById(request.getMaNhanVien())
                     .orElseThrow(() -> new RuntimeException("Nhân viên không tồn tại"));
             
@@ -100,7 +108,7 @@ public class BillingService {
             kiemke.setMaPhieuThue(phieuThue);
             kiemke.setMaPhong(phong);
             kiemke.setMaNhanVien(nhanvien);
-            kiemke.setNgayKiemKe(request.getNgayKiemKe() != null ? request.getNgayKiemKe() : LocalDate.now());
+            kiemke.setNgayKiemKe(request.getNgayKiemKe() != null ? request.getNgayKiemKe() : LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")));
             kiemke.setTinhTrang(request.getTinhTrang());
             kiemke.setTienBoiThuong(request.getTienBoiThuong() != null ? request.getTienBoiThuong() : 0.0);
             kiemke.setGhiChu(request.getGhiChu());
@@ -143,13 +151,25 @@ public class BillingService {
             Phieuthuephong phieuThue = phieuthuephongRepository.findById(maPhieuThue)
                     .orElseThrow(() -> new RuntimeException("Phiếu thuê phòng không tồn tại"));
             
+            if ("Đã trả phòng".equals(phieuThue.getTrangThai())) {
+                throw new IllegalStateException("Phiếu thuê phòng này đã được trả phòng và xuất hóa đơn trước đó!");
+            }
+            if ("Đã hủy".equals(phieuThue.getTrangThai())) {
+                throw new IllegalStateException("Phiếu thuê phòng này đã bị hủy, không thể thực hiện thanh toán!");
+            }
+            
             Nhanvien nhanvien = nhanvienRepository.findById(maNhanVien)
                     .orElseThrow(() -> new RuntimeException("Nhân viên không tồn tại"));
             
-            // 1. Tính tiền phòng từ CtPhieuthuephong
+            // 1. Tính tiền phòng từ CtPhieuthuephong (nhân số ngày thuê theo kế hoạch)
+            long days = java.time.temporal.ChronoUnit.DAYS.between(phieuThue.getNgayNhanPhong(), phieuThue.getNgayTraPhong());
+            if (days <= 0) {
+                days = 1;
+            }
+            final long finalDays = days;
             Double tienPhong = ctPhieuthuephongRepository.findByPhieuThueId(maPhieuThue)
                     .stream()
-                    .mapToDouble(CtPhieuthuephong::getDonGia)
+                    .mapToDouble(ct -> (ct.getDonGia() != null ? ct.getDonGia() : 0.0) * finalDays)
                     .sum();
             
             // 2. Tính tiền dịch vụ từ Sudungdichvu
@@ -165,14 +185,14 @@ public class BillingService {
             Hoadon hoadon = new Hoadon();
             hoadon.setMaPhieuThue(phieuThue);
             hoadon.setMaNhanVien(nhanvien);
-            hoadon.setNgayThanhToan(LocalDate.now());
+            hoadon.setNgayThanhToan(LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")));
             hoadon.setTongTien(tongTien);
             // Lưu phương thức thanh toán do người dùng chọn (mặc định "Tiền mặt" nếu không chọn)
             String phuongThuc = (request.getPhuongThucThanhToan() != null && !request.getPhuongThucThanhToan().isBlank())
                     ? request.getPhuongThucThanhToan()
                     : "Tiền mặt";
             hoadon.setPhuongThucThanhToan(phuongThuc);
-            hoadon.setTrangThai("Đã thanh toán");
+            hoadon.setTrangThai("Chờ thanh toán");
             
             Hoadon savedHoadon = hoadonRepository.save(hoadon);
             
@@ -186,9 +206,9 @@ public class BillingService {
                 ctPhong.setMaHoaDon(savedHoadon);
                 ctPhong.setMaPhong(ctPhieuThue.getMaPhong());
                 ctPhong.setLoaiChiPhi("Tiền phòng");
-                ctPhong.setSoLuong(1);
+                ctPhong.setSoLuong((int) finalDays);
                 ctPhong.setDonGia(ctPhieuThue.getDonGia());
-                ctPhong.setThanhTien(ctPhieuThue.getDonGia());
+                ctPhong.setThanhTien(ctPhieuThue.getDonGia() * finalDays);
                 
                 CtHoadon savedCtPhong = ctHoadonRepository.save(ctPhong);
                 
@@ -196,9 +216,9 @@ public class BillingService {
                         .id(savedCtPhong.getId())
                         .maPhong(ctPhieuThue.getMaPhong().getId())
                         .loaiChiPhi("Tiền phòng")
-                        .soLuong(1)
+                        .soLuong((int) finalDays)
                         .donGia(ctPhieuThue.getDonGia())
-                        .thanhTien(ctPhieuThue.getDonGia())
+                        .thanhTien(ctPhieuThue.getDonGia() * finalDays)
                         .build());
             }
             
