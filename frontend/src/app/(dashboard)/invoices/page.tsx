@@ -17,7 +17,7 @@ export default function InvoicesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("Tất cả"); // Status filter
+  const [filter, setFilter] = useState("Chờ thanh toán"); // Status filter
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [totalElements, setTotalElements] = useState(0);
@@ -75,12 +75,15 @@ export default function InvoicesPage() {
   const fetchInvoices = useCallback((pageToFetch: number, searchKeyword: string, statusFilter: string, append = false) => {
     setLoading(true);
     const { year, month } = getFilterDateParams(timeOption, customMonth, customYear);
+    // "Chờ thanh toán" → ngày tạo tăng dần, mặc định → giảm dần
+    const sortDir = statusFilter === "Chờ thanh toán" ? "asc" : "desc";
 
     getPagedInvoices({
       year,
       month,
       search: searchKeyword,
       status: statusFilter,
+      sortDir,
       page: pageToFetch,
       size: PAGE_SIZE,
     })

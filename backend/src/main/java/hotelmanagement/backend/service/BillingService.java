@@ -31,6 +31,7 @@ public class BillingService {
     private final NhanvienRepository nhanvienRepository;
     private final CtPhieuthuephongRepository ctPhieuthuephongRepository;
     private final PhongRepository phongRepository;
+    private final DatphongRepository datphongRepository;
     
     /**
      * API 1: Ghi nhận khách gọi thêm dịch vụ phát sinh (đồ ăn, giặt ủi, v.v.)
@@ -276,6 +277,13 @@ public class BillingService {
             // 7. Cập nhật trạng thái phiếu thuê → "Đã trả phòng"
             phieuThue.setTrangThai("Đã trả phòng");
             phieuthuephongRepository.save(phieuThue);
+
+            // 7b. Cập nhật trạng thái đặt phòng (Datphong) → "Đã trả phòng"
+            if (phieuThue.getMaDatPhong() != null) {
+                Datphong datPhong = phieuThue.getMaDatPhong();
+                datPhong.setTrangThai("Đã trả phòng");
+                datphongRepository.save(datPhong);
+            }
 
             // 8. Giải phóng phòng → "Trống"
             List<CtPhieuthuephong> ctList = ctPhieuthuephongRepository.findByPhieuThueId(maPhieuThue);

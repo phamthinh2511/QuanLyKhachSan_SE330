@@ -192,7 +192,7 @@ public class InvoiceService {
         hoadonRepository.delete(hoadon);
     }
 
-    public InvoicePageResponseDto getPagedInvoices(Integer year, Integer month, String search, String status, int page, int size) {
+    public InvoicePageResponseDto getPagedInvoices(Integer year, Integer month, String search, String status, String sortDir, int page, int size) {
         LocalDate startDate = null;
         LocalDate endDate = null;
 
@@ -204,7 +204,10 @@ public class InvoiceService {
         String searchVal = search != null ? search.trim() : "";
         String statusVal = status != null ? status.trim() : "";
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("ngayThanhToan").descending().and(Sort.by("id").descending()));
+        Sort sort = "asc".equalsIgnoreCase(sortDir)
+                ? Sort.by("ngayThanhToan").ascending().and(Sort.by("id").ascending())
+                : Sort.by("ngayThanhToan").descending().and(Sort.by("id").descending());
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<Hoadon> hoadonPage;
         long totalCount;

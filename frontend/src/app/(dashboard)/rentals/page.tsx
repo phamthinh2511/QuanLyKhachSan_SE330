@@ -23,10 +23,10 @@ const statusStyle: Record<string, string> = {
 };
 
 export default function RentalsPage() {
-  const { rentals, loading, error, removeRental } = useRentals();
+  const { rentals, loading, error, removeRental, refresh } = useRentals();
   const { showToast } = useToast();
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("Tất cả");
+  const [filterStatus, setFilterStatus] = useState("Đang sử dụng");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [selectedRental, setSelectedRental] = useState<RentalSlip | null>(null);
   // Phiếu thuê đang được chọn để trả phòng (mở CheckoutModal)
@@ -70,7 +70,15 @@ export default function RentalsPage() {
     return matchSearch && matchStatus;
   });
 
-  const visibleRentals = filteredRentals.slice(0, visibleCount);
+  // Sắp xếp: "Đang sử dụng" → check-out gần nhất trước, mặc định → mã phiếu giảm dần
+  const sortedRentals = [...filteredRentals].sort((a: RentalSlip, b: RentalSlip) => {
+    if (filterStatus === "Đang sử dụng") {
+      return new Date(a.checkOut).getTime() - new Date(b.checkOut).getTime();
+    }
+    return b.id - a.id;
+  });
+
+  const visibleRentals = sortedRentals.slice(0, visibleCount);
   const hasMore = visibleCount < filteredRentals.length;
 
   const handleDelete = async (id: number, code: string) => {
@@ -96,10 +104,11 @@ export default function RentalsPage() {
     }
   };
 
-  // Khi checkout thành công → đóng modal và reload trang
-  const handleCheckoutSuccess = () => {
+  // Khi checkout thành công → hiện toast và reload dữ liệu
+  const handleCheckoutSuccess = async (result: any) => {
     setCheckoutRental(null);
-    window.location.reload();
+    showToast(`Trả phòng thành công! Mã hóa đơn: #${result?.maHoaDon || ""}`); 
+    await refresh();
   };
 
   return (

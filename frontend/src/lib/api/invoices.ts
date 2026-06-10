@@ -28,6 +28,7 @@ export async function getPagedInvoices(params: {
   month?: number;
   search?: string;
   status?: string;
+  sortDir?: string;
   page: number;
   size: number;
 }): Promise<PaginatedInvoices> {
@@ -42,6 +43,9 @@ export async function getPagedInvoices(params: {
   }
   if (params.status !== undefined && params.status !== "Tất cả") {
     queryParams.status = params.status;
+  }
+  if (params.sortDir) {
+    queryParams.sortDir = params.sortDir;
   }
 
   return apiClient<PaginatedInvoices>("/api/invoices/paged", {

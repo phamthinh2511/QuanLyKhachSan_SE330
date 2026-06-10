@@ -40,9 +40,10 @@ public class InvoiceController {
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false, defaultValue = "desc") String sortDir,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(invoiceService.getPagedInvoices(year, month, search, status, page, size));
+        return ResponseEntity.ok(invoiceService.getPagedInvoices(year, month, search, status, sortDir, page, size));
     }
 
     @GetMapping("/export")

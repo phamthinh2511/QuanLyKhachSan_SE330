@@ -9,7 +9,6 @@ import {
   deleteBooking,
   updateBooking,
   checkInBooking,
-  checkOutBooking,
   BookingRequestPayload,
   CustomerResponse,
   RoomResponse
@@ -21,7 +20,6 @@ import { useToast } from "@/context/ToastContext";
 import BookingTodayTable from "@/components/bookings/BookingTodayTable";
 import BookingAllTable from "@/components/bookings/BookingAllTable";
 import BookingModal from "@/components/bookings/BookingModal";
-import CheckoutModal from "@/components/invoices/CheckoutModal";
 
 const today = new Date().toISOString().split("T")[0];
 const PAGE_SIZE_ALL = 50;
@@ -57,7 +55,7 @@ export default function BookingsPage() {
   const [rooms, setRooms] = useState<RoomResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("Tất cả");
+  const [filter, setFilter] = useState("Đặt trước");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE_ALL);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Booking | null>(null);
@@ -78,8 +76,6 @@ export default function BookingsPage() {
     y: number;
     booking: Booking;
   } | null>(null);
-  const [checkoutBooking, setCheckoutBooking] = useState<Booking | null>(null);
-  const [checkoutPaymentMethod, setCheckoutPaymentMethod] = useState<string>("Tiền mặt");
 
   // Thao tác nhanh Check-in
   const handleCheckIn = async (bookingId: number) => {
@@ -161,7 +157,11 @@ export default function BookingsPage() {
         guests: b.guests || b.soKhach || 1
       }));
 
-      setBookings(mappedData);
+      // Loại bỏ booking trùng id (API có thể trả về trùng lặp)
+      const uniqueBookings = Array.from(
+        new Map(mappedData.map((b: Booking) => [b.id, b])).values()
+      );
+      setBookings(uniqueBookings);
     } catch (error) {
       console.error("Lỗi đồng bộ danh sách đặt phòng:", error);
     } finally {
@@ -210,14 +210,20 @@ export default function BookingsPage() {
             );
           });
 
-          // 2. TÁCH MẢNG THEO TRẠNG THÁI CHO TỪNG BẢNG
-           const datPhongList = searchedBookings.filter((b) => {
-               const isCorrectType = b.status === "Đặt trước" || b.status === "Đã hủy";
-               const matchFilter = filter === "Tất cả" || b.status === filter;
-               return isCorrectType && matchFilter;
+          // 2. LỌC THEO TRẠNG THÁI (hiển thị tất cả trạng thái, filter theo dropdown)
+           const filteredBookings = searchedBookings.filter((b) => {
+               return filter === "Tất cả" || b.status === filter;
              });
 
-             const visibleAll = datPhongList.slice(0, visibleCount);
+           // 3. SẮP XẾP: "Đặt trước" → check-in gần nhất trước, mặc định → mã giảm dần
+           const sortedBookings = [...filteredBookings].sort((a, b) => {
+             if (filter === "Đặt trước") {
+               return new Date(a.checkIn).getTime() - new Date(b.checkIn).getTime();
+             }
+             return b.id - a.id;
+           });
+
+             const visibleAll = sortedBookings.slice(0, visibleCount);
 
 
   const handleDelete = async (id: number) => {
@@ -361,8 +367,10 @@ export default function BookingsPage() {
                 onChange={(e) => setFilter(e.target.value)}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
-                <option value="Tất cả">Tất cả trạng thái (Filter tổng)</option>
+                <option value="Tất cả">Tất cả trạng thái</option>
                 <option value="Đặt trước">Đặt trước</option>
+                <option value="Đang sử dụng">Đang sử dụng</option>
+                <option value="Đã trả phòng">Đã trả phòng</option>
                 <option value="Đã hủy">Đã hủy</option>
               </select>
             </div>
@@ -412,36 +420,12 @@ export default function BookingsPage() {
                 Hủy đặt trước
               </button>
             </div>
-          ) : contextMenu.booking.status === "Đang sử dụng" ? (
-            <div className="p-1">
-              <button
-                onClick={() => { setCheckoutBooking(contextMenu.booking); setCheckoutPaymentMethod("Tiền mặt"); setContextMenu(null); }}
-                className="w-full text-left px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 rounded-lg transition flex items-center gap-2"
-              >
-                <span className="w-2 h-2 rounded-full bg-blue-500" />
-                Check-out & Tạo hóa đơn
-              </button>
-            </div>
           ) : (
             <div className="px-4 py-3 text-xs text-gray-400 text-center italic">Không khả dụng nhanh</div>
           )}
         </div>
       )}
 
-      {checkoutBooking && (
-        <CheckoutModal
-          maPhieuThue={checkoutBooking.id}
-          maPhong={parseInt(checkoutBooking.roomNumber) || 0}
-          maNhanVien={1}
-          khachHang={checkoutBooking.customerName}
-          onSuccess={async (result) => {
-            showToast(`Checkout thành công! Mã hóa đơn: #${result.maHoaDon}`);
-            setCheckoutBooking(null);
-            await fetchData();
-          }}
-          onClose={() => setCheckoutBooking(null)}
-        />
-      )}
     </div>
   );
 }
