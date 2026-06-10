@@ -184,6 +184,10 @@ public class InvoiceService {
         Hoadon hoadon = hoadonRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn có ID: " + id));
 
+        if (!"Đã thanh toán".equalsIgnoreCase(hoadon.getTrangThai())) {
+            throw new IllegalStateException("Chỉ có thể xóa hóa đơn ở trạng thái 'Đã thanh toán'!");
+        }
+
         List<CtHoadon> details = ctHoadonRepository.findByMaHoaDon(hoadon);
         if (details != null && !details.isEmpty()) {
             ctHoadonRepository.deleteAll(details);
