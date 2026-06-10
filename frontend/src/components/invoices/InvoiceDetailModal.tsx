@@ -88,8 +88,7 @@ export default function InvoiceDetailModal({ invoice, onClose }: Props) {
               <p className="text-gray-500">Thanh toán: <span className="font-semibold text-gray-800">{invoice.paymentMethod || "—"}</span></p>
               <p className="text-gray-500">Trạng thái:&nbsp;
                 <span className={`font-semibold ${
-                  invoice.status === "Đã thanh toán" ? "text-green-600" :
-                  invoice.status === "Một phần" ? "text-yellow-600" : "text-orange-600"
+                  invoice.status === "Đã thanh toán" ? "text-green-600" : "text-orange-600"
                 }`}>{invoice.status}</span>
               </p>
             </div>

@@ -1,6 +1,7 @@
 package hotelmanagement.backend.service;
 
 import hotelmanagement.backend.dto.request.InvoiceRequestDto;
+import hotelmanagement.backend.dto.request.CheckoutRequest;
 import hotelmanagement.backend.dto.response.InvoiceResponseDto;
 import hotelmanagement.backend.dto.response.SudungdichvuResponseDto;
 import hotelmanagement.backend.entity.*;
@@ -27,7 +28,8 @@ public class InvoiceService {
     private final CtHoadonRepository ctHoadonRepository;
     private final PhieuthuephongRepository phieuthuephongRepository;
     private final DatphongRepository datphongRepository;
-    private final BookingService bookingService;
+    private final BillingService billingService;
+    private final SudungdichvuRepository sudungdichvuRepository;
 
     private InvoiceResponseDto toDto(Hoadon hoadon) {
         String bookingCode = "";
@@ -119,8 +121,12 @@ public class InvoiceService {
 
         Integer bookingId = Integer.parseInt(dto.getBookingCode().trim());
 
-        // Gọi logic checkout của BookingService để tạo hóa đơn
-        bookingService.checkOut(bookingId, dto.getPaymentMethod() != null ? dto.getPaymentMethod() : "Tiền mặt");
+        // Gọi logic checkout của BillingService để tạo hóa đơn
+        billingService.checkout(CheckoutRequest.builder()
+                .maPhieuThue(bookingId)
+                .maNhanVien(1)
+                .phuongThucThanhToan(dto.getPaymentMethod() != null ? dto.getPaymentMethod() : "Tiền mặt")
+                .build());
 
         // Tìm phiếu thuê tương ứng sau khi checkout thành công
         Phieuthuephong pt = phieuthuephongRepository.findById(bookingId).orElse(null);
@@ -152,43 +158,22 @@ public class InvoiceService {
         hoadon.setPhuongThucThanhToan(dto.getPaymentMethod());
         hoadon.setTrangThai(dto.getStatus());
 
-        List<CtHoadon> details = ctHoadonRepository.findByMaHoaDon(hoadon);
-
-        // Cập nhật lại đơn giá và thành tiền của Tiền phòng nếu có thay đổi
-        if (dto.getRoomCost() != null) {
-            for (CtHoadon ct : details) {
-                if ("Tiền phòng".equalsIgnoreCase(ct.getLoaiChiPhi())) {
-                    ct.setDonGia(dto.getRoomCost() / (ct.getSoLuong() > 0 ? ct.getSoLuong() : 1));
-                    ct.setThanhTien(dto.getRoomCost());
-                    ctHoadonRepository.save(ct);
+        if ("Đã thanh toán".equalsIgnoreCase(dto.getStatus())) {
+            hoadon.setNgayThanhToan(LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")));
+            if (hoadon.getMaPhieuThue() != null) {
+                List<Sudungdichvu> usages = sudungdichvuRepository.findByPhieuThueId(hoadon.getMaPhieuThue().getId());
+                if (usages != null) {
+                    for (Sudungdichvu usage : usages) {
+                        if (!"Đã hủy".equalsIgnoreCase(usage.getTrangThai())) {
+                            usage.setTrangThai("Đã sử dụng");
+                            sudungdichvuRepository.save(usage);
+                        }
+                    }
                 }
             }
+        } else if ("Chờ thanh toán".equalsIgnoreCase(dto.getStatus())) {
+            hoadon.setNgayThanhToan(null);
         }
-
-        // Cập nhật lại đơn giá và thành tiền của Tiền dịch vụ nếu có thay đổi
-        if (dto.getServiceCost() != null) {
-            double currentServiceCost = details.stream()
-                    .filter(ct -> "Tiền dịch vụ".equalsIgnoreCase(ct.getLoaiChiPhi()))
-                    .mapToDouble(CtHoadon::getThanhTien)
-                    .sum();
-
-            if (Math.abs(currentServiceCost - dto.getServiceCost()) > 0.01) {
-                List<CtHoadon> serviceDetails = details.stream()
-                        .filter(ct -> "Tiền dịch vụ".equalsIgnoreCase(ct.getLoaiChiPhi()))
-                        .collect(Collectors.toList());
-                if (!serviceDetails.isEmpty()) {
-                    CtHoadon firstService = serviceDetails.get(0);
-                    firstService.setThanhTien(dto.getServiceCost());
-                    firstService.setDonGia(dto.getServiceCost() / (firstService.getSoLuong() > 0 ? firstService.getSoLuong() : 1));
-                    ctHoadonRepository.save(firstService);
-                }
-            }
-        }
-
-        // Tính lại tổng tiền từ chi tiết hóa đơn
-        List<CtHoadon> updatedDetails = ctHoadonRepository.findByMaHoaDon(hoadon);
-        double total = updatedDetails.stream().mapToDouble(CtHoadon::getThanhTien).sum();
-        hoadon.setTongTien(total);
 
         Hoadon saved = hoadonRepository.save(hoadon);
         return toDto(saved);

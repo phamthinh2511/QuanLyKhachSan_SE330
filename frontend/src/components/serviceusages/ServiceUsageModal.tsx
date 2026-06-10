@@ -3,11 +3,9 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { ServiceUsage, ServiceUsageStatus } from "@/types/serviceUsage";
-import { Booking } from "@/types/booking";
-import { getAllBookings, getAllRooms, RoomResponse } from "@/lib/api/bookings";
 import { getServices } from "@/lib/api/services";
 import { Service } from "@/types/service";
-import { mapBookingStatus } from "@/app/(dashboard)/bookings/page";
+import { getRentals, RentalSlip } from "@/lib/api/rentals";
 import { isNotEmpty, isPositiveInteger } from "@/lib/validation";
 
 interface Props {
@@ -30,28 +28,24 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
     quantity: usage ? usage.quantity : "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [rentals, setRentals] = useState<RentalSlip[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [rooms, setRooms] = useState<RoomResponse[]>([]);
 
   useEffect(() => {
-    // Load Bookings
-    getAllBookings()
+    // Load Rentals
+    getRentals()
       .then((data) => {
-        const rawList = Array.isArray(data) ? data : [];
-        const mapped = rawList.map((b: any) => ({
-          id: b.id,
-          bookingCode: String(b.id),
-          customerName: b.customerName || "Khách vãng lai",
-          roomNumber: b.roomNumber || "Chưa gán",
-          checkIn: b.checkIn ? String(b.checkIn) : "",
-          checkOut: b.checkOut ? String(b.checkOut) : "",
-          bookingDate: b.bookingDate || "",
-          status: mapBookingStatus(b.status),
-          amount: b.thanhTien || b.tongTien || b.tongGia || b.amount || 0,
-          guests: b.guests || b.soKhach || 1
-        }));
-        setBookings(mapped);
+        let rawList: any[] = [];
+        if (Array.isArray(data)) {
+          rawList = data;
+        } else if (data && typeof data === "object") {
+          if (Array.isArray((data as any).result)) {
+            rawList = (data as any).result;
+          } else if ((data as any).data && Array.isArray((data as any).data.result)) {
+            rawList = (data as any).data.result;
+          }
+        }
+        setRentals(rawList);
       })
       .catch((err) => console.error(err));
 
@@ -59,13 +53,6 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
     getServices()
       .then((data) => {
         setServices(data || []);
-      })
-      .catch((err) => console.error(err));
-
-    // Load Rooms
-    getAllRooms()
-      .then((data) => {
-        setRooms(data || []);
       })
       .catch((err) => console.error(err));
   }, []);
@@ -80,14 +67,14 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
     setErrors({});
   }, [usage]);
 
-  // Tự điền thông tin khi chọn booking
+  // Tự điền thông tin khi chọn booking (phát sinh từ phiếu thuê phòng)
   const handleBookingChange = (code: string) => {
-    const booking = bookings.find((b) => b.bookingCode === code);
+    const rental = rentals.find((r) => String(r.id) === code);
     setForm((prev) => ({
       ...prev,
       bookingCode: code,
-      customerName: booking?.customerName ?? "",
-      roomNumber: booking?.roomNumber ?? "",
+      customerName: rental?.customerName ?? "",
+      roomNumber: rental?.roomNumber ?? "",
     }));
     if (errors.bookingCode) {
       setErrors((prev) => {
@@ -190,26 +177,23 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
         <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
           {/* Booking */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Booking</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phiếu thuê phòng</label>
             <select 
               value={form.bookingCode} 
               onChange={(e) => handleBookingChange(e.target.value)}
               className={getInputClass("bookingCode")}
             >
-              <option value="">Chọn booking</option>
-              {bookings
-                .filter((b) => {
-                  const isCurrent = b.bookingCode === form.bookingCode;
+              <option value="">Chọn phiếu thuê</option>
+              {rentals
+                .filter((r) => {
+                  const isCurrent = String(r.id) === form.bookingCode;
                   if (isCurrent) return true;
 
-                  if (b.status !== "Đang sử dụng") return false;
-
-                  const room = rooms.find((r) => String(r.id) === String(b.roomNumber));
-                  return room?.trangThai === "Đang sử dụng";
+                  return r.status === "Đang sử dụng";
                 })
-                .map((b) => (
-                  <option key={b.id} value={b.bookingCode}>
-                    {b.bookingCode} — {b.customerName} (Phòng {b.roomNumber})
+                .map((r) => (
+                  <option key={r.id} value={String(r.id)}>
+                    {r.rentalCode} — {r.customerName} (Phòng {r.roomNumber})
                   </option>
                 ))}
             </select>

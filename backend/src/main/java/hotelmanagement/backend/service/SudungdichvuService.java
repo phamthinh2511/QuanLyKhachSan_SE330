@@ -91,6 +91,10 @@ public class SudungdichvuService {
     private void applyRequestToEntity(Sudungdichvu sddv, SudungdichvuRequestDto dto) {
         Phieuthuephong pt = findPhieuthuephong(dto.getBookingCode());
         
+        if (!"Đang sử dụng".equals(pt.getTrangThai())) {
+            throw new IllegalStateException("Phiếu thuê phòng không còn hoạt động (Trạng thái: " + pt.getTrangThai() + "), không thể sử dụng thêm dịch vụ!");
+        }
+
         Dichvu dv = dichvuRepository.findAll().stream()
                 .filter(d -> d.getTenDichVu().equalsIgnoreCase(dto.getServiceName()))
                 .findFirst()
