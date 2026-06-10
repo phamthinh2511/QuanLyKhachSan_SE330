@@ -16,7 +16,107 @@ export default function ChatbotWidget() {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  
+
+  // Dragging state for chatbot floating button
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const elementStartPos = useRef({ x: 0, y: 0 });
+  const hasMoved = useRef(false);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (e.button !== 0) return;
+    setIsDragging(true);
+    hasMoved.current = false;
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
+    elementStartPos.current = { ...position };
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLButtonElement>) => {
+    const touch = e.touches[0];
+    setIsDragging(true);
+    hasMoved.current = false;
+    dragStartPos.current = { x: touch.clientX, y: touch.clientY };
+    elementStartPos.current = { ...position };
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      const deltaX = e.clientX - dragStartPos.current.x;
+      const deltaY = e.clientY - dragStartPos.current.y;
+      if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+        hasMoved.current = true;
+      }
+      const wWidth = typeof window !== "undefined" ? window.innerWidth : 1000;
+      const wHeight = typeof window !== "undefined" ? window.innerHeight : 1000;
+      const maxLeft = -(wWidth - 80);
+      const maxRight = 24;
+      const maxUp = -(wHeight - 80);
+      const maxDown = 24;
+
+      setPosition({
+        x: Math.max(maxLeft, Math.min(maxRight, elementStartPos.current.x + deltaX)),
+        y: Math.max(maxUp, Math.min(maxDown, elementStartPos.current.y + deltaY)),
+      });
+    };
+
+    const handleMouseUp = () => {
+      if (isDragging) {
+        setIsDragging(false);
+      }
+    };
+
+    if (isDragging) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
+  useEffect(() => {
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging) return;
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - dragStartPos.current.x;
+      const deltaY = touch.clientY - dragStartPos.current.y;
+      if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+        hasMoved.current = true;
+      }
+      const wWidth = typeof window !== "undefined" ? window.innerWidth : 1000;
+      const wHeight = typeof window !== "undefined" ? window.innerHeight : 1000;
+      const maxLeft = -(wWidth - 80);
+      const maxRight = 24;
+      const maxUp = -(wHeight - 80);
+      const maxDown = 24;
+
+      setPosition({
+        x: Math.max(maxLeft, Math.min(maxRight, elementStartPos.current.x + deltaX)),
+        y: Math.max(maxUp, Math.min(maxDown, elementStartPos.current.y + deltaY)),
+      });
+    };
+
+    const handleTouchEnd = () => {
+      if (isDragging) {
+        setIsDragging(false);
+      }
+    };
+
+    if (isDragging) {
+      window.addEventListener("touchmove", handleTouchMove, { passive: false });
+      window.addEventListener("touchend", handleTouchEnd);
+    }
+
+    return () => {
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [isDragging]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load chat history from localStorage
@@ -95,7 +195,13 @@ export default function ChatbotWidget() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    <div 
+      className="fixed z-50 flex flex-col items-end select-none"
+      style={{
+        bottom: `calc(1.5rem - ${position.y}px)`,
+        right: `calc(1.5rem - ${position.x}px)`,
+      }}
+    >
       {/* Cửa sổ chat */}
       {isOpen && (
         <div className="w-[380px] h-[500px] bg-white border border-gray-100 rounded-2xl shadow-2xl flex flex-col mb-4 overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-300">
@@ -215,11 +321,22 @@ export default function ChatbotWidget() {
 
       {/* Floating Action Button (FAB) */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onClick={(e) => {
+          if (hasMoved.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+          setIsOpen(!isOpen);
+        }}
         className={clsx(
-          "w-14 h-14 rounded-full flex items-center justify-center text-white shadow-xl transition-all duration-300 hover:scale-105 active:scale-95",
-          isOpen ? "bg-red-500 hover:bg-red-600" : "bg-blue-600 hover:bg-blue-700"
+          "w-14 h-14 rounded-full flex items-center justify-center text-white shadow-xl cursor-grab active:cursor-grabbing select-none transition-all duration-300",
+          isOpen ? "bg-red-500 hover:bg-red-600" : "bg-blue-600 hover:bg-blue-700",
+          isDragging && "scale-105"
         )}
+        style={{ touchAction: "none" }}
       >
         {isOpen ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6 animate-bounce" />}
       </button>
