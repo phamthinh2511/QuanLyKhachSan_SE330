@@ -97,8 +97,8 @@ public class PhieuthuephongService {
     public void delete(Integer id) {
         Phieuthuephong pt = phieuthuephongRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu thuê phòng với ID: " + id));
-        if (!"Đã trả phòng".equalsIgnoreCase(pt.getTrangThai())) {
-            throw new IllegalStateException("Chỉ có thể xóa phiếu thuê phòng ở trạng thái 'Đã trả phòng'!");
+        if ("Đang sử dụng".equalsIgnoreCase(pt.getTrangThai())) {
+            throw new IllegalStateException("Không thể xóa phiếu thuê phòng đang ở trạng thái 'Đang sử dụng'!");
         }
 
         List<Sudungdichvu> sddvList = sudungdichvuRepository.findAll().stream()

@@ -142,15 +142,17 @@ public class SudungdichvuService {
             throw new IllegalStateException("Không thể xóa phiếu sử dụng dịch vụ đang ở trạng thái 'Chờ sử dụng'!");
         }
 
-        Phieuthuephong pt = sddv.getMaPhieuThue();
-        if (pt != null) {
-            if ("Đang sử dụng".equalsIgnoreCase(pt.getTrangThai())) {
-                throw new IllegalStateException("Không thể xóa phiếu sử dụng dịch vụ vì phiếu thuê phòng liên kết đang ở trạng thái 'Đang sử dụng'!");
-            }
+        if ("Đã sử dụng".equalsIgnoreCase(sddv.getTrangThai())) {
+            if (sddv.getMaPhieuThue() != null) {
+                boolean phieuThueExists = phieuthuephongRepository.existsById(sddv.getMaPhieuThue().getId());
+                if (phieuThueExists) {
+                    throw new IllegalStateException("Không thể xóa dịch vụ đã sử dụng vì còn lưu trong phiếu thuê!");
+                }
 
-            java.util.Optional<Hoadon> hdOpt = hoadonRepository.findByMaPhieuThue(pt);
-            if (hdOpt.isPresent() && "Chờ thanh toán".equalsIgnoreCase(hdOpt.get().getTrangThai())) {
-                throw new IllegalStateException("Không thể xóa phiếu sử dụng dịch vụ vì hóa đơn liên kết chưa được thanh toán (đang chờ thanh toán)!");
+                boolean hoaDonExists = hoadonRepository.findByMaPhieuThue(sddv.getMaPhieuThue()).isPresent();
+                if (hoaDonExists) {
+                    throw new IllegalStateException("Không thể xóa dịch vụ đã sử dụng vì còn lưu trong hóa đơn!");
+                }
             }
         }
 
