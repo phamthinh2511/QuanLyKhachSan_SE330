@@ -57,7 +57,7 @@ export default function BookingsPage() {
   const [rooms, setRooms] = useState<RoomResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("Tất cả");
+  const [filter, setFilter] = useState("Đặt trước");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE_ALL);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Booking | null>(null);
@@ -81,7 +81,6 @@ export default function BookingsPage() {
   const [checkoutBooking, setCheckoutBooking] = useState<Booking | null>(null);
   const [checkoutPaymentMethod, setCheckoutPaymentMethod] = useState<string>("Tiền mặt");
 
-  // Thao tác nhanh Check-in
   const handleCheckIn = async (bookingId: number) => {
     try {
       setLoading(true);
@@ -94,8 +93,6 @@ export default function BookingsPage() {
       setLoading(false);
     }
   };
-
-
 
   const handleCancelBooking = async (booking: Booking) => {
     const isConfirmed = window.confirm(`Bạn có chắc chắn muốn hủy đơn đặt phòng ${booking.bookingCode} của khách ${booking.customerName} không?`);
@@ -200,25 +197,31 @@ export default function BookingsPage() {
 
   const { dangOActive, sapToiActive, tongDoanhThuThang } = computedBookingsForCards();
 
-  const todayBookings = bookings.filter((b) => b.checkIn === today);
-        // 1. Áp dụng tìm kiếm text trước
-          const searchedBookings = bookings.filter((b) => {
-            return (
-              b.bookingCode.toLowerCase().includes(search.toLowerCase()) ||
-              b.customerName.toLowerCase().includes(search.toLowerCase()) ||
-              b.roomNumber.toLowerCase().includes(search.toLowerCase())
-            );
-          });
+const searchedBookings = bookings.filter((b) => {
+    return (
+      b.bookingCode.toLowerCase().includes(search.toLowerCase()) ||
+      b.customerName.toLowerCase().includes(search.toLowerCase()) ||
+      b.roomNumber.toLowerCase().includes(search.toLowerCase())
+    );
+  });
 
-          // 2. TÁCH MẢNG THEO TRẠNG THÁI CHO TỪNG BẢNG
-           const datPhongList = searchedBookings.filter((b) => {
-               const isCorrectType = b.status === "Đặt trước" || b.status === "Đã hủy";
-               const matchFilter = filter === "Tất cả" || b.status === filter;
-               return isCorrectType && matchFilter;
-             });
+  const filteredBookings = searchedBookings.filter((b) => {
+    if (filter === "Tất cả") return true;
+    return b.status === filter;
+  });
 
-             const visibleAll = datPhongList.slice(0, visibleCount);
+  const sortedBookings = [...filteredBookings].sort((a, b) => {
+    if (filter === "Đặt trước") {
+      return new Date(a.checkIn).getTime() - new Date(b.checkIn).getTime();
+    }
 
+    if (filter === "Đã hủy") {
+      return b.id - a.id;
+    }
+
+    return b.id - a.id;
+  });
+  const visibleAll = sortedBookings.slice(0, visibleCount);
 
   const handleDelete = async (id: number) => {
     try {
@@ -310,7 +313,6 @@ export default function BookingsPage() {
     }
   };
 
-  // 🔥 ĐÃ FIX: Chỉ giữ lại một hàm duy nhất ở đây, xóa bỏ hàm trùng lặp gây lỗi 500
   const handleEdit = (booking: Booking) => {
     setEditing(booking);
     setModalOpen(true);
@@ -332,14 +334,7 @@ export default function BookingsPage() {
         </button>
       </div>
 
-     <BookingStatCards
-       bookings={bookings}
-       overrideStats={{
-         dangO: dangOActive,
-         sapToi: sapToiActive,
-         doanhThu: tongDoanhThuThang
-       }}
-     />
+
 
       {loading && bookings.length === 0 ? (
         <div className="p-12 text-center text-gray-400 text-sm">Đang đồng bộ dữ liệu hệ thống phòng...</div>
