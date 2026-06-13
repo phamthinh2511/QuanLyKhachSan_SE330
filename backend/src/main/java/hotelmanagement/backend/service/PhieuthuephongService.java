@@ -3,9 +3,11 @@ package hotelmanagement.backend.service;
 import hotelmanagement.backend.dto.response.PhieuthuephongResponseDto;
 import hotelmanagement.backend.entity.CtPhieuthuephong;
 import hotelmanagement.backend.entity.Phieuthuephong;
+import hotelmanagement.backend.entity.Hoadon;
 import hotelmanagement.backend.repository.CtPhieuthuephongRepository;
 import hotelmanagement.backend.repository.PhieuthuephongRepository;
 import hotelmanagement.backend.repository.PhongRepository;
+import hotelmanagement.backend.repository.HoadonRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ public class PhieuthuephongService {
     private final CtPhieuthuephongRepository ctPhieuthuephongRepository;
     private final PhongRepository phongRepository;
     private final SudungdichvuRepository sudungdichvuRepository;
+    private final HoadonRepository hoadonRepository;
 
     private PhieuthuephongResponseDto toResponseDto(Phieuthuephong pt) {
         String bookingCode = pt.getMaDatPhong() != null ? String.valueOf(pt.getMaDatPhong().getId()) : "";
@@ -97,8 +100,16 @@ public class PhieuthuephongService {
     public void delete(Integer id) {
         Phieuthuephong pt = phieuthuephongRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu thuê phòng với ID: " + id));
-        if (!"Đã trả phòng".equalsIgnoreCase(pt.getTrangThai())) {
-            throw new IllegalStateException("Chỉ có thể xóa phiếu thuê phòng ở trạng thái 'Đã trả phòng'!");
+        if ("Đang sử dụng".equalsIgnoreCase(pt.getTrangThai())) {
+            throw new IllegalStateException("Không thể xóa phiếu thuê phòng đang ở trạng thái 'Đang sử dụng'!");
+        }
+
+        java.util.Optional<Hoadon> hoaDonOpt = hoadonRepository.findByMaPhieuThue(pt);
+        if (hoaDonOpt.isPresent()) {
+            Hoadon hd = hoaDonOpt.get();
+            hd.setMaPhieuThue(null);
+            hoadonRepository.save(hd);
+            hoadonRepository.flush();
         }
 
         List<Sudungdichvu> sddvList = sudungdichvuRepository.findAll().stream()
@@ -106,6 +117,7 @@ public class PhieuthuephongService {
                 .collect(Collectors.toList());
         if (!sddvList.isEmpty()) {
             sudungdichvuRepository.deleteAll(sddvList);
+            sudungdichvuRepository.flush();
         }
 
         List<CtPhieuthuephong> details = ctPhieuthuephongRepository.findByMaPhieuThue(pt);
@@ -117,6 +129,7 @@ public class PhieuthuephongService {
                 }
             }
             ctPhieuthuephongRepository.deleteAll(details);
+            ctPhieuthuephongRepository.flush();
         }
         phieuthuephongRepository.delete(pt);
     }

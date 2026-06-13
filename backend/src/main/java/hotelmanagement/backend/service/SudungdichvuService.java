@@ -138,20 +138,8 @@ public class SudungdichvuService {
         Sudungdichvu sddv = sudungdichvuRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bản ghi sử dụng dịch vụ với ID: " + id));
 
-        if ("Chờ sử dụng".equalsIgnoreCase(sddv.getTrangThai())) {
-            throw new IllegalStateException("Không thể xóa phiếu sử dụng dịch vụ đang ở trạng thái 'Chờ sử dụng'!");
-        }
-
-        Phieuthuephong pt = sddv.getMaPhieuThue();
-        if (pt != null) {
-            if ("Đang sử dụng".equalsIgnoreCase(pt.getTrangThai())) {
-                throw new IllegalStateException("Không thể xóa phiếu sử dụng dịch vụ vì phiếu thuê phòng liên kết đang ở trạng thái 'Đang sử dụng'!");
-            }
-
-            java.util.Optional<Hoadon> hdOpt = hoadonRepository.findByMaPhieuThue(pt);
-            if (hdOpt.isPresent() && "Chờ thanh toán".equalsIgnoreCase(hdOpt.get().getTrangThai())) {
-                throw new IllegalStateException("Không thể xóa phiếu sử dụng dịch vụ vì hóa đơn liên kết chưa được thanh toán (đang chờ thanh toán)!");
-            }
+        if ("Đã sử dụng".equalsIgnoreCase(sddv.getTrangThai()) || sddv.getTrangThai() == null) {
+            throw new IllegalStateException("Không thể xóa dịch vụ đã sử dụng vì đã lưu vào phiếu thuê!");
         }
 
         sudungdichvuRepository.delete(sddv);

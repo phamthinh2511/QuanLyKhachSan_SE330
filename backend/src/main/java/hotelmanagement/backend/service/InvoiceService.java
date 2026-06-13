@@ -30,6 +30,8 @@ public class InvoiceService {
     private final DatphongRepository datphongRepository;
     private final BillingService billingService;
     private final SudungdichvuRepository sudungdichvuRepository;
+    private final CtPhieuthuephongRepository ctPhieuthuephongRepository;
+    private final PhongRepository phongRepository;
 
     private InvoiceResponseDto toDto(Hoadon hoadon) {
         String bookingCode = "";
@@ -188,12 +190,45 @@ public class InvoiceService {
             throw new IllegalStateException("Chỉ có thể xóa hóa đơn ở trạng thái 'Đã thanh toán'!");
         }
 
+        Phieuthuephong pt = hoadon.getMaPhieuThue();
+
         List<CtHoadon> details = ctHoadonRepository.findByMaHoaDon(hoadon);
         if (details != null && !details.isEmpty()) {
             ctHoadonRepository.deleteAll(details);
+            ctHoadonRepository.flush();
         }
 
         hoadonRepository.delete(hoadon);
+        hoadonRepository.flush();
+
+        if (pt != null) {
+            // Xóa toàn bộ phiếu sử dụng dịch vụ đi kèm của phiếu thuê phòng này
+            List<Sudungdichvu> sddvList = sudungdichvuRepository.findAll().stream()
+                    .filter(u -> u.getMaPhieuThue() != null && u.getMaPhieuThue().getId().equals(pt.getId()))
+                    .collect(Collectors.toList());
+            if (!sddvList.isEmpty()) {
+                sudungdichvuRepository.deleteAll(sddvList);
+                sudungdichvuRepository.flush();
+            }
+
+            // Xóa chi tiết thuê phòng và đặt trạng thái phòng về 'Trống'
+            List<CtPhieuthuephong> ctPt = ctPhieuthuephongRepository.findByMaPhieuThue(pt);
+            if (ctPt != null && !ctPt.isEmpty()) {
+                for (CtPhieuthuephong ct : ctPt) {
+                    if (ct.getMaPhong() != null) {
+                        ct.getMaPhong().setTrangThai("Trống");
+                        phongRepository.save(ct.getMaPhong());
+                    }
+                }
+                phongRepository.flush();
+                ctPhieuthuephongRepository.deleteAll(ctPt);
+                ctPhieuthuephongRepository.flush();
+            }
+
+            // Cuối cùng xóa chính phiếu thuê phòng
+            phieuthuephongRepository.delete(pt);
+            phieuthuephongRepository.flush();
+        }
     }
 
     public InvoicePageResponseDto getPagedInvoices(Integer year, Integer month, String search, String status, int page, int size) {
