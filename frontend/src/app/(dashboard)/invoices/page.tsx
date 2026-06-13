@@ -17,7 +17,7 @@ export default function InvoicesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("Tất cả"); // Status filter
+  const [filter, setFilter] = useState("Chờ thanh toán"); // Status filter
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [totalElements, setTotalElements] = useState(0);
@@ -183,7 +183,17 @@ export default function InvoicesPage() {
       setLoading(false);
     }
   };
+const sortedInvoices = [...invoices].sort((a: any, b: any) => {
+    const timeA = new Date(a.createdAt || a.ngayTao || a.invoiceDate || 0).getTime();
+    const timeB = new Date(b.createdAt || b.ngayTao || b.invoiceDate || 0).getTime();
 
+    if (filter === "Chờ thanh toán") {
+      return timeB - timeA;
+    }
+if (filter === "Đã thanh toán") {
+      return timeA - timeB;
+    }
+  });
   return (
     <div className="p-6 space-y-6">
       {/* Embedded Animations */}
@@ -308,7 +318,7 @@ export default function InvoicesPage() {
 
       {/* Table */}
       <InvoiceTable
-        invoices={invoices}
+        invoices={sortedInvoices}
         onView={(inv) => setDetailInvoice(inv)}
         onEdit={(inv) => setEditingInvoice(inv)}
         onDelete={handleDelete}

@@ -26,7 +26,7 @@ export default function RentalsPage() {
   const { rentals, loading, error, removeRental } = useRentals();
   const { showToast } = useToast();
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("Tất cả");
+  const [filterStatus, setFilterStatus] = useState("Đang sử dụng");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [selectedRental, setSelectedRental] = useState<RentalSlip | null>(null);
   // Phiếu thuê đang được chọn để trả phòng (mở CheckoutModal)
@@ -69,19 +69,24 @@ export default function RentalsPage() {
 
     return matchSearch && matchStatus;
   });
-
-  const visibleRentals = filteredRentals.slice(0, visibleCount);
+    const sortedRentals = [...filteredRentals].sort((a, b) => {
+        if (filterStatus === "Đang sử dụng") {
+          return new Date(a.checkOut).getTime() - new Date(b.checkOut).getTime();
+        }
+        if (filterStatus === "Đã trả phòng") {
+              return b.id - a.id;
+            }
+      });
+  const visibleRentals = sortedRentals.slice(0, visibleCount);
   const hasMore = visibleCount < filteredRentals.length;
 
   const handleDelete = async (id: number, code: string) => {
     if (confirm(`Bạn có chắc chắn muốn hủy phiếu thuê phòng ${code}? Điều này sẽ giải phóng trạng thái phòng về trống.`)) {
       try {
         await removeRental(id);
-        // Dùng showToast thay alert (từ main)
         showToast(`Đã hủy phiếu thuê phòng ${code} thành công!`);
       } catch (err: any) {
         const errorMessage = (err.message || "").toLowerCase();
-        // Kiểm tra lỗi khóa ngoại ràng buộc dữ liệu với dịch vụ phòng
         if (errorMessage.includes("sudungdichvu") || errorMessage.includes("foreign key")) {
           showToast(
             `Không thể hủy phiếu thuê ${code}!\n\n` +
@@ -95,8 +100,6 @@ export default function RentalsPage() {
       }
     }
   };
-
-  // Khi checkout thành công → đóng modal và reload trang
   const handleCheckoutSuccess = () => {
     setCheckoutRental(null);
     window.location.reload();
