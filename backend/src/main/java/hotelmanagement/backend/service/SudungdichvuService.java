@@ -138,16 +138,8 @@ public class SudungdichvuService {
         Sudungdichvu sddv = sudungdichvuRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bản ghi sử dụng dịch vụ với ID: " + id));
 
-        if ("Chờ sử dụng".equalsIgnoreCase(sddv.getTrangThai())) {
-            throw new IllegalStateException("Không thể xóa phiếu sử dụng dịch vụ đang ở trạng thái 'Chờ sử dụng'!");
-        }
-
-        // Nếu đã sử dụng còn lưu trong phiếu thuê và hóa đơn thì không được xóa.
-        // Chỉ được xóa khi không có phiếu thuê hay hóa đơn lưu dịch vụ đó nữa.
         if ("Đã sử dụng".equalsIgnoreCase(sddv.getTrangThai()) || sddv.getTrangThai() == null) {
-            if (sddv.getMaPhieuThue() != null) {
-                throw new IllegalStateException("Không thể xóa dịch vụ đã sử dụng vì vẫn còn lưu trong phiếu thuê hoặc hóa đơn liên kết!");
-            }
+            throw new IllegalStateException("Không thể xóa dịch vụ đã sử dụng vì đã lưu vào phiếu thuê!");
         }
 
         sudungdichvuRepository.delete(sddv);

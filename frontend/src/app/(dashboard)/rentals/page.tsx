@@ -211,14 +211,6 @@ export default function RentalsPage() {
                                 <LogOut className="w-3.5 h-3.5" /> Trả phòng
                               </button>
                             )}
-
-                            <button
-                              onClick={() => handleDelete(r.id, r.rentalCode)}
-                              title="Hủy phiếu thuê"
-                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
                           </div>
                         </td>
                       </tr>
