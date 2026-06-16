@@ -18,7 +18,7 @@ export default function InvoicesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("Chờ thanh toán"); // Status filter
+  const [filter, setFilter] = useState("Tất cả"); // Status filter
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [totalElements, setTotalElements] = useState(0);
