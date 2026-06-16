@@ -99,10 +99,10 @@ export async function updateBooking(id: number, payload: BookingRequestPayload):
     throw new Error(error.message || "Không thể cập nhật thông tin phòng");
   }
 }
-export async function checkInBooking(bookingId: number): Promise<any> {
+export async function checkInBooking(bookingId: number, maNhanVien: number): Promise<any> {
   return apiClient<any>("/api/bookings/check-in", {
     method: "POST",
-    body: JSON.stringify({ maDatPhong: bookingId, maNhanVien: 1 }),
+    body: JSON.stringify({ maDatPhong: bookingId, maNhanVien }),
   });
 }
 export async function checkOutBooking(bookingId: number, paymentMethod?: string): Promise<ApiResponse<void>> {

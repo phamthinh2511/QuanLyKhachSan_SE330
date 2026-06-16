@@ -115,8 +115,10 @@ public void xuLyDatHoacThuePhong(BookingRequest request) {
             throw new IllegalStateException("Ngày nhận phòng cho thuê trực tiếp phải là ngày hôm nay (" + today + ")!");
         }
 
-        Nhanvien nv = nhanvienRepository.findById(request.getMaNhanVienId())
-                .orElseThrow(() -> new IllegalStateException("Yêu cầu nhân viên lễ tân thực hiện lập phiếu thuê!"));
+        Nhanvien nv = getCurrentEmployee(request.getMaNhanVienId());
+        if (nv == null) {
+            throw new IllegalStateException("Yêu cầu nhân viên lễ tân thực hiện lập phiếu thuê!");
+        }
         Phieuthuephong pt = new Phieuthuephong();
         pt.setMaDatPhong(null);
         pt.setMaKhachHang(khach);
@@ -164,8 +166,10 @@ public void xuLyDatHoacThuePhong(BookingRequest request) {
                 }
             }
 
-            Nhanvien nv = nhanvienRepository.findById(maNhanVienId)
-                    .orElseThrow(() -> new IllegalStateException("Cần thông tin nhân viên để thực hiện Check-in."));
+            Nhanvien nv = getCurrentEmployee(maNhanVienId);
+            if (nv == null) {
+                throw new IllegalStateException("Cần thông tin nhân viên để thực hiện Check-in.");
+            }
 
             dp.setTrangThai("Đã nhận phòng");
             datphongRepository.save(dp);
@@ -529,9 +533,10 @@ public List<DatPhongResponse> getAllBookings() {
 
             validateRoomAvailability(newRoomId, dp.getNgayNhan(), request.getNgayTra(), dp.getId());
 
-            Integer nvId = request.getMaNhanVienId() != null ? request.getMaNhanVienId() : 1;
-            Nhanvien nv = nhanvienRepository.findById(nvId)
-                    .orElseThrow(() -> new IllegalStateException("Cần thông tin nhân viên để lập phiếu thuê!"));
+            Nhanvien nv = getCurrentEmployee(request.getMaNhanVienId());
+            if (nv == null) {
+                throw new IllegalStateException("Cần thông tin nhân viên để lập phiếu thuê!");
+            }
 
             Phieuthuephong pt = new Phieuthuephong();
             pt.setMaDatPhong(null); // Không lưu liên kết đặt phòng để cho phép xóa đơn đặt phòng khỏi DB
@@ -612,5 +617,24 @@ public List<DatPhongResponse> getAllBookings() {
         phongRepository.save(phong);
 
         return savedDp;
+    }
+
+    private Nhanvien getCurrentEmployee(Integer requestEmployeeId) {
+        if (requestEmployeeId != null) {
+            return nhanvienRepository.findById(requestEmployeeId).orElse(null);
+        }
+        try {
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                String username = auth.getName();
+                java.util.Optional<Nhanvien> nvOpt = nhanvienRepository.findByTaikhoanTenDangNhapAndIsDeletedFalse(username);
+                if (nvOpt.isPresent()) {
+                    return nvOpt.get();
+                }
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return nhanvienRepository.findById(1).orElse(null);
     }
 }

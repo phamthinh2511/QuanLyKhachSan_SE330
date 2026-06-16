@@ -15,5 +15,7 @@ export interface Invoice {
   paymentMethod: PaymentMethod;
   status: InvoiceStatus;
   createdAt: string; // YYYY-MM-DD
+  maNhanVien?: number;
+  tenNhanVien?: string;
   serviceUsages?: ServiceUsage[];
 }

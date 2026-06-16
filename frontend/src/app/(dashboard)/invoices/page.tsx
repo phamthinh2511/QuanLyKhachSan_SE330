@@ -15,7 +15,7 @@ import PageError from "@/components/ui/PageError";
 
 // Module-level cache to persist state across client-side page views
 let cachedInvoicesSearch = "";
-let cachedInvoicesFilter = "Chờ thanh toán";
+let cachedInvoicesFilter = "Tất cả";
 let cachedInvoicesTimeOption = "this-month";
 let cachedInvoicesCustomMonth = new Date().getMonth() + 1;
 let cachedInvoicesCustomYear = new Date().getFullYear();

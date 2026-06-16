@@ -81,6 +81,7 @@ public class AiChatService {
                     "HÃY LƯU Ý KHI TRẢ LỜI:\n" +
                     "- Trả lời trực tiếp, lịch sự, chuyên nghiệp và ngắn gọn.\n" +
                     "- Khi khách hỏi về phòng trống trong tương lai (ví dụ: ngày mai, ngày cụ thể), bạn phải sử dụng công cụ/hàm `checkRoomAvailabilityFunction` được cung cấp. Không tự ý suy đoán phòng trống trong tương lai dựa vào trạng thái hiện tại.\n" +
+                    "- Khi khách hỏi về phòng đang sử dụng, phòng bận hoặc đã có khách đặt trước trong tương lai (ví dụ: ngày mai, ngày cụ thể), bạn phải sử dụng công cụ/hàm `checkBookedRoomsFunction` được cung cấp. Không tự ý suy đoán dựa vào trạng thái hiện tại.\n" +
                     "- Nếu thông tin nằm ngoài phạm vi dữ liệu được cung cấp hoặc các công cụ không tra cứu được, hãy lịch sự phản hồi rằng hệ thống chưa ghi nhận thông tin này.",
                     todayStr, rulesContext, roomDetailsPrompt, danhSachDichVu
             );
@@ -92,7 +93,7 @@ public class AiChatService {
             Prompt prompt = new Prompt(
                     List.of(systemMessage, userMessage),
                     GoogleGenAiChatOptions.builder()
-                            .toolNames(Set.of("checkRoomAvailabilityFunction"))
+                            .toolNames(Set.of("checkRoomAvailabilityFunction", "checkBookedRoomsFunction"))
                             .build()
             );
 

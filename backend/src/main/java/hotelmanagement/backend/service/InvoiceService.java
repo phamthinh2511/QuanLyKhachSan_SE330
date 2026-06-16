@@ -32,6 +32,7 @@ public class InvoiceService {
     private final SudungdichvuRepository sudungdichvuRepository;
     private final CtPhieuthuephongRepository ctPhieuthuephongRepository;
     private final PhongRepository phongRepository;
+    private final NhanvienRepository nhanvienRepository;
 
     private InvoiceResponseDto toDto(Hoadon hoadon) {
         String bookingCode = "";
@@ -87,6 +88,9 @@ public class InvoiceService {
         String year = String.valueOf(hoadon.getNgayThanhToan().getYear());
         String code = "INV-" + year + "-" + String.format("%03d", hoadon.getId());
 
+        Integer maNhanVienIdVal = hoadon.getMaNhanVien() != null ? hoadon.getMaNhanVien().getId() : null;
+        String tenNhanVienVal = hoadon.getMaNhanVien() != null ? hoadon.getMaNhanVien().getHoTen() : "";
+
         return InvoiceResponseDto.builder()
                 .id(hoadon.getId())
                 .invoiceCode(code)
@@ -99,6 +103,8 @@ public class InvoiceService {
                 .paymentMethod(hoadon.getPhuongThucThanhToan() != null ? hoadon.getPhuongThucThanhToan() : "Tiền mặt")
                 .status(hoadon.getTrangThai() != null ? hoadon.getTrangThai() : "Đã thanh toán")
                 .createdAt(hoadon.getNgayThanhToan())
+                .maNhanVien(maNhanVienIdVal)
+                .tenNhanVien(tenNhanVienVal)
                 .serviceUsages(serviceUsages)
                 .build();
     }
@@ -124,9 +130,11 @@ public class InvoiceService {
         Integer bookingId = Integer.parseInt(dto.getBookingCode().trim());
 
         // Gọi logic checkout của BillingService để tạo hóa đơn
+        Nhanvien currentEmp = getCurrentEmployee();
+        Integer maNhanVien = currentEmp != null ? currentEmp.getId() : 1;
         billingService.checkout(CheckoutRequest.builder()
                 .maPhieuThue(bookingId)
-                .maNhanVien(1)
+                .maNhanVien(maNhanVien)
                 .phuongThucThanhToan(dto.getPaymentMethod() != null ? dto.getPaymentMethod() : "Tiền mặt")
                 .build());
 
@@ -306,5 +314,21 @@ public class InvoiceService {
         return hoadonRepository.findByNgayThanhToanBetween(start, end).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
+    }
+
+    private Nhanvien getCurrentEmployee() {
+        try {
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                String username = auth.getName();
+                java.util.Optional<Nhanvien> nvOpt = nhanvienRepository.findByTaikhoanTenDangNhapAndIsDeletedFalse(username);
+                if (nvOpt.isPresent()) {
+                    return nvOpt.get();
+                }
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return nhanvienRepository.findById(1).orElse(null);
     }
 }

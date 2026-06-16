@@ -17,6 +17,9 @@ public class AiChatConfig {
     public record RoomAvailabilityRequest(String checkIn, String checkOut) {}
     public record RoomAvailabilityResponse(List<String> availableRooms) {}
 
+    public record BookedRoomsRequest(String checkIn, String checkOut) {}
+    public record BookedRoomsResponse(List<String> bookedRooms) {}
+
     /**
      * Bean Function Calling hỗ trợ tra cứu phòng trống theo khoảng thời gian thực tế trong Database.
      */
@@ -57,6 +60,47 @@ public class AiChatConfig {
                 return new RoomAvailabilityResponse(roomDetails);
             } catch (Exception e) {
                 return new RoomAvailabilityResponse(List.of("Đã xảy ra lỗi khi kiểm tra phòng trống: " + e.getMessage()));
+            }
+        };
+    }
+
+    /**
+     * Bean Function Calling hỗ trợ tra cứu danh sách phòng bận/đã được đặt theo khoảng thời gian thực tế trong Database.
+     */
+    @Bean
+    @Description("Tra cứu danh sách các phòng đã được đặt hoặc đang sử dụng (occupied/booked) trong khách sạn theo khoảng ngày Check-In (ngày nhận phòng) và Check-Out (ngày trả phòng). Yêu cầu định dạng ngày gửi lên là YYYY-MM-DD.")
+    public Function<BookedRoomsRequest, BookedRoomsResponse> checkBookedRoomsFunction(
+            PhongRepository phongRepository,
+            DatphongRepository datphongRepository) {
+        return request -> {
+            try {
+                LocalDate checkIn = LocalDate.parse(request.checkIn());
+                LocalDate checkOut = LocalDate.parse(request.checkOut());
+
+                // Lấy danh sách ID các phòng đã được đặt trùng lịch trong khoảng này
+                List<Integer> bookedRoomIds = datphongRepository.findBookedRoomIds(checkIn, checkOut);
+
+                if (bookedRoomIds == null || bookedRoomIds.isEmpty()) {
+                    return new BookedRoomsResponse(List.of());
+                }
+
+                List<Phong> bookedRooms = phongRepository.findAllWithLoaiPhong().stream()
+                        .filter(p -> p.getIsDeleted() == null || !p.getIsDeleted())
+                        .filter(p -> bookedRoomIds.contains(p.getId()))
+                        .toList();
+
+                List<String> roomDetails = bookedRooms.stream()
+                        .map(p -> String.format("Phòng %d: Tầng %d, Loại phòng: %s, Sức chứa tối đa: %d người, Đơn giá: %,.0f VND",
+                                p.getId(),
+                                p.getSoTang(),
+                                p.getMaLoaiPhong().getTenLoaiPhong(),
+                                p.getMaLoaiPhong().getSucChuaToiDa(),
+                                p.getMaLoaiPhong().getDonGia()))
+                        .toList();
+
+                return new BookedRoomsResponse(roomDetails);
+            } catch (Exception e) {
+                return new BookedRoomsResponse(List.of("Đã xảy ra lỗi khi kiểm tra phòng bận: " + e.getMessage()));
             }
         };
     }

@@ -1,7 +1,7 @@
 const TOKEN_KEY = "hotel_token";
 const USER_KEY  = "hotel_user";
 
-export function saveAuth(token: string, user: { name: string; role: string }) {
+export function saveAuth(token: string, user: { name: string; role: string; employeeId?: number | null }) {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
   document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=${60 * 60 * 24 * 7}`;
@@ -12,7 +12,7 @@ export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
 
-export function getUser(): { name: string; role: string } | null {
+export function getUser(): { name: string; role: string; employeeId?: number | null } | null {
   if (typeof window === "undefined") return null;
   const raw = localStorage.getItem(USER_KEY);
   return raw ? JSON.parse(raw) : null;

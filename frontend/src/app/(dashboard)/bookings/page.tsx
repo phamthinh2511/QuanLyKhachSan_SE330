@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { getUser } from "@/lib/auth";
 import {
   getAllBookings,
   submitBookingForm,
@@ -93,7 +94,9 @@ export default function BookingsPage() {
   const handleCheckIn = async (bookingId: number) => {
     try {
       setLoading(true);
-      await checkInBooking(bookingId);
+      const currUser = getUser();
+      const employeeId = currUser?.employeeId || 1;
+      await checkInBooking(bookingId, employeeId);
       showToast("Nhận phòng (Check-in) thành công! Đã tạo phiếu thuê phòng.");
       await fetchData();
     } catch (error: any) {
@@ -287,12 +290,15 @@ const searchedBookings = bookings.filter((b) => {
       const matchedRoom = rooms.find((r) => r.id === parseInt(formData.roomId));
       const donGiaPhong = dbStatus === "Đã hủy" ? 0.0 : (matchedRoom?.maLoaiPhong?.donGia || parseFloat(formData.roomPrice) || parseFloat(formData.amount) || 300000.0);
 
+      const currUser = getUser();
+      const employeeId = currUser?.employeeId || 1;
+
       const bookingPayload: BookingRequestPayload = {
         role: "NHAN_VIEN",
         loaiHinh: formData.bookingType || (dbStatus === "Đang sử dụng" ? "THUE_TRUC_TIEP" : "DAT_TRUOC"),
         maKhachHangId: parseInt(formData.customerId),
         maPhongId: parseInt(formData.roomId),
-        maNhanVienId: 1,
+        maNhanVienId: employeeId,
         ngayNhan: formData.ngayNhan,
         ngayTra: formData.ngayTra,
         donGia: donGiaPhong,
@@ -438,7 +444,7 @@ const searchedBookings = bookings.filter((b) => {
         <CheckoutModal
           maPhieuThue={checkoutBooking.id}
           maPhong={parseInt(checkoutBooking.roomNumber) || 0}
-          maNhanVien={1}
+          maNhanVien={getUser()?.employeeId || 1}
           khachHang={checkoutBooking.customerName}
           onSuccess={async (result) => {
             showToast(`Checkout thành công! Mã hóa đơn: #${result.maHoaDon}`);
