@@ -11,6 +11,8 @@ import RoomModal from "@/components/rooms/RoomModal";
 import { apiClient } from "@/lib/api/client";
 import CustomSelect from "@/components/ui/CustomSelect";
 import { mapBookingStatus } from "@/app/(dashboard)/bookings/page";
+import PageSkeleton from "@/components/ui/PageSkeleton";
+import PageError from "@/components/ui/PageError";
 
 interface BookingItem {
   id: number;
@@ -213,26 +215,13 @@ export default function RoomsPage() {
     }
   };
 
-  if (loading) return (
-    <div className="p-6 flex items-center justify-center min-h-64">
-      <div className="flex items-center gap-3 text-gray-500">
-        <span className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
-        Đang tải dữ liệu...
-      </div>
-    </div>
-  );
+  if (loading) {
+    return <PageSkeleton type="table" />;
+  }
 
-  if (error) return (
-    <div className="p-6 flex items-center justify-center min-h-64">
-      <div className="text-center space-y-3">
-        <p className="text-red-500 font-medium">{error}</p>
-        <button onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-xl hover:bg-blue-500 transition">
-          Thử lại
-        </button>
-      </div>
-    </div>
-  );
+  if (error) {
+    return <PageError message={error} />;
+  }
 
   return (
     <div className="p-6 space-y-6">

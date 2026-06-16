@@ -10,6 +10,8 @@ import CheckoutModal from "@/components/invoices/CheckoutModal";
 import clsx from "clsx";
 import { useToast } from "@/context/ToastContext";
 import CustomSelect from "@/components/ui/CustomSelect";
+import PageSkeleton from "@/components/ui/PageSkeleton";
+import PageError from "@/components/ui/PageError";
 
 const PAGE_SIZE = 50;
 
@@ -24,7 +26,7 @@ const statusStyle: Record<string, string> = {
 };
 
 export default function RentalsPage() {
-  const { rentals, loading, error, removeRental } = useRentals();
+  const { rentals, loading, error, refresh, removeRental } = useRentals();
   const { showToast } = useToast();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("Đang sử dụng");
@@ -147,14 +149,10 @@ export default function RentalsPage() {
       </div>
 
       {/* Table List */}
-      {loading && (!rentals || actualRentals.length === 0) ? (
-        <div className="p-12 text-center text-gray-400 text-sm bg-white border border-gray-100 rounded-2xl shadow-sm">
-          Đang đồng bộ dữ liệu phiếu thuê phòng...
-        </div>
-      ) : error ? (
-        <div className="p-12 text-center text-red-500 text-sm bg-white border border-gray-100 rounded-2xl shadow-sm">
-          {error}
-        </div>
+      {error && rentals.length === 0 ? (
+        <PageError message={error} onRetry={() => refresh()} />
+      ) : loading && rentals.length === 0 ? (
+        <PageSkeleton type="table" />
       ) : (
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">

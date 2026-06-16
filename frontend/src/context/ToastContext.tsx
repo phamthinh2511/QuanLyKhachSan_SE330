@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback } from "react";
 
-type ToastType = "success" | "error";
+type ToastType = "success" | "error" | "warning" | "info";
 
 interface Toast {
   id: string;
@@ -22,9 +22,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const showToast = useCallback((message: string, type: ToastType = "success") => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000); // Tăng thời gian hiển thị lên 4 giây để dễ đọc lỗi dài
+
+    // Chỉ tự đóng nếu toast không phải dạng lỗi (error)
+    if (type !== "error") {
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 4000);
+    }
   }, []);
 
   return (
@@ -38,21 +42,42 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             className={`flex items-start gap-3 p-4 rounded-xl shadow-lg border pointer-events-auto transition-all duration-300 animate-slide-in ${
               toast.type === "success"
                 ? "bg-green-50 border-green-200 text-green-800"
-                : "bg-red-50 border-red-200 text-red-800"
+                : toast.type === "error"
+                ? "bg-red-50 border-red-200 text-red-800"
+                : toast.type === "warning"
+                ? "bg-yellow-50 border-yellow-200 text-yellow-800"
+                : "bg-blue-50 border-blue-200 text-blue-800"
             }`}
           >
-            {toast.type === "success" ? (
+            {toast.type === "success" && (
               <svg className="w-5 h-5 text-green-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-            ) : (
+            )}
+            {toast.type === "error" && (
               <svg className="w-5 h-5 text-red-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             )}
+            {toast.type === "warning" && (
+              <svg className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            )}
+            {toast.type === "info" && (
+              <svg className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-800 mb-0.5">
-                {toast.type === "success" ? "Thành công" : "Có lỗi xảy ra"}
+                {toast.type === "success"
+                  ? "Thành công"
+                  : toast.type === "error"
+                  ? "Có lỗi xảy ra"
+                  : toast.type === "warning"
+                  ? "Cảnh báo"
+                  : "Thông báo"}
               </p>
               <span className="text-sm font-medium whitespace-pre-line break-words text-gray-700 leading-relaxed">
                 {toast.message}

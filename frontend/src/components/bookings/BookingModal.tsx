@@ -386,6 +386,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
         customerId = newCustomer.id;
         customerName = newCustomer.name;
       } catch (err: any) {
+        setIsSubmitting(false);
         if (err && err.isApiError && err.result) {
           setFieldErrors(err.result);
           const firstErr = Object.keys(err.result)[0];
@@ -393,7 +394,6 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
         } else {
           alert("Lỗi khi thêm mới khách hàng: " + (err.message || err));
         }
-        setIsSubmitting(false);
         return;
       }
     }
@@ -416,6 +416,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
         status: form.status.trim()
       });
     } catch (err: any) {
+      setIsSubmitting(false);
       console.log("Modal nhận diện lỗi từ Page truyền xuống:", err);
       if (err && err.isApiError && err.status === 422 && err.result) {
         setFieldErrors(err.result);
@@ -812,7 +813,8 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 border border-slate-200 text-slate-600 py-3 rounded-xl text-sm font-semibold hover:bg-slate-50 transition duration-150 shadow-sm"
+                disabled={isSubmitting}
+                className="flex-1 border border-slate-200 text-slate-600 py-3 rounded-xl text-sm font-semibold hover:bg-slate-50 transition duration-150 shadow-sm disabled:opacity-50 cursor-pointer"
               >
                 Hủy
               </button>

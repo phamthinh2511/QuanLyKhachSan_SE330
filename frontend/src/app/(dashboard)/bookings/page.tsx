@@ -23,6 +23,13 @@ import BookingAllTable from "@/components/bookings/BookingAllTable";
 import BookingModal from "@/components/bookings/BookingModal";
 import CustomSelect from "@/components/ui/CustomSelect";
 import CheckoutModal from "@/components/invoices/CheckoutModal";
+import PageSkeleton from "@/components/ui/PageSkeleton";
+import PageError from "@/components/ui/PageError";
+
+// Module-level caches
+let bookingsCache: Booking[] | null = null;
+let bookingsCustomersCache: CustomerResponse[] | null = null;
+let bookingsRoomsCache: RoomResponse[] | null = null;
 
 const today = new Date().toISOString().split("T")[0];
 const PAGE_SIZE_ALL = 50;
@@ -52,11 +59,12 @@ export const mapBookingStatus = (status: string): BookingStatus => {
 };
 
 export default function BookingsPage() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>(() => bookingsCache || []);
   const { showToast } = useToast();
-  const [customers, setCustomers] = useState<CustomerResponse[]>([]);
-  const [rooms, setRooms] = useState<RoomResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [customers, setCustomers] = useState<CustomerResponse[]>(() => bookingsCustomersCache || []);
+  const [rooms, setRooms] = useState<RoomResponse[]>(() => bookingsRoomsCache || []);
+  const [loading, setLoading] = useState(() => !bookingsCache);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Đặt trước");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE_ALL);
@@ -117,9 +125,12 @@ export default function BookingsPage() {
     return () => window.removeEventListener("click", closeMenu);
   }, []);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (force = false) => {
     try {
-      setLoading(true);
+      if (!bookingsCache || force) {
+        setLoading(true);
+      }
+      setError(null);
 
       const [response, customerRes, roomRes] = await Promise.all([
         getAllBookings(),
@@ -127,12 +138,13 @@ export default function BookingsPage() {
         getAllRooms().catch(() => [])
       ]);
 
-      setCustomers(customerRes);
+      let parsedCustomers = customerRes;
+      let parsedRooms = [];
       if (Array.isArray(roomRes)) {
-            setRooms(roomRes);
-          } else if (roomRes && typeof roomRes === 'object' && Array.isArray((roomRes as any).result)) {
-            setRooms((roomRes as any).result);
-          }
+        parsedRooms = roomRes;
+      } else if (roomRes && typeof roomRes === 'object' && Array.isArray((roomRes as any).result)) {
+        parsedRooms = (roomRes as any).result;
+      }
 
       let rawList: any[] = [];
 
@@ -159,9 +171,16 @@ export default function BookingsPage() {
         guests: b.guests || b.soKhach || 1
       }));
 
+      bookingsCache = mappedData;
+      bookingsCustomersCache = parsedCustomers;
+      bookingsRoomsCache = parsedRooms;
+
+      setCustomers(parsedCustomers);
+      setRooms(parsedRooms);
       setBookings(mappedData);
-    } catch (error) {
-      console.error("Lỗi đồng bộ danh sách đặt phòng:", error);
+    } catch (err: any) {
+      console.error("Lỗi đồng bộ danh sách đặt phòng:", err);
+      setError(err.message || "Lỗi đồng bộ danh sách đặt phòng");
     } finally {
       setLoading(false);
     }
@@ -295,20 +314,9 @@ const searchedBookings = bookings.filter((b) => {
       setEditing(null);
     } catch (error: any) {
       console.error("Lỗi lưu dữ liệu:", error);
-      if (error && error.response && error.response.status === 422) {
-              throw {
-                isApiError: true,
-                status: 422,
-                result: error.response.data.result || error.response.data,
-                message: error.message || "Dữ liệu đầu vào không hợp lệ!"
-              };
-            }alert("Thao tác thất bại: " + (error.message || "Lỗi kết nối Server API. Vui lòng kiểm tra Console log!"));
-                   throw {
-                     isApiError: true,
-                     status: 422,
-                     result: {},
-                     message: error.message
-                   };
+      const msg = error.message || "Lỗi kết nối Server API. Vui lòng kiểm tra Console log!";
+      showToast("Thao tác thất bại: " + msg, "error");
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -337,8 +345,10 @@ const searchedBookings = bookings.filter((b) => {
 
 
 
-      {loading && bookings.length === 0 ? (
-        <div className="p-12 text-center text-gray-400 text-sm">Đang đồng bộ dữ liệu hệ thống phòng...</div>
+      {error && bookings.length === 0 ? (
+        <PageError message={error} onRetry={() => fetchData(true)} />
+      ) : loading && bookings.length === 0 ? (
+        <PageSkeleton type="table" />
       ) : (
         <>
 

@@ -12,39 +12,60 @@ import { getReportData, ReportData } from "@/lib/api/invoices";
 import { Room } from "@/types/room";
 import { Booking } from "@/types/booking";
 import { getUser } from "@/lib/auth";
+import PageSkeleton from "@/components/ui/PageSkeleton";
+import PageError from "@/components/ui/PageError";
+
+// Module-level cache
+let dashboardRoomsCache: Room[] | null = null;
+let dashboardBookingsCache: Booking[] | null = null;
+let dashboardYearReportCache: ReportData | null = null;
+let dashboardMonthlyRevenueCache: number | null = null;
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
   
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [yearReport, setYearReport] = useState<ReportData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<number>(0);
+  const [rooms, setRooms] = useState<Room[]>(() => dashboardRoomsCache || []);
+  const [bookings, setBookings] = useState<Booking[]>(() => dashboardBookingsCache || []);
+  const [yearReport, setYearReport] = useState<ReportData | null>(() => dashboardYearReportCache);
+  const [loading, setLoading] = useState(() => !dashboardRoomsCache);
+  const [error, setError] = useState<string | null>(null);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<number>(() => dashboardMonthlyRevenueCache || 0);
 
   useEffect(() => {
     setUser(getUser());
 
-    async function loadDashboardData() {
+    async function loadDashboardData(force = false) {
       try {
-        setLoading(true);
+        if (!dashboardRoomsCache || force) {
+          setLoading(true);
+        }
+        setError(null);
         const currentYear = new Date().getFullYear();
         const currentMonth = new Date().getMonth() + 1;
 
         const [roomsData, bookingsRes, reportYearData, reportMonthData] = await Promise.all([
-          getRooms().catch(() => []),
-          getAllBookings().catch(() => ({ code: 200, result: [] })),
-          getReportData({ type: "year", year: currentYear }).catch(() => null),
-          getReportData({ type: "month", year: currentYear, value: currentMonth }).catch(() => null),
+          getRooms(),
+          getAllBookings(),
+          getReportData({ type: "year", year: currentYear }),
+          getReportData({ type: "month", year: currentYear, value: currentMonth }),
         ]);
 
+        const parsedBookings = bookingsRes.result || [];
+        const parsedRevenue = reportMonthData?.revenue || 0;
+
+        dashboardRoomsCache = roomsData;
+        dashboardBookingsCache = parsedBookings;
+        dashboardYearReportCache = reportYearData;
+        dashboardMonthlyRevenueCache = parsedRevenue;
+
         setRooms(roomsData);
-        setBookings(bookingsRes.result || []);
+        setBookings(parsedBookings);
         setYearReport(reportYearData);
-        setMonthlyRevenue(reportMonthData?.revenue || 0);
-      } catch (error) {
-        console.error("Lỗi khi tải dữ liệu dashboard:", error);
+        setMonthlyRevenue(parsedRevenue);
+      } catch (err: any) {
+        console.error("Lỗi khi tải dữ liệu dashboard:", err);
+        setError(err.message || "Lỗi tải dữ liệu trang chủ");
       } finally {
         setLoading(false);
       }
@@ -71,15 +92,12 @@ export default function DashboardPage() {
     { title: "Doanh thu tháng", value: monthlyRevenue.toLocaleString("vi-VN") + " đ", icon: <DollarSign className="w-6 h-6 text-emerald-600" />, iconBg: "bg-emerald-100" },
   ];
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-full min-h-[400px]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-          <p className="text-gray-400 text-sm font-medium">Đang tải dữ liệu trang chủ...</p>
-        </div>
-      </div>
-    );
+  if (error && rooms.length === 0) {
+    return <PageError message={error} />;
+  }
+
+  if (loading && rooms.length === 0) {
+    return <PageSkeleton type="dashboard" />;
   }
 
   return (
