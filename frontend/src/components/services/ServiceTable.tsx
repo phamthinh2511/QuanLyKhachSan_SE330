@@ -6,6 +6,7 @@ interface Props {
   services: Service[];
   onEdit: (s: Service) => void;
   onDelete: (id: number) => void;
+  isAdmin?: boolean;
 }
 
 const getDescriptionBadgeStyle = (desc: string) => {
@@ -19,7 +20,7 @@ const getDescriptionBadgeStyle = (desc: string) => {
   return "bg-sky-100 text-sky-800 border-sky-200 hover:bg-sky-200 hover:text-sky-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs";
 };
 
-export default function ServiceTable({ services, onEdit, onDelete }: Props) {
+export default function ServiceTable({ services, onEdit, onDelete, isAdmin = true }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-100">
@@ -30,7 +31,7 @@ export default function ServiceTable({ services, onEdit, onDelete }: Props) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-gray-400 text-xs uppercase tracking-wide">
-              {["ID", "Tên dịch vụ", "Giá", "Mô tả", "Thao tác"].map((h) => (
+              {["ID", "Tên dịch vụ", "Giá", "Mô tả", ...(isAdmin ? ["Thao tác"] : [])].map((h) => (
                 <th key={h} className="px-6 py-3 text-left font-medium">{h}</th>
               ))}
             </tr>
@@ -38,7 +39,7 @@ export default function ServiceTable({ services, onEdit, onDelete }: Props) {
           <tbody className="divide-y divide-gray-50">
             {services.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-10 text-center text-gray-400">
+                <td colSpan={isAdmin ? 5 : 4} className="px-6 py-10 text-center text-gray-400">
                   Không tìm thấy dịch vụ nào.
                 </td>
               </tr>
@@ -52,20 +53,22 @@ export default function ServiceTable({ services, onEdit, onDelete }: Props) {
                     {s.description || "Dịch vụ phòng"}
                   </span>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-1.5">
-                    <button onClick={() => onEdit(s)}
-                      className="p-1.5 text-amber-600 bg-amber-50 border border-amber-100 hover:bg-amber-100 rounded-lg transition flex items-center justify-center"
-                      title="Chỉnh sửa">
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => onDelete(s.id)}
-                      className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center"
-                      title="Xóa">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
+                {isAdmin && (
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-1.5">
+                      <button onClick={() => onEdit(s)}
+                        className="p-1.5 text-amber-600 bg-amber-50 border border-amber-100 hover:bg-amber-100 rounded-lg transition flex items-center justify-center"
+                        title="Chỉnh sửa">
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => onDelete(s.id)}
+                        className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center"
+                        title="Xóa">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

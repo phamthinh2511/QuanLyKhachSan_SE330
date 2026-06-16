@@ -6,6 +6,7 @@ interface Props {
   roomTypes: RoomTypeModel[];
   onEdit: (rt: RoomTypeModel) => void;
   onDelete: (id: number) => void;
+  isAdmin?: boolean;
 }
 
 const getDescriptionBadgeStyle = (moTa: string) => {
@@ -19,7 +20,7 @@ const getDescriptionBadgeStyle = (moTa: string) => {
   return "bg-sky-100 text-sky-800 border border-sky-200 hover:bg-sky-200 hover:text-sky-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs";
 };
 
-export default function RoomTypeTable({ roomTypes, onEdit, onDelete }: Props) {
+export default function RoomTypeTable({ roomTypes, onEdit, onDelete, isAdmin = true }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-100">
@@ -33,7 +34,7 @@ export default function RoomTypeTable({ roomTypes, onEdit, onDelete }: Props) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-gray-400 text-xs uppercase tracking-wide">
-              {["ID", "Tên loại phòng", "Đơn giá", "Sức chứa", "Mô tả", "Thao tác"].map((h) => (
+              {["ID", "Tên loại phòng", "Đơn giá", "Sức chứa", "Mô tả", ...(isAdmin ? ["Thao tác"] : [])].map((h) => (
                 <th key={h} className="px-4 py-3 text-left font-medium whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -41,7 +42,7 @@ export default function RoomTypeTable({ roomTypes, onEdit, onDelete }: Props) {
           <tbody className="divide-y divide-gray-50">
             {roomTypes.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-10 text-center text-gray-400">
+                <td colSpan={isAdmin ? 6 : 5} className="px-6 py-10 text-center text-gray-400">
                   Không có dữ liệu loại phòng.
                 </td>
               </tr>
@@ -59,24 +60,26 @@ export default function RoomTypeTable({ roomTypes, onEdit, onDelete }: Props) {
                       {rt.moTa}
                     </span>
                   </td>
-                  <td className="px-4 py-4">
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => onEdit(rt)}
-                        className="p-1.5 text-amber-600 bg-amber-50 border border-amber-100 hover:bg-amber-100 rounded-lg transition flex items-center justify-center"
-                        title="Chỉnh sửa"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(rt.id)}
-                        className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center"
-                        title="Xóa"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+                  {isAdmin && (
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => onEdit(rt)}
+                          className="p-1.5 text-amber-600 bg-amber-50 border border-amber-100 hover:bg-amber-100 rounded-lg transition flex items-center justify-center"
+                          title="Chỉnh sửa"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => onDelete(rt.id)}
+                          className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center"
+                          title="Xóa"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

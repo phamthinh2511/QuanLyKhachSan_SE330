@@ -6,6 +6,7 @@ interface Props {
   rooms: Room[];
   onEdit: (r: Room) => void;
   onDelete: (id: number) => void;
+  isAdmin?: boolean;
 }
 
 const statusStyle: Record<string, string> = {
@@ -15,7 +16,7 @@ const statusStyle: Record<string, string> = {
   "Bảo trì":        "bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 hover:text-amber-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
 };
 
-export default function RoomGrid({ rooms, onEdit, onDelete }: Props) {
+export default function RoomGrid({ rooms, onEdit, onDelete, isAdmin = true }: Props) {
   if (rooms.length === 0) {
     return (
       <div className="text-center py-16 text-gray-400">Không tìm thấy phòng nào.</div>
@@ -84,20 +85,22 @@ export default function RoomGrid({ rooms, onEdit, onDelete }: Props) {
           </span>
 
           {/* Actions */}
-          <div className="flex gap-2 mt-auto pt-2 border-t border-gray-100">
-            <button
-              onClick={() => onEdit(r)}
-              className="flex-1 flex items-center justify-center gap-1.5 bg-amber-50 border border-amber-100 text-amber-600 hover:bg-amber-100 py-2 rounded-xl text-xs font-semibold transition"
-            >
-              <Pencil className="w-3 h-3" /> Chỉnh sửa
-            </button>
-            <button
-              onClick={() => onDelete(r.id)}
-              className="p-2 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-xl transition flex items-center justify-center"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="flex gap-2 mt-auto pt-2 border-t border-gray-100">
+              <button
+                onClick={() => onEdit(r)}
+                className="flex-1 flex items-center justify-center gap-1.5 bg-amber-50 border border-amber-100 text-amber-600 hover:bg-amber-100 py-2 rounded-xl text-xs font-semibold transition"
+              >
+                <Pencil className="w-3 h-3" /> Chỉnh sửa
+              </button>
+              <button
+                onClick={() => onDelete(r.id)}
+                className="p-2 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-xl transition flex items-center justify-center"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       ))}
     </div>

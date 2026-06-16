@@ -6,6 +6,7 @@ import hotelmanagement.backend.dto.response.DichvuResponseDto;
 import hotelmanagement.backend.service.DichvuService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class DichvuController {
     private final DichvuService dichvuService;
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
     public ApiResponse<List<DichvuResponseDto>> getAll() { 
         return ApiResponse.<List<DichvuResponseDto>>builder()
                 .result(dichvuService.getAll())
@@ -24,6 +26,7 @@ public class DichvuController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
     public ApiResponse<DichvuResponseDto> getById(@PathVariable Integer id) {
         return ApiResponse.<DichvuResponseDto>builder()
                 .result(dichvuService.getById(id))
@@ -31,6 +34,7 @@ public class DichvuController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<DichvuResponseDto> create(@Valid @RequestBody DichvuRequestDto dto) {
         return ApiResponse.<DichvuResponseDto>builder()
                 .code(201)
@@ -40,6 +44,7 @@ public class DichvuController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<DichvuResponseDto> update(
             @PathVariable Integer id,
             @Valid @RequestBody DichvuRequestDto dto){
@@ -50,6 +55,7 @@ public class DichvuController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<Void> delete(@PathVariable Integer id) {
         dichvuService.delete(id);
         return ApiResponse.<Void>builder()
@@ -58,6 +64,7 @@ public class DichvuController {
     }
 
     @GetMapping("/trash")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<List<DichvuResponseDto>> getTrashBin() {
         return ApiResponse.<List<DichvuResponseDto>>builder()
                 .result(dichvuService.getTrashBin())
@@ -65,6 +72,7 @@ public class DichvuController {
     }
 
     @PutMapping("/{id}/restore")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<DichvuResponseDto> restore(@PathVariable Integer id) {
         return ApiResponse.<DichvuResponseDto>builder()
                 .message("Khôi phục dịch vụ thành công")
@@ -73,6 +81,7 @@ public class DichvuController {
     }
 
     @DeleteMapping("/{id}/hard")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<Void> hardDelete(@PathVariable Integer id) {
         dichvuService.hardDelete(id);
         return ApiResponse.<Void>builder()

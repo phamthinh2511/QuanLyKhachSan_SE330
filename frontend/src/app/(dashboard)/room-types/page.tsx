@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useRoomTypes } from "@/hooks/useRoomTypes";
 import { useToast } from "@/context/ToastContext";
@@ -9,12 +9,20 @@ import RoomTypeTable from "@/components/room-types/RoomTypeTable";
 import RoomTypeModal from "@/components/room-types/RoomTypeModal";
 import PageSkeleton from "@/components/ui/PageSkeleton";
 import PageError from "@/components/ui/PageError";
+import { getUser } from "@/lib/auth";
 
 const PAGE_SIZE = 50;
 
 export default function RoomTypesPage() {
   const { roomTypes, loading, error, handleCreate, handleUpdate, handleDelete } = useRoomTypes();
   const { showToast } = useToast();
+
+  const [isAdmin, setIsAdmin] = useState(true);
+
+  useEffect(() => {
+    const currUser = getUser();
+    setIsAdmin(currUser?.role === "ADMIN");
+  }, []);
 
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -84,12 +92,14 @@ export default function RoomTypesPage() {
             value={search} onChange={(e) => handleSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
-        <button
-          onClick={() => { setEditing(null); setModalOpen(true); }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
-        >
-          <Plus className="w-4 h-4" /> Thêm loại phòng
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => { setEditing(null); setModalOpen(true); }}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
+          >
+            <Plus className="w-4 h-4" /> Thêm loại phòng
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -97,6 +107,7 @@ export default function RoomTypesPage() {
         roomTypes={visibleRoomTypes}
         onEdit={(rt) => { setEditing(rt); setModalOpen(true); }}
         onDelete={handleDeleteConfirm}
+        isAdmin={isAdmin}
       />
 
       {/* Load more */}

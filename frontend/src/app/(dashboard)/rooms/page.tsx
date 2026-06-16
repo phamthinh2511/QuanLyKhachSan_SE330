@@ -13,6 +13,7 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import { mapBookingStatus } from "@/app/(dashboard)/bookings/page";
 import PageSkeleton from "@/components/ui/PageSkeleton";
 import PageError from "@/components/ui/PageError";
+import { getUser } from "@/lib/auth";
 
 interface BookingItem {
   id: number;
@@ -31,6 +32,12 @@ const PAGE_SIZE = 10;
 
 export default function RoomsPage() {
   const { rooms, loading, error, handleCreate, handleUpdate, handleDelete } = useRooms();
+  const [isAdmin, setIsAdmin] = useState(true);
+
+  useEffect(() => {
+    const currUser = getUser();
+    setIsAdmin(currUser?.role === "ADMIN");
+  }, []);
 
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("Tất cả");
@@ -243,10 +250,12 @@ export default function RoomsPage() {
             value={search} onChange={(e) => handleSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
-        <button onClick={() => { setEditing(null); setModalOpen(true); }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition shrink-0">
-          <Plus className="w-4 h-4" /> Thêm phòng
-        </button>
+        {isAdmin && (
+          <button onClick={() => { setEditing(null); setModalOpen(true); }}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition shrink-0">
+            <Plus className="w-4 h-4" /> Thêm phòng
+          </button>
+        )}
         <CustomSelect value={filterType} onChange={(e) => handleFilterType(e.target.value)}
           className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option>Tất cả</option>
@@ -282,8 +291,8 @@ export default function RoomsPage() {
       </div>
 
       {viewMode === "list"
-        ? <RoomTable rooms={visibleRooms} onEdit={(r) => { setEditing(r); setModalOpen(true); }} onDelete={handleDeleteConfirm} />
-        : <RoomGrid  rooms={visibleRooms} onEdit={(r) => { setEditing(r); setModalOpen(true); }} onDelete={handleDeleteConfirm} />
+        ? <RoomTable rooms={visibleRooms} onEdit={(r) => { setEditing(r); setModalOpen(true); }} onDelete={handleDeleteConfirm} isAdmin={isAdmin} />
+        : <RoomGrid  rooms={visibleRooms} onEdit={(r) => { setEditing(r); setModalOpen(true); }} onDelete={handleDeleteConfirm} isAdmin={isAdmin} />
       }
 
       {hasMore && (
