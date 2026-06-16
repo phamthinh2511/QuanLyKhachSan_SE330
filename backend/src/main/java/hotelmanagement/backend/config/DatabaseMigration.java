@@ -51,6 +51,16 @@ public class DatabaseMigration implements CommandLineRunner {
         } catch (Exception e) {
             System.out.println("[DB Migration] Index idx_hoadon_ngaythanhtoan error: " + e.getMessage());
         }
+
+        // Reset sequence loaiphong để tránh duplicate key
+        try {
+            jdbcTemplate.execute(
+                "SELECT setval('loaiphong_maloaiphong_seq', COALESCE((SELECT MAX(maloaiphong) FROM loaiphong), 0) + 1, false)"
+            );
+            System.out.println("[DB Migration] loaiphong sequence reset => OK");
+        } catch (Exception e) {
+            System.out.println("[DB Migration] loaiphong sequence reset: " + e.getMessage());
+        }
     }
 }
 
