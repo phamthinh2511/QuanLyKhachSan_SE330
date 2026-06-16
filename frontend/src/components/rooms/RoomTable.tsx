@@ -6,6 +6,7 @@ interface Props {
   rooms: Room[];
   onEdit: (r: Room) => void;
   onDelete: (id: number) => void;
+  isAdmin?: boolean;
 }
 
 const statusStyle: Record<string, string> = {
@@ -15,7 +16,7 @@ const statusStyle: Record<string, string> = {
   "Bảo trì":        "bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 hover:text-amber-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
 };
 
-export default function RoomTable({ rooms, onEdit, onDelete }: Props) {
+export default function RoomTable({ rooms, onEdit, onDelete, isAdmin = true }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-100">
@@ -27,7 +28,7 @@ export default function RoomTable({ rooms, onEdit, onDelete }: Props) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-gray-400 text-xs uppercase tracking-wide">
-              {["Số phòng", "Loại", "Tầng", "Sức chứa", "Giá/đêm", "Trạng thái", "Thao tác"].map((h) => (
+              {["Số phòng", "Loại", "Tầng", "Sức chứa", "Giá/đêm", "Trạng thái", ...(isAdmin ? ["Thao tác"] : [])].map((h) => (
                 <th key={h} className="px-6 py-3 text-left font-medium">{h}</th>
               ))}
             </tr>
@@ -35,7 +36,7 @@ export default function RoomTable({ rooms, onEdit, onDelete }: Props) {
           <tbody className="divide-y divide-gray-50">
             {rooms.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-10 text-center text-gray-400">Không tìm thấy phòng nào.</td>
+                <td colSpan={isAdmin ? 7 : 6} className="px-6 py-10 text-center text-gray-400">Không tìm thấy phòng nào.</td>
               </tr>
             ) : rooms.map((r) => (
               <tr key={r.id} className="hover:bg-gray-50 transition">
@@ -49,22 +50,24 @@ export default function RoomTable({ rooms, onEdit, onDelete }: Props) {
                     {r.status}
                   </span>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => onEdit(r)}
-                      className="flex items-center gap-1.5 bg-amber-50 border border-amber-100 text-amber-600 hover:bg-amber-100 px-3 py-1.5 rounded-lg text-xs font-medium transition"
-                    >
-                      <Pencil className="w-3 h-3" /> Sửa
-                    </button>
-                    <button
-                      onClick={() => onDelete(r.id)}
-                      className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
+                {isAdmin && (
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => onEdit(r)}
+                        className="flex items-center gap-1.5 bg-amber-50 border border-amber-100 text-amber-600 hover:bg-amber-100 px-3 py-1.5 rounded-lg text-xs font-medium transition"
+                      >
+                        <Pencil className="w-3 h-3" /> Sửa
+                      </button>
+                      <button
+                        onClick={() => onDelete(r.id)}
+                        className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

@@ -5,9 +5,10 @@ interface Props {
   services: Service[];
   onEdit: (s: Service) => void;
   onDelete: (id: number) => void;
+  isAdmin?: boolean;
 }
 
-export default function ServiceGrid({ services, onEdit, onDelete }: Props) {
+export default function ServiceGrid({ services, onEdit, onDelete, isAdmin = true }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
       {services.map((s) => (
@@ -22,16 +23,18 @@ export default function ServiceGrid({ services, onEdit, onDelete }: Props) {
                 <p className="font-semibold text-gray-800">{s.name}</p>
               </div>
             </div>
-            <div className="flex gap-1">
-              <button onClick={() => onEdit(s)}
-                className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
-                <Pencil className="w-4 h-4" />
-              </button>
-              <button onClick={() => onDelete(s.id)}
-                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+            {isAdmin && (
+              <div className="flex gap-1">
+                <button onClick={() => onEdit(s)}
+                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                  <Pencil className="w-4 h-4" />
+                </button>
+                <button onClick={() => onDelete(s.id)}
+                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Description */}

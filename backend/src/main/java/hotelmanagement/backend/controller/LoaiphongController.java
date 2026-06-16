@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -17,21 +18,25 @@ public class LoaiphongController {
     private final LoaiphongService loaiphongService;
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
     public ResponseEntity<List<LoaiPhongResponseDto>> getAll() {
         return ResponseEntity.ok(loaiphongService.getAll());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
     public ResponseEntity<LoaiPhongResponseDto> getById(@PathVariable Integer id) {
         return ResponseEntity.ok(loaiphongService.getById(id));
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<LoaiPhongResponseDto> create(@RequestBody LoaiPhongRequestDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(loaiphongService.create(dto));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<LoaiPhongResponseDto> update(
             @PathVariable Integer id,
             @RequestBody LoaiPhongRequestDto dto) {
@@ -39,22 +44,26 @@ public class LoaiphongController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         loaiphongService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/trash")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<List<LoaiPhongResponseDto>> getTrashBin() {
         return ResponseEntity.ok(loaiphongService.getTrashBin());
     }
 
     @PutMapping("/{id}/restore")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<LoaiPhongResponseDto> restore(@PathVariable Integer id) {
         return ResponseEntity.ok(loaiphongService.restore(id));
     }
 
     @DeleteMapping("/{id}/hard")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> hardDelete(@PathVariable Integer id) {
         loaiphongService.hardDelete(id);
         return ResponseEntity.noContent().build();

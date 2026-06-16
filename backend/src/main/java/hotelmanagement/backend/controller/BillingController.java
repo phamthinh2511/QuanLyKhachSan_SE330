@@ -10,6 +10,7 @@ import hotelmanagement.backend.dto.response.CheckoutResponse;
 import hotelmanagement.backend.service.BillingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
 
 /**
@@ -20,6 +21,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/billing")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyAuthority('ADMIN', 'NHAN_VIEN')")
 public class BillingController {
     
     private final BillingService billingService;

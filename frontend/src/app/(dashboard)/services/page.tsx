@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useServices } from "@/hooks/useServices";
 import { Service } from "@/types/service";
@@ -11,6 +11,7 @@ import ServiceTable from "@/components/services/ServiceTable";
 import ServiceModal from "@/components/services/ServiceModal";
 import PageSkeleton from "@/components/ui/PageSkeleton";
 import PageError from "@/components/ui/PageError";
+import { getUser } from "@/lib/auth";
 
 const PAGE_SIZE = 10;
 
@@ -20,6 +21,13 @@ export default function ServicesPage() {
     handleCreate, handleUpdate, handleDelete, // ← từ hook
   } = useServices();
   const { showToast } = useToast();
+
+  const [isAdmin, setIsAdmin] = useState(true);
+
+  useEffect(() => {
+    const currUser = getUser();
+    setIsAdmin(currUser?.role === "ADMIN");
+  }, []);
 
   const [search, setSearch] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -85,15 +93,17 @@ export default function ServicesPage() {
       <div className="p-6 rounded-lg bg-white shadow-sm item-start sm:flex sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Quản lý dịch vụ</h1>
-          <p className="text-gray-500 text-sm">Welcome back, Admin</p>
+          <p className="text-gray-500 text-sm">Welcome back, {isAdmin ? "Admin" : "Nhân viên"}</p>
         </div>
-        <button
-          onClick={() => { setEditing(null); setModalOpen(true); }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition h-10"
-        >
-          <Plus className="w-4 h-4" />
-          Thêm dịch vụ
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => { setEditing(null); setModalOpen(true); }}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition h-10"
+          >
+            <Plus className="w-4 h-4" />
+            Thêm dịch vụ
+          </button>
+        )}
       </div>
 
       {/* Stat Cards */}
@@ -104,6 +114,7 @@ export default function ServicesPage() {
         services={services}
         onEdit={handleEdit}
         onDelete={handleDeleteConfirm} // ← đổi thành handleDeleteConfirm
+        isAdmin={isAdmin}
       />
 
       {/* Search + Filter + Table */}
@@ -127,6 +138,7 @@ export default function ServicesPage() {
           services={visibleServices}
           onEdit={handleEdit}
           onDelete={handleDeleteConfirm} // ← đổi thành handleDeleteConfirm
+          isAdmin={isAdmin}
         />
 
         {hasMore && (
