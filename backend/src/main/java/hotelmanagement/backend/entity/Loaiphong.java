@@ -12,7 +12,8 @@ import lombok.Setter;
 @Table(name = "loaiphong")
 public class Loaiphong {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SequenceGenerator(name = "loaiphong_seq", sequenceName = "loaiphong_maloaiphong_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "loaiphong_seq")
     @Column(name = "MaLoaiPhong", nullable = false)
     private Integer id;
 
