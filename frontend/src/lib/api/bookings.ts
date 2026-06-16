@@ -2,6 +2,7 @@ import { apiClient } from "./client";
 import { Booking } from "@/types/booking";
 
 export interface BookingRequestPayload {
+  id?: number;
   maKhachHangId: number;
   maPhongId: number;
   maNhanVienId?: number;

@@ -304,6 +304,9 @@ export default function ReportsPage() {
               data={chartData}
               stats={stats}
               period={getPeriodLabel()}
+              filterType={filterType}
+              selectedYear={selectedYear}
+              selectedValue={selectedValue}
             />
           </div>
         </div>

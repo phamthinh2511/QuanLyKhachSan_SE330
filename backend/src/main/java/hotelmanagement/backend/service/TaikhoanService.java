@@ -51,7 +51,7 @@ public class TaikhoanService {
 
         Taikhoan tk = new Taikhoan();
         tk.setTenDangNhap(dto.getUsername());
-        tk.setMatKhau(passwordEncoder.encode(dto.getPassword()));
+        tk.setMatKhau(passwordEncoder.encode(dto.getPassword() != null && !dto.getPassword().trim().isEmpty() ? dto.getPassword() : "123456"));
         tk.setLoaiTaiKhoan(dto.getRole());
         tk.setNgayTao(LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")));
 
@@ -81,6 +81,18 @@ public class TaikhoanService {
         tk.setIsDeleted(true);
         tk.setDeletedAt(java.time.LocalDateTime.now());
         taikhoanRepository.save(tk);
+
+        // Đồng bộ xóa nhân viên liên kết nếu có
+        java.util.Optional<hotelmanagement.backend.entity.Nhanvien> nvOpt = nhanvienRepository.findByTaikhoanId(id);
+        if (nvOpt.isPresent()) {
+            hotelmanagement.backend.entity.Nhanvien nv = nvOpt.get();
+            if (!nv.getIsDeleted()) {
+                nv.setIsDeleted(true);
+                nv.setDeletedAt(java.time.LocalDateTime.now());
+                nv.setTrangThai(hotelmanagement.backend.enums.TrangThaiNhanVien.NGHI_VIEC.name());
+                nhanvienRepository.save(nv);
+            }
+        }
     }
 
     public List<TaikhoanResponseDto> getTrashBin() {
@@ -96,9 +108,33 @@ public class TaikhoanService {
         if (!tk.getIsDeleted()) {
             throw new RuntimeException("Tai khoan khong nam trong thung rac");
         }
+
+        // Kiểm tra trùng tên đăng nhập hoạt động
+        if (taikhoanRepository.existsByTenDangNhapAndIsDeletedFalse(tk.getTenDangNhap())) {
+            throw new RuntimeException("Ten dang nhap cua tai khoan nay da ton tai va dang hoat dong trong he thong");
+        }
+
         tk.setIsDeleted(false);
         tk.setDeletedAt(null);
-        return toResponseDto(taikhoanRepository.save(tk));
+        Taikhoan savedTk = taikhoanRepository.save(tk);
+
+        // Đồng bộ khôi phục nhân viên liên kết nếu nhân viên đó cũng đang bị xóa
+        java.util.Optional<hotelmanagement.backend.entity.Nhanvien> nvOpt = nhanvienRepository.findByTaikhoanId(id);
+        if (nvOpt.isPresent()) {
+            hotelmanagement.backend.entity.Nhanvien nv = nvOpt.get();
+            if (nv.getIsDeleted()) {
+                // Kiểm tra trùng số điện thoại trước khi khôi phục nhân viên
+                if (nhanvienRepository.existsBySoDienThoaiAndIsDeletedFalse(nv.getSoDienThoai())) {
+                    throw new RuntimeException("Khong the khoi phuc dong bo nhan vien vi so dien thoai da ton tai");
+                }
+                nv.setIsDeleted(false);
+                nv.setDeletedAt(null);
+                nv.setTrangThai(hotelmanagement.backend.enums.TrangThaiNhanVien.DANG_LAM_VIEC.name());
+                nhanvienRepository.save(nv);
+            }
+        }
+
+        return toResponseDto(savedTk);
     }
 
     public void hardDelete(Integer id) {

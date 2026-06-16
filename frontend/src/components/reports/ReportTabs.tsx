@@ -14,9 +14,12 @@ interface Props {
   data: { labels: string[]; revenue: number[]; profit: number[]; occupancy: number[]; guests: number[] };
   stats: { revenue: number; profit: number; occupancy: number; guests: number; expenses: number };
   period: Period;
+  filterType: "month" | "quarter" | "year";
+  selectedYear: number;
+  selectedValue: number;
 }
 
-export default function ReportTabs({ activeTab, onTabChange, data, stats, period }: Props) {
+export default function ReportTabs({ activeTab, onTabChange, data, stats, period, filterType, selectedYear, selectedValue }: Props) {
   return (
     <div className="space-y-4">
       {/* Tab buttons */}
@@ -36,7 +39,13 @@ export default function ReportTabs({ activeTab, onTabChange, data, stats, period
       {/* Tab content */}
       {activeTab === "Phân tích doanh thu"  && <RevenueAnalysis  data={data} stats={stats} />}
       {activeTab === "Tỉ lệ bận phòng"    && <OccupancyRate    data={data} />}
-      {activeTab === "Sử dụng dịch vụ"     && <ServiceUsageReport />}
+      {activeTab === "Sử dụng dịch vụ"     && (
+        <ServiceUsageReport
+          filterType={filterType}
+          selectedYear={selectedYear}
+          selectedValue={selectedValue}
+        />
+      )}
       {activeTab === "Năng suất phòng"  && <RoomPerformance />}
     </div>
   );

@@ -79,11 +79,14 @@ public class NhanvienService {
         Taikhoan tk = null;
         if (dto.getTenDangNhap() != null && !dto.getTenDangNhap().trim().isEmpty()) {
             if (taikhoanRepository.existsByTenDangNhapAndIsDeletedFalse(dto.getTenDangNhap())) {
-                throw new RuntimeException("Ten dang nhap da ton tai trong he thong");
+                throw new RuntimeException("Tên đăng nhập đã tồn tại trong hệ thống");
+            }
+            if (dto.getMatKhau() == null || dto.getMatKhau().trim().isEmpty()) {
+                throw new RuntimeException("Mật khẩu không được để trống khi tạo mới nhân viên");
             }
             tk = new Taikhoan();
             tk.setTenDangNhap(dto.getTenDangNhap());
-            tk.setMatKhau(passwordEncoder.encode(dto.getMatKhau() != null && !dto.getMatKhau().isEmpty() ? dto.getMatKhau() : "123456"));
+            tk.setMatKhau(passwordEncoder.encode(dto.getMatKhau()));
             tk.setLoaiTaiKhoan(dto.getLoaiTaiKhoan() != null ? dto.getLoaiTaiKhoan() : "USER");
             tk.setNgayTao(LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")));
             tk = taikhoanRepository.save(tk);
@@ -161,16 +164,26 @@ public class NhanvienService {
         if (!nv.getIsDeleted()) {
             throw new RuntimeException("Nhan vien khong nam trong thung rac");
         }
-        nv.setIsDeleted(false);
-        nv.setDeletedAt(null);
-        nv.setTrangThai(TrangThaiNhanVien.DANG_LAM_VIEC.name());
+
+        // Kiểm tra xem số điện thoại của nhân viên muốn khôi phục có đang hoạt động trong hệ thống hay không
+        if (nhanvienRepository.existsBySoDienThoaiAndIsDeletedFalse(nv.getSoDienThoai())) {
+            throw new RuntimeException("So dien thoai cua nhan vien nay da ton tai va dang hoat dong trong he thong");
+        }
 
         if (nv.getTaikhoan() != null) {
             Taikhoan tk = nv.getTaikhoan();
+            // Kiểm tra xem tên đăng nhập của tài khoản nhân viên này có đang hoạt động hay không
+            if (taikhoanRepository.existsByTenDangNhapAndIsDeletedFalse(tk.getTenDangNhap())) {
+                throw new RuntimeException("Ten dang nhap cua tai khoan nhan vien nay da ton tai va dang hoat dong trong he thong");
+            }
             tk.setIsDeleted(false);
             tk.setDeletedAt(null);
             taikhoanRepository.save(tk);
         }
+
+        nv.setIsDeleted(false);
+        nv.setDeletedAt(null);
+        nv.setTrangThai(TrangThaiNhanVien.DANG_LAM_VIEC.name());
 
         return toResponseDto(nhanvienRepository.save(nv));
     }

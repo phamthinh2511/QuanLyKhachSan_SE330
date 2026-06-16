@@ -373,12 +373,25 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
         if (capacity > 0 && form.guests !== "" && form.guests > capacity) {
           newErrors.soKhach = `Phòng này chỉ chứa tối đa ${capacity} người`;
         }
+
+        // Kiểm tra phòng trống trong khoảng thời gian đã chọn
+        if (form.checkIn && form.checkOut && !isRoomAvailable(form.roomNumber)) {
+          newErrors.maPhongId = "Phòng đã có lịch đặt hoặc đang được sử dụng trong khoảng thời gian này";
+        }
       }
     }
 
     if (!isNotEmpty(form.checkIn)) {
       newErrors.ngayNhan = "Vui lòng chọn ngày check-in";
+    } else {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const checkInDate = new Date(form.checkIn);
+      if (checkInDate < today && !booking) {
+        newErrors.ngayNhan = "Ngày check-in không được ở quá khứ";
+      }
     }
+
     if (!isNotEmpty(form.checkOut)) {
       newErrors.ngayTra = "Vui lòng chọn ngày check-out";
     } else if (form.checkIn && new Date(form.checkOut) <= new Date(form.checkIn)) {
@@ -610,7 +623,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                     required
                     placeholder="Nguyễn Văn A"
                   />
-                  {fieldErrors.customerName && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.customerName}</span>}
+                  {fieldErrors.customerName && <p className="text-red-500 text-xs mt-1 font-medium">{fieldErrors.customerName}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Giới tính</label>
@@ -639,7 +652,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                     required
                     placeholder="Nhập SĐT để tự hoàn tất..."
                   />
-                  {fieldErrors.customerPhone && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.customerPhone}</span>}
+                  {fieldErrors.customerPhone && <p className="text-red-500 text-xs mt-1 font-medium">{fieldErrors.customerPhone}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email</label>
@@ -652,7 +665,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                     required
                     placeholder="Nhập Email để tự hoàn tất..."
                   />
-                  {fieldErrors.customerEmail && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.customerEmail}</span>}
+                  {fieldErrors.customerEmail && <p className="text-red-500 text-xs mt-1 font-medium">{fieldErrors.customerEmail}</p>}
                 </div>
               </div>
 
@@ -668,7 +681,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                     required
                     placeholder="Nhập CCCD để tự hoàn tất..."
                   />
-                  {fieldErrors.customerIdCard && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.customerIdCard}</span>}
+                  {fieldErrors.customerIdCard && <p className="text-red-500 text-xs mt-1 font-medium">{fieldErrors.customerIdCard}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Ngày sinh</label>
@@ -678,8 +691,8 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                     value={form.customerBirthday}
                     onChange={(e) => handleCustomerFieldChange("customerBirthday", e.target.value)}
                     className={getInputStyle("customerBirthday")}
-                    required
                   />
+                  {fieldErrors.customerBirthday && <p className="text-red-500 text-xs mt-1 font-medium">{fieldErrors.customerBirthday}</p>}
                 </div>
               </div>
 
@@ -695,6 +708,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                     required
                     placeholder="Hà Nội, Việt Nam"
                   />
+                  {fieldErrors.customerAddress && <p className="text-red-500 text-xs mt-1 font-medium">{fieldErrors.customerAddress}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Hạng khách hàng</label>
@@ -753,7 +767,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                         </option>
                       ))}
                   </CustomSelect>
-                  {fieldErrors.maPhongId && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.maPhongId}</span>}
+                  {fieldErrors.maPhongId && <p className="text-red-500 text-xs mt-1 font-medium">{fieldErrors.maPhongId}</p>}
                 </div>
 
                 <div>
@@ -783,7 +797,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                     className={getInputStyle("ngayNhan")}
                     required
                   />
-                  {fieldErrors.ngayNhan && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.ngayNhan}</span>}
+                  {fieldErrors.ngayNhan && <p className="text-red-500 text-xs mt-1 font-medium">{fieldErrors.ngayNhan}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Ngày check-out</label>
@@ -809,7 +823,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                     className={getInputStyle("ngayTra")}
                     required
                   />
-                  {fieldErrors.ngayTra && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.ngayTra}</span>}
+                  {fieldErrors.ngayTra && <p className="text-red-500 text-xs mt-1 font-medium">{fieldErrors.ngayTra}</p>}
                 </div>
               </div>
 
@@ -829,7 +843,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                     className={getInputStyle("soKhach")}
                     required
                   />
-                  {fieldErrors.soKhach && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.soKhach}</span>}
+                  {fieldErrors.soKhach && <p className="text-red-500 text-xs mt-1 font-medium">{fieldErrors.soKhach}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tổng tiền thanh toán</label>

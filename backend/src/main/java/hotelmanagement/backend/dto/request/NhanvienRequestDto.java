@@ -39,7 +39,6 @@ public class NhanvienRequestDto {
     @NotBlank(message = "Username cannot be blank")
     private String tenDangNhap;
 
-    @NotBlank(message = "Password cannot be blank")
     private String matKhau;
 
     @NotBlank(message = "Account type cannot be blank")
