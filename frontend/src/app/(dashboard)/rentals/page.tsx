@@ -29,7 +29,7 @@ export default function RentalsPage() {
   const { rentals, loading, error, refresh, removeRental } = useRentals();
   const { showToast } = useToast();
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("Đang sử dụng");
+  const [filterStatus, setFilterStatus] = useState("Tất cả");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [selectedRental, setSelectedRental] = useState<RentalSlip | null>(null);
   // Phiếu thuê đang được chọn để trả phòng (mở CheckoutModal)

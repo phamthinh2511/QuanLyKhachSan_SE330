@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +31,10 @@ public class PhongService {
     private final CtHoadonRepository ctHoadonRepository;
     private final SudungdichvuRepository sudungdichvuRepository;
     private final KiemkephongRepository kiemkephongRepository;
+
+    @Autowired
+    @Lazy
+    private BookingService bookingService;
 
     // Entity -> DTO
     private LoaiPhongResponseDto toLoaiPhongResponseDto(Loaiphong loaiphong){
@@ -162,5 +168,11 @@ public class PhongService {
         }
 
         phongRepository.delete(p);
+    }
+
+    public List<PhongResponseDto> getAvailableRooms(java.time.LocalDate checkIn, java.time.LocalDate checkOut) {
+        return bookingService.getAvailableRooms(checkIn, checkOut).stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
     }
 }

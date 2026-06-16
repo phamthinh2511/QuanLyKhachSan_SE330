@@ -66,7 +66,7 @@ export default function BookingsPage() {
   const [loading, setLoading] = useState(() => !bookingsCache);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("Đặt trước");
+  const [filter, setFilter] = useState("Tất cả");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE_ALL);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Booking | null>(null);

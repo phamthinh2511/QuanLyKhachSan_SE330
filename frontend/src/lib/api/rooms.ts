@@ -69,6 +69,13 @@ export async function getRooms(): Promise<Room[]> {
   return data.map(mapToRoom);
 }
 
+export async function getAvailableRooms(checkIn: string, checkOut: string): Promise<Room[]> {
+  const data = await apiClient<PhongResponseApi[]>("/api/rooms/available", {
+    params: { checkIn, checkOut },
+  });
+  return data.map(mapToRoom);
+}
+
 export async function getRoomById(id: number): Promise<Room> {
   const data = await apiClient<PhongResponseApi>(`/api/rooms/${id}`);
   return mapToRoom(data);

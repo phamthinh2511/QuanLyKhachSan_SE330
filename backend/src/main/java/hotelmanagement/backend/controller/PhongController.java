@@ -19,6 +19,15 @@ public class PhongController {
     @GetMapping
     public ResponseEntity<List<PhongResponseDto>> getAll() { return ResponseEntity.ok(phongService.getAll()); }
 
+    @GetMapping("/available")
+    public ResponseEntity<List<PhongResponseDto>> getAvailableRooms(
+            @RequestParam("checkIn") String checkInStr,
+            @RequestParam("checkOut") String checkOutStr) {
+        java.time.LocalDate checkIn = java.time.LocalDate.parse(checkInStr);
+        java.time.LocalDate checkOut = java.time.LocalDate.parse(checkOutStr);
+        return ResponseEntity.ok(phongService.getAvailableRooms(checkIn, checkOut));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<PhongResponseDto> getById(@PathVariable Integer id) {
         return ResponseEntity.ok(phongService.getById(id));

@@ -283,7 +283,7 @@ public PhieuthuephongResponseDto checkIn(CheckInRequest request) {
     }
 
     Phieuthuephong phieu = new Phieuthuephong();
-    phieu.setMaDatPhong(datphong);
+    phieu.setMaDatPhong(null); // Không lưu liên kết đặt phòng để cho phép xóa đơn đặt phòng khỏi DB
     phieu.setMaKhachHang(datphong.getMaKhachHang());
     phieu.setMaNhanVien(nhanvien);
     phieu.setNgayNhanPhong(today);
@@ -318,8 +318,10 @@ public PhieuthuephongResponseDto checkIn(CheckInRequest request) {
         ctPhieuthuephongRepository.save(ctPhieu);
     }
 
-    datphong.setTrangThai("Đã nhận phòng");
-    datphongRepository.save(datphong);
+    // Xóa chi tiết đặt phòng và đơn đặt phòng khỏi database
+    ctDatphongRepository.deleteAll(dsPhongDat);
+    ctDatphongRepository.flush();
+    datphongRepository.delete(datphong);
 
     return PhieuthuephongResponseDto.builder()
             .id(savedPhieu.getId())
@@ -361,48 +363,9 @@ public void tuDongHuyDonDatPhongQuaHan() {
 public List<DatPhongResponse> getAllBookings() {
     tuDongHuyDonDatPhongQuaHan();
     List<Datphong> dsDatPhong = datphongRepository.findAll();
-    List<DatPhongResponse> listResponses = dsDatPhong.stream()
+    return dsDatPhong.stream()
             .map(this::convertToDatPhongResponse)
             .collect(Collectors.toList());
-    List<Phieuthuephong> dsPhieuThueQuay = phieuthuephongRepository.findAll().stream()
-            .filter(pt -> pt.getMaDatPhong() == null)
-            .toList();
-
-    for (Phieuthuephong pt : dsPhieuThueQuay) {
-        String soPhong = "Chưa gán";
-        Double tongTien = 0.0;
-
-        List<CtPhieuthuephong> chiTiet = ctPhieuthuephongRepository.findByMaPhieuThue(pt);
-        if (chiTiet != null && !chiTiet.isEmpty()) {
-            CtPhieuthuephong ctDauTien = chiTiet.get(0);
-            if (ctDauTien.getMaPhong() != null) {
-                soPhong = String.valueOf(ctDauTien.getMaPhong().getId());
-            }
-            double donGiaSum = chiTiet.stream()
-                    .mapToDouble(ct -> ct.getDonGia() != null ? ct.getDonGia() : 0.0)
-                    .sum();
-            long days = java.time.temporal.ChronoUnit.DAYS.between(pt.getNgayNhanPhong(), pt.getNgayTraPhong());
-            if (days <= 0) {
-                days = 1;
-            }
-            tongTien = donGiaSum * days;
-        }
-
-        int guestsCount = pt.getSoKhach() != null ? pt.getSoKhach() : 1;
-
-        listResponses.add(DatPhongResponse.builder()
-                .id(pt.getId())
-                .bookingCode(String.valueOf(pt.getId()))
-                .customerName(pt.getMaKhachHang() != null ? pt.getMaKhachHang().getTenKhachHang() : "Ẩn danh")
-                .roomNumber(soPhong)
-                .checkIn(pt.getNgayNhanPhong())
-                .checkOut(pt.getNgayTraPhong())
-                .guests(guestsCount)
-                .amount(tongTien)
-                .status(pt.getTrangThai())
-                .build());
-    }
-    return listResponses;
 }
     private DatPhongResponse convertToDatPhongResponse(Datphong dp) {
         String soPhong = "Chưa gán";
@@ -566,15 +529,12 @@ public List<DatPhongResponse> getAllBookings() {
 
             validateRoomAvailability(newRoomId, dp.getNgayNhan(), request.getNgayTra(), dp.getId());
 
-            dp.setTrangThai("Đã nhận phòng");
-            datphongRepository.save(dp);
-
             Integer nvId = request.getMaNhanVienId() != null ? request.getMaNhanVienId() : 1;
             Nhanvien nv = nhanvienRepository.findById(nvId)
                     .orElseThrow(() -> new IllegalStateException("Cần thông tin nhân viên để lập phiếu thuê!"));
 
             Phieuthuephong pt = new Phieuthuephong();
-            pt.setMaDatPhong(dp); // Liên kết với đơn đặt phòng gốc
+            pt.setMaDatPhong(null); // Không lưu liên kết đặt phòng để cho phép xóa đơn đặt phòng khỏi DB
             pt.setMaKhachHang(kh);
             pt.setMaNhanVien(nv);
             pt.setNgayNhanPhong(today);
@@ -593,6 +553,7 @@ public List<DatPhongResponse> getAllBookings() {
             ctPt.setMaPhong(phong);
             ctPt.setDonGia(request.getDonGia() != null ? request.getDonGia() : (phong.getMaLoaiPhong() != null ? phong.getMaLoaiPhong().getDonGia() : 500000.0));
             ctPhieuthuephongRepository.save(ctPt);
+
             List<CtDatphong> oldDetails = ctDatphongRepository.findByMaDatPhong(dp);
             if (oldDetails != null) {
                 for (CtDatphong oldCt : oldDetails) {
@@ -601,9 +562,14 @@ public List<DatPhongResponse> getAllBookings() {
                         phongRepository.save(oldCt.getMaPhong());
                     }
                 }
+                ctDatphongRepository.deleteAll(oldDetails);
+                ctDatphongRepository.flush();
             }
 
-            return dp;
+            // Xóa phiếu đặt phòng gốc khỏi Database
+            datphongRepository.delete(dp);
+
+            return null;
         }
 
         if (!"Đã hủy".equals(cleanStatus)) {

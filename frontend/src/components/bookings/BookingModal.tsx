@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { X, User, CalendarDays, Sparkles, Check } from "lucide-react";
 import { Booking, BookingStatus } from "@/types/booking";
 import { getCustomers, createCustomer } from "@/lib/api/customers";
-import { getRooms } from "@/lib/api/rooms";
+import { getRooms, getAvailableRooms } from "@/lib/api/rooms";
 import { Customer } from "@/types/customer";
 import { Room } from "@/types/room";
 import { isNotEmpty, isValidEmail, isValidPhone, isValidIdCard, isPastDate, isPositiveInteger } from "@/lib/validation";
@@ -80,25 +80,64 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
         (c.email && c.email.toLowerCase().includes(searchQuery.toLowerCase()))
       );
 
-  // Tải dữ liệu phòng và khách hàng
+  // Tải dữ liệu khách hàng lúc mount
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
-        const [custData, roomData] = await Promise.all([
-          getCustomers(),
-          getRooms(),
-        ]);
+        const custData = await getCustomers();
         setCustomers(custData);
-        setRooms(roomData);
       } catch (err) {
-        console.error("Lỗi khi tải dữ liệu trong Modal:", err);
+        console.error("Lỗi khi tải dữ liệu khách hàng:", err);
       } finally {
         setLoading(false);
       }
     }
     loadData();
   }, []);
+
+  // Tự động load phòng trống theo khoảng thời gian thực tế từ backend
+  useEffect(() => {
+    if (!form.checkIn || !form.checkOut) {
+      // Fallback: Nếu chưa chọn ngày thì load tất cả phòng trống hiện tại
+      getRooms()
+        .then((data) => setRooms(data || []))
+        .catch((err) => console.error("Lỗi load phòng mặc định:", err));
+      return;
+    }
+
+    const formIn = new Date(form.checkIn);
+    const formOut = new Date(form.checkOut);
+    if (isNaN(formIn.getTime()) || isNaN(formOut.getTime()) || formIn >= formOut) {
+      setRooms([]);
+      return;
+    }
+
+    async function loadAvailableRooms() {
+      try {
+        const available = await getAvailableRooms(form.checkIn, form.checkOut);
+        
+        // Nếu đang chỉnh sửa đơn đặt cũ, phòng hiện tại của đơn này có thể bị trùng và không nằm trong danh sách trả về
+        // (Do backend check trùng cả đơn này). Ta phải giữ lại phòng hiện tại để người dùng có thể chọn tiếp.
+        if (booking && booking.roomNumber) {
+          const exists = available.some((r) => r.roomNumber === booking.roomNumber);
+          if (!exists) {
+            const allRooms = await getRooms();
+            const currentRoom = allRooms.find((r) => r.roomNumber === booking.roomNumber);
+            if (currentRoom) {
+              setRooms([currentRoom, ...available]);
+              return;
+            }
+          }
+        }
+        setRooms(available);
+      } catch (err) {
+        console.error("Lỗi khi gọi API tải phòng trống:", err);
+      }
+    }
+
+    loadAvailableRooms();
+  }, [form.checkIn, form.checkOut, booking]);
 
   // Điền dữ liệu vào form khi ở chế độ chỉnh sửa
   useEffect(() => {
