@@ -27,8 +27,16 @@ class BackendApplicationTests {
     void testChatbot() {
         try {
             System.out.println("CHATBOT TEST START");
-            String response = aiChatService.generateChatResponse("Hôm nay còn bao nhiêu phòng trống?");
-            System.out.println("Chatbot response: " + response);
+            
+            String response1 = aiChatService.generateChatResponse("Hôm nay còn bao nhiêu phòng trống?");
+            System.out.println("Chatbot response (today available): " + response1);
+            
+            String response2 = aiChatService.generateChatResponse("Vào ngày 17/06/2026 có những phòng nào đang sử dụng?");
+            System.out.println("Chatbot response (occupied 17/06): " + response2);
+
+            String response3 = aiChatService.generateChatResponse("Vào ngày 15/05/2026 có những phòng nào đang sử dụng?");
+            System.out.println("Chatbot response (occupied 15/05): " + response3);
+            
             System.out.println("CHATBOT TEST END");
         } catch (Exception e) {
             System.err.println("Chatbot test failed with exception:");

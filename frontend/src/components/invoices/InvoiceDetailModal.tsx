@@ -16,6 +16,7 @@ export default function InvoiceDetailModal({ invoice, onClose }: Props) {
     csv += `Khách hàng,"${(invoice.customerName || "").replace(/"/g, '""')}"\n`;
     csv += `Mã booking,${invoice.bookingCode || ""}\n`;
     csv += `Phòng,${invoice.roomNumber || ""}\n`;
+    csv += `Nhân viên,"${String(invoice.tenNhanVien ? `${invoice.tenNhanVien} (ID: ${invoice.maNhanVien})` : invoice.maNhanVien || "—").replace(/"/g, '""')}"\n`;
     csv += `Ngày tạo,${invoice.createdAt || ""}\n`;
     csv += `Thanh toán,"${(invoice.paymentMethod || "—").replace(/"/g, '""')}"\n`;
     csv += `Trạng thái,"${(invoice.status || "").replace(/"/g, '""')}"\n\n`;
@@ -82,6 +83,7 @@ export default function InvoiceDetailModal({ invoice, onClose }: Props) {
               <p className="text-gray-500">Khách hàng: <span className="font-semibold text-gray-800">{invoice.customerName}</span></p>
               <p className="text-gray-500">Mã booking: <span className="font-semibold text-gray-800">{invoice.bookingCode}</span></p>
               <p className="text-gray-500">Phòng: <span className="font-semibold text-gray-800">{invoice.roomNumber}</span></p>
+              <p className="text-gray-500">Nhân viên lập: <span className="font-semibold text-gray-800">{invoice.tenNhanVien ? `${invoice.tenNhanVien} (ID: ${invoice.maNhanVien})` : invoice.maNhanVien || "—"}</span></p>
             </div>
             <div className="space-y-1.5 text-right">
               <p className="text-gray-500">Ngày tạo: <span className="font-semibold text-gray-800">{invoice.createdAt}</span></p>

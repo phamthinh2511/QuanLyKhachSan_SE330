@@ -19,7 +19,7 @@ export default function LoginPage() {
     setError("");
 
     if (process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === "true") {
-      saveAuth("dev-token", { name: "Admin User", role: "ADMIN" });
+      saveAuth("dev-token", { name: "Admin User", role: "ADMIN", employeeId: 1 });
       router.push("/dashboard");
       return;
     }
@@ -35,8 +35,9 @@ export default function LoginPage() {
       const decoded = decodeJwt(res.result);
       const role = decoded?.role || "NHAN_VIEN";
       const name = decoded?.sub || "User";
+      const employeeId = decoded?.maNhanVien || null;
 
-      saveAuth(res.result, { name, role });
+      saveAuth(res.result, { name, role, employeeId });
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Đăng nhập thất bại");

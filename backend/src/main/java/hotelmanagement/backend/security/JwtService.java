@@ -28,14 +28,20 @@ public class JwtService {
     }
     // 1. Hàm tạo Token có chứa Claims (Roles)
     public String generateToken(UserDetails userDetails) {
-        Map<String, Object> extraClaims = new HashMap<>();
+        return generateToken(userDetails, null);
+    }
 
+    public String generateToken(UserDetails userDetails, Integer maNhanVien) {
+        Map<String, Object> extraClaims = new HashMap<>();
 
         String roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
         extraClaims.put("role", roles);
+        if (maNhanVien != null) {
+            extraClaims.put("maNhanVien", maNhanVien);
+        }
 
         return buildToken(extraClaims, userDetails);
     }

@@ -97,8 +97,10 @@ public class BillingService {
                 throw new IllegalStateException("Phiếu thuê phòng không còn hoạt động (Trạng thái: " + phieuThue.getTrangThai() + "), không thể ghi nhận kiểm kê phòng!");
             }
             
-            Nhanvien nhanvien = nhanvienRepository.findById(request.getMaNhanVien())
-                    .orElseThrow(() -> new RuntimeException("Nhân viên không tồn tại"));
+            Nhanvien nhanvien = getCurrentEmployee(request.getMaNhanVien());
+            if (nhanvien == null) {
+                throw new RuntimeException("Nhân viên không tồn tại");
+            }
             
             Phong phong = phongRepository.findById(request.getMaPhong())
                     .orElseThrow(() -> new RuntimeException("Phòng không tồn tại"));
@@ -158,8 +160,10 @@ public class BillingService {
                 throw new IllegalStateException("Phiếu thuê phòng này đã bị hủy, không thể thực hiện thanh toán!");
             }
             
-            Nhanvien nhanvien = nhanvienRepository.findById(maNhanVien)
-                    .orElseThrow(() -> new RuntimeException("Nhân viên không tồn tại"));
+            Nhanvien nhanvien = getCurrentEmployee(maNhanVien);
+            if (nhanvien == null) {
+                throw new RuntimeException("Nhân viên không tồn tại");
+            }
             
             // 1. Tính tiền phòng từ CtPhieuthuephong (nhân số ngày thuê theo kế hoạch)
             long days = java.time.temporal.ChronoUnit.DAYS.between(phieuThue.getNgayNhanPhong(), phieuThue.getNgayTraPhong());
@@ -304,5 +308,24 @@ public class BillingService {
                     .message("Lỗi check-out: " + e.getMessage())
                     .build();
         }
+    }
+
+    private Nhanvien getCurrentEmployee(Integer requestEmployeeId) {
+        if (requestEmployeeId != null) {
+            return nhanvienRepository.findById(requestEmployeeId).orElse(null);
+        }
+        try {
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                String username = auth.getName();
+                java.util.Optional<Nhanvien> nvOpt = nhanvienRepository.findByTaikhoanTenDangNhapAndIsDeletedFalse(username);
+                if (nvOpt.isPresent()) {
+                    return nvOpt.get();
+                }
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return nhanvienRepository.findById(1).orElse(null);
     }
 }

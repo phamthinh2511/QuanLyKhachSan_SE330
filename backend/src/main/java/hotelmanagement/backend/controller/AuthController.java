@@ -4,11 +4,14 @@ import hotelmanagement.backend.dto.request.LoginRequest;
 import hotelmanagement.backend.dto.response.ApiResponse;
 import hotelmanagement.backend.security.CustomUserDetailsService;
 import hotelmanagement.backend.security.JwtService;
+import hotelmanagement.backend.entity.Nhanvien;
+import hotelmanagement.backend.repository.NhanvienRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
 @RestController
 @RequestMapping("api/auth")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -23,6 +26,9 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private NhanvienRepository nhanvienRepository;
+
     @PostMapping("/login")
     public ApiResponse<String> login(@jakarta.validation.Valid @RequestBody LoginRequest request) {
 
@@ -33,7 +39,12 @@ public class AuthController {
 
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-            String token = jwtService.generateToken(userDetails);
+            
+            Integer employeeId = nhanvienRepository.findByTaikhoanTenDangNhapAndIsDeletedFalse(request.getUsername())
+                    .map(Nhanvien::getId)
+                    .orElse(null);
+            
+            String token = jwtService.generateToken(userDetails, employeeId);
 
             ApiResponse<String> response = new ApiResponse<>();
             response.setCode(200);

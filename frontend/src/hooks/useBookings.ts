@@ -69,9 +69,9 @@ export function useBookings() {
     }
   };
 
-  const processCheckIn = async (bookingId: number) => {
+  const processCheckIn = async (bookingId: number, maNhanVien: number) => {
     try {
-      await checkInBooking(bookingId);
+      await checkInBooking(bookingId, maNhanVien);
       await fetchBookings();
     } catch (err) {
       console.error("Failed to process check-in:", err);

@@ -20,5 +20,7 @@ public class InvoiceResponseDto {
     private String paymentMethod;
     private String status;
     private LocalDate createdAt;
+    private Integer maNhanVien;
+    private String tenNhanVien;
     private List<SudungdichvuResponseDto> serviceUsages;
 }

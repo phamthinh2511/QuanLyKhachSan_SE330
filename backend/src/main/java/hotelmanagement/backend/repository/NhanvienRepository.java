@@ -16,4 +16,5 @@ public interface NhanvienRepository extends JpaRepository<Nhanvien, Integer> {
     java.util.Optional<Nhanvien> findByIdAndIsDeletedFalse(Integer id);
     boolean existsBySoDienThoaiAndIsDeletedFalse(String soDienThoai);
     boolean existsByTaikhoanId(Integer taikhoanId);
+    java.util.Optional<Nhanvien> findByTaikhoanTenDangNhapAndIsDeletedFalse(String tenDangNhap);
 }

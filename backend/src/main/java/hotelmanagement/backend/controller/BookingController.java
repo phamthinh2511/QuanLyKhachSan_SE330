@@ -8,6 +8,8 @@ import hotelmanagement.backend.dto.response.DatPhongResponse;
 import hotelmanagement.backend.dto.response.PhieuthuephongResponseDto;
 import hotelmanagement.backend.entity.Datphong;
 import hotelmanagement.backend.entity.Phieuthuephong;
+import hotelmanagement.backend.entity.Nhanvien;
+import hotelmanagement.backend.repository.NhanvienRepository;
 import hotelmanagement.backend.service.BookingService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,9 @@ public class BookingController {
     
     @Autowired
     private hotelmanagement.backend.service.BillingService billingService;
+
+    @Autowired
+    private NhanvienRepository nhanvienRepository;
 
     @PostMapping("/submit")
     public ApiResponse<Void> submitBooking(@Valid @RequestBody BookingRequest request) {
@@ -95,9 +100,21 @@ public ApiResponse<Void> updateBooking(@PathVariable Integer id, @Valid @Request
             paymentMethod = "Tiền mặt";
         }
 
+        Integer employeeId = 1;
+        try {
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                employeeId = nhanvienRepository.findByTaikhoanTenDangNhapAndIsDeletedFalse(auth.getName())
+                        .map(Nhanvien::getId)
+                        .orElse(1);
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+
         billingService.checkout(hotelmanagement.backend.dto.request.CheckoutRequest.builder()
                 .maPhieuThue(bookingId)
-                .maNhanVien(1)
+                .maNhanVien(employeeId)
                 .phuongThucThanhToan(paymentMethod)
                 .build());
 

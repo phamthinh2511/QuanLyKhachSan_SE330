@@ -12,6 +12,7 @@ import { useToast } from "@/context/ToastContext";
 import CustomSelect from "@/components/ui/CustomSelect";
 import PageSkeleton from "@/components/ui/PageSkeleton";
 import PageError from "@/components/ui/PageError";
+import { getUser } from "@/lib/auth";
 
 const PAGE_SIZE = 50;
 
@@ -254,7 +255,7 @@ export default function RentalsPage() {
         <CheckoutModal
           maPhieuThue={checkoutRental.id}
           maPhong={parseInt(checkoutRental.roomNumber) || 0}
-          maNhanVien={1} // TODO: lấy từ session đăng nhập
+          maNhanVien={getUser()?.employeeId || 1}
           khachHang={checkoutRental.customerName}
           onSuccess={handleCheckoutSuccess}
           onClose={() => setCheckoutRental(null)}
