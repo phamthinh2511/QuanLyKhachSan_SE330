@@ -9,6 +9,14 @@ import { getReportData, exportRevenueReport, ReportData } from "@/lib/api/invoic
 import { useToast } from "@/context/ToastContext";
 import { getUser } from "@/lib/auth";
 import CustomSelect from "@/components/ui/CustomSelect";
+import PageSkeleton from "@/components/ui/PageSkeleton";
+import PageError from "@/components/ui/PageError";
+
+// Module-level cache to persist state across client-side page views
+let cachedFilterType: "month" | "quarter" | "year" = "month";
+let cachedSelectedYear: number = new Date().getFullYear();
+let cachedSelectedValue: number = new Date().getMonth() + 1;
+let cachedReportData: ReportData | null = null;
 
 export type Period = string;
 export type ReportTab = "Phân tích doanh thu" | "Tỉ lệ bận phòng" | "Sử dụng dịch vụ" | "Năng suất phòng";
@@ -28,12 +36,12 @@ export default function ReportsPage() {
   const reportRef = useRef<HTMLDivElement>(null);
 
   // Dynamic filter state
-  const [filterType, setFilterType] = useState<"month" | "quarter" | "year">("month");
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [selectedValue, setSelectedValue] = useState<number>(new Date().getMonth() + 1); // Month 1-12 or Quarter 1-4
+  const [filterType, setFilterType] = useState<"month" | "quarter" | "year">(cachedFilterType);
+  const [selectedYear, setSelectedYear] = useState<number>(cachedSelectedYear);
+  const [selectedValue, setSelectedValue] = useState<number>(cachedSelectedValue);
 
-  const [reportData, setReportData] = useState<ReportData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [reportData, setReportData] = useState<ReportData | null>(cachedReportData);
+  const [loading, setLoading] = useState(() => !cachedReportData);
   const [error, setError] = useState("");
 
   // Years options: from 3 years ago to 3 years in the future
@@ -61,20 +69,27 @@ export default function ReportsPage() {
   };
 
   // Fetch report data from backend
-  const fetchReport = useCallback(() => {
-    setLoading(true);
+  const fetchReport = useCallback((force = false) => {
+    if (!cachedReportData || force) {
+      setLoading(true);
+    }
+    setError("");
     getReportData({
       type: filterType,
       year: selectedYear,
       value: filterType !== "year" ? selectedValue : undefined,
     })
       .then((data) => {
+        cachedFilterType = filterType;
+        cachedSelectedYear = selectedYear;
+        cachedSelectedValue = selectedValue;
+        cachedReportData = data;
         setReportData(data);
         setError("");
       })
       .catch((err) => {
-        console.error(err);
-        setError(err.message || "Không thể tải dữ liệu báo cáo.");
+        console.error("Lỗi khi tải dữ liệu báo cáo:", err);
+        setError(err.message || "Lỗi tải dữ liệu báo cáo");
       })
       .finally(() => {
         setLoading(false);
@@ -260,15 +275,10 @@ export default function ReportsPage() {
       </div>
 
       {/* Main Report Dashboard */}
-      {loading && !reportData ? (
-        <div className="flex flex-col items-center justify-center min-h-[350px] bg-white rounded-2xl border border-gray-100 shadow-sm">
-          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-4 text-gray-400 text-sm font-medium">Đang tính toán dữ liệu báo cáo...</p>
-        </div>
-      ) : error ? (
-        <div className="p-5 bg-red-50 text-red-700 border border-red-100 rounded-2xl text-sm shadow-sm">
-          Lỗi: {error}
-        </div>
+      {error && !reportData ? (
+        <PageError message={error} onRetry={() => fetchReport(true)} />
+      ) : loading && !reportData ? (
+        <PageSkeleton type="reports" />
       ) : (
         <div ref={reportRef} className="space-y-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
           {/* Report Header for Export/Print */}

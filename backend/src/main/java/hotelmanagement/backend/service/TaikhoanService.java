@@ -105,6 +105,10 @@ public class TaikhoanService {
         Taikhoan tk = taikhoanRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay tai khoan id: " + id));
 
+        if (!tk.getIsDeleted()) {
+            throw new RuntimeException("Tai khoan khong nam trong thung rac nen khong the xoa vinh vien");
+        }
+
         if (nhanvienRepository.existsByTaikhoanId(id)) {
             throw new RuntimeException("Khong the xoa vinh vien tai khoan nay vi dang lien ket voi nhan vien trong he thong");
         }

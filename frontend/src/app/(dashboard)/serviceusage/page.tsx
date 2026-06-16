@@ -10,12 +10,14 @@ import ServiceUsageTodayTable from "@/components/serviceusages/ServiceUsageToday
 import ServiceUsageAllTable from "@/components/serviceusages/ServiceUsageAllTable";
 import ServiceUsageModal from "@/components/serviceusages/ServiceUsageModal";
 import CustomSelect from "@/components/ui/CustomSelect";
+import PageSkeleton from "@/components/ui/PageSkeleton";
+import PageError from "@/components/ui/PageError";
 
 const today = new Date().toISOString().split("T")[0];
 const PAGE_SIZE = 50;
 
 export default function ServiceUsagePage() {
-  const { usages, loading, error, saveUsage, removeUsage } = useServiceUsage();
+  const { usages, loading, error, refresh, saveUsage, removeUsage } = useServiceUsage();
   const { showToast } = useToast();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("Tất cả");
@@ -130,8 +132,10 @@ export default function ServiceUsagePage() {
       {/* Stat Cards — tháng này */}
       <ServiceUsageStatCards usages={usages} />
 
-      {loading && usages.length === 0 ? (
-        <div className="p-12 text-center text-gray-400 text-sm">Đang đồng bộ dữ liệu sử dụng dịch vụ...</div>
+      {error && usages.length === 0 ? (
+        <PageError message={error} onRetry={() => refresh()} />
+      ) : loading && usages.length === 0 ? (
+        <PageSkeleton type="table" />
       ) : (
         <>
           {/* Hôm nay */}

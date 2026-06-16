@@ -7,29 +7,38 @@ import {
   updateService, deleteService,
 } from "@/lib/api/services";
 
-export function useServices() {
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState<string | null>(null);
+// Module-level cache
+let servicesCache: Service[] | null = null;
 
-  const fetchServices = useCallback(async () => {
-    setLoading(true);
+export function useServices() {
+  const [services, setServices] = useState<Service[]>(() => servicesCache || []);
+  const [loading, setLoading] = useState(() => !servicesCache);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchServices = useCallback(async (force = false) => {
+    if (!servicesCache || force) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const data = await getServices();
+      servicesCache = data;
       setServices(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Lỗi tải dữ liệu");
+      setError(err instanceof Error ? err.message : "Lỗi tải dữ liệu dịch vụ");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchServices(); }, [fetchServices]);
+  useEffect(() => {
+    fetchServices();
+  }, [fetchServices]);
 
   const handleCreate = async (service: Omit<Service, "id" | "serviceCode">) => {
     const created = await createService(service);
-    setServices((prev) => [...prev, created]);
+    servicesCache = [...(servicesCache || []), created];
+    setServices(servicesCache);
   };
 
   const handleUpdate = async (
@@ -37,17 +46,23 @@ export function useServices() {
     service: Omit<Service, "id" | "serviceCode">
   ) => {
     const updated = await updateService(id, service);
-    setServices((prev) => prev.map((s) => (s.id === id ? updated : s)));
+    servicesCache = (servicesCache || []).map((s) => (s.id === id ? updated : s));
+    setServices(servicesCache);
   };
 
   const handleDelete = async (id: number) => {
     await deleteService(id);
-    setServices((prev) => prev.filter((s) => s.id !== id));
+    servicesCache = (servicesCache || []).filter((s) => s.id !== id);
+    setServices(servicesCache);
   };
 
   return {
-    services, loading, error,
-    refetch: fetchServices,
-    handleCreate, handleUpdate, handleDelete,
+    services,
+    loading,
+    error,
+    refetch: () => fetchServices(true),
+    handleCreate,
+    handleUpdate,
+    handleDelete,
   };
 }

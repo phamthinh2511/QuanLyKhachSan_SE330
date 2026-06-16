@@ -1,7 +1,7 @@
-const loading = () => {
-    return(
-            <p>Đang tải...</p>
-    );
-};
+"use client";
 
-export default loading;
+import PageSkeleton from "@/components/ui/PageSkeleton";
+
+export default function Loading() {
+  return <PageSkeleton type="table" />;
+}

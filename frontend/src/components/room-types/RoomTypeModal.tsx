@@ -25,6 +25,7 @@ export default function RoomTypeModal({ roomType, onSave, onClose }: Props) {
     sucChuaToiDa: roomType ? roomType.sucChuaToiDa : "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (roomType) {
@@ -62,18 +63,26 @@ export default function RoomTypeModal({ roomType, onSave, onClose }: Props) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     if (!validate()) return;
+    setSubmitting(true);
     const dataToSave = {
       ...form,
       donGia: form.donGia === "" ? 0 : form.donGia,
       sucChuaToiDa: form.sucChuaToiDa === "" ? 1 : form.sucChuaToiDa,
     };
-    if (roomType) {
-      onSave({ ...dataToSave, id: roomType.id } as any);
-    } else {
-      onSave(dataToSave as any);
+    try {
+      if (roomType) {
+        await onSave({ ...dataToSave, id: roomType.id } as any);
+      } else {
+        await onSave(dataToSave as any);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTimeout(() => setSubmitting(false), 2000);
     }
   };
 
@@ -152,13 +161,13 @@ export default function RoomTypeModal({ roomType, onSave, onClose }: Props) {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose}
-              className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
+            <button type="button" onClick={onClose} disabled={submitting}
+              className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition disabled:opacity-50">
               Hủy
             </button>
-            <button type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-medium transition">
-              {roomType ? "Lưu thay đổi" : "Thêm loại phòng"}
+            <button type="submit" disabled={submitting}
+              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
+              {submitting ? "Đang xử lý..." : (roomType ? "Lưu thay đổi" : "Thêm loại phòng")}
             </button>
           </div>
         </form>

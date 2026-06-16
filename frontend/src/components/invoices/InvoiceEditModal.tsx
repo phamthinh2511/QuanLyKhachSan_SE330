@@ -29,7 +29,7 @@ export default function InvoiceEditModal({ invoice, onSave, onClose }: Props) {
     } catch (err) {
       console.error(err);
     } finally {
-      setIsSubmitting(false);
+      setTimeout(() => setIsSubmitting(false), 2000);
     }
   };
 
@@ -117,8 +117,8 @@ export default function InvoiceEditModal({ invoice, onSave, onClose }: Props) {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose}
-              className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
+            <button type="button" onClick={onClose} disabled={isSubmitting}
+              className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition disabled:opacity-50">
               Hủy
             </button>
             <button type="submit" disabled={isSubmitting}

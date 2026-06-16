@@ -10,28 +10,38 @@ import { getPagedInvoices, deleteInvoice, updateInvoice, exportInvoices } from "
 import { Download, Calendar, Search, ChevronDown } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import CustomSelect from "@/components/ui/CustomSelect";
+import PageSkeleton from "@/components/ui/PageSkeleton";
+import PageError from "@/components/ui/PageError";
+
+// Module-level cache to persist state across client-side page views
+let cachedInvoicesSearch = "";
+let cachedInvoicesFilter = "Chờ thanh toán";
+let cachedInvoicesTimeOption = "this-month";
+let cachedInvoicesCustomMonth = new Date().getMonth() + 1;
+let cachedInvoicesCustomYear = new Date().getFullYear();
+let cachedInvoicesPage = 0;
+let cachedInvoicesList: Invoice[] | null = null;
+let cachedInvoicesTotalElements = 0;
+let cachedInvoicesHasMore = false;
+let cachedInvoicesStats = { totalCount: 0, paidAmount: 0, pendingAmount: 0 };
 
 const PAGE_SIZE = 15;
 
 export default function InvoicesPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [invoices, setInvoices] = useState<Invoice[]>(() => cachedInvoicesList || []);
+  const [loading, setLoading] = useState(() => !cachedInvoicesList);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("Tất cả"); // Status filter
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
-  const [totalElements, setTotalElements] = useState(0);
-  const [stats, setStats] = useState({
-    totalCount: 0,
-    paidAmount: 0,
-    pendingAmount: 0,
-  });
+  const [search, setSearch] = useState(() => cachedInvoicesSearch);
+  const [filter, setFilter] = useState(() => cachedInvoicesFilter); // Status filter
+  const [page, setPage] = useState(() => cachedInvoicesPage);
+  const [hasMore, setHasMore] = useState(() => cachedInvoicesHasMore);
+  const [totalElements, setTotalElements] = useState(() => cachedInvoicesTotalElements);
+  const [stats, setStats] = useState(() => cachedInvoicesStats);
 
   // Time filters
-  const [timeOption, setTimeOption] = useState<string>("this-month"); // "this-month", "last-month", "custom", "all"
-  const [customMonth, setCustomMonth] = useState<number>(new Date().getMonth() + 1);
-  const [customYear, setCustomYear] = useState<number>(new Date().getFullYear());
+  const [timeOption, setTimeOption] = useState<string>(() => cachedInvoicesTimeOption); // "this-month", "last-month", "custom", "all"
+  const [customMonth, setCustomMonth] = useState<number>(() => cachedInvoicesCustomMonth);
+  const [customYear, setCustomYear] = useState<number>(() => cachedInvoicesCustomYear);
 
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
@@ -73,8 +83,10 @@ export default function InvoicesPage() {
   };
 
   // Fetch invoices from backend
-  const fetchInvoices = useCallback((pageToFetch: number, searchKeyword: string, statusFilter: string, append = false) => {
-    setLoading(true);
+  const fetchInvoices = useCallback((pageToFetch: number, searchKeyword: string, statusFilter: string, append = false, force = false) => {
+    if (!cachedInvoicesList || force || append) {
+      setLoading(true);
+    }
     const { year, month } = getFilterDateParams(timeOption, customMonth, customYear);
 
     getPagedInvoices({
@@ -86,28 +98,43 @@ export default function InvoicesPage() {
       size: PAGE_SIZE,
     })
       .then((data) => {
+        let newList = data.content || [];
         if (append) {
-          setInvoices((prev) => [...prev, ...(data.content || [])]);
-        } else {
-          setInvoices(data.content || []);
+          newList = [...invoices, ...newList];
         }
-        setStats({
+
+        // Cache state and list
+        cachedInvoicesSearch = searchKeyword;
+        cachedInvoicesFilter = statusFilter;
+        cachedInvoicesTimeOption = timeOption;
+        cachedInvoicesCustomMonth = customMonth;
+        cachedInvoicesCustomYear = customYear;
+        cachedInvoicesPage = pageToFetch;
+        cachedInvoicesList = newList;
+        cachedInvoicesTotalElements = data.totalElements;
+        cachedInvoicesHasMore = !data.last && data.content && data.content.length > 0;
+        cachedInvoicesStats = {
           totalCount: data.totalCount,
           paidAmount: data.paidAmount,
           pendingAmount: data.pendingAmount,
-        });
+        };
+
+        setInvoices(newList);
+        setStats(cachedInvoicesStats);
         setTotalElements(data.totalElements);
-        setHasMore(!data.last && data.content && data.content.length > 0);
+        setHasMore(cachedInvoicesHasMore);
         setError("");
       })
       .catch((err) => {
         console.error(err);
-        setError(err.message || "Không thể kết nối tới máy chủ.");
+        const msg = err.message || "Không thể kết nối tới máy chủ.";
+        setError(msg);
+        showToast(msg, "error");
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [timeOption, customMonth, customYear]);
+  }, [timeOption, customMonth, customYear, invoices]);
 
   // Initial fetch and fetch when filters change
   useEffect(() => {
@@ -184,6 +211,14 @@ export default function InvoicesPage() {
       setLoading(false);
     }
   };
+
+  if (error && invoices.length === 0) {
+    return <PageError message={error} onRetry={() => fetchInvoices(page, search, filter, false, true)} />;
+  }
+
+  if (loading && invoices.length === 0) {
+    return <PageSkeleton type="table" />;
+  }
 const sortedInvoices = [...invoices].sort((a: any, b: any) => {
     const timeA = new Date(a.createdAt || a.ngayTao || a.invoiceDate || 0).getTime();
     const timeB = new Date(b.createdAt || b.ngayTao || b.invoiceDate || 0).getTime();
@@ -307,12 +342,7 @@ const sortedInvoices = [...invoices].sort((a: any, b: any) => {
         </div>
       </div>
 
-      {/* Loading & Error States */}
-      {error && (
-        <div className="p-4 bg-red-50 text-red-700 border border-red-100 rounded-xl text-sm">
-          {error}
-        </div>
-      )}
+
 
       {/* Table */}
       <InvoiceTable
