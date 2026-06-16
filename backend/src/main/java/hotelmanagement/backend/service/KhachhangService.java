@@ -66,6 +66,9 @@ public class KhachhangService {
         if (khachhangRepository.existsByCccdAndIsDeletedFalse(dto.getIdCard())) {
             throw new RuntimeException("CCCD da ton tai trong he thong");
         }
+        if (khachhangRepository.existsBySoDienThoaiAndIsDeletedFalse(dto.getPhone())) {
+            throw new RuntimeException("So dien thoai da ton tai trong he thong");
+        }
 
         Khachhang kh = new Khachhang();
         applyRequestDto(kh, dto);
@@ -75,6 +78,17 @@ public class KhachhangService {
     public KhachhangResponseDto update(Integer id, KhachhangRequestDto dto) {
         Khachhang kh = khachhangRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay khach hang voi id: " + id));
+        
+        if (khachhangRepository.existsByEmailAndIdNotAndIsDeletedFalse(dto.getEmail(), id)) {
+            throw new RuntimeException("Email da ton tai trong he thong");
+        }
+        if (khachhangRepository.existsByCccdAndIdNotAndIsDeletedFalse(dto.getIdCard(), id)) {
+            throw new RuntimeException("CCCD da ton tai trong he thong");
+        }
+        if (khachhangRepository.existsBySoDienThoaiAndIdNotAndIsDeletedFalse(dto.getPhone(), id)) {
+            throw new RuntimeException("So dien thoai da ton tai trong he thong");
+        }
+
         applyRequestDto(kh, dto);
         return toResponseDto(khachhangRepository.save(kh));
     }
@@ -108,6 +122,10 @@ public class KhachhangService {
     public void hardDelete(Integer id) {
         Khachhang kh = khachhangRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay khach hang voi id: " + id));
+
+        if (!kh.getIsDeleted()) {
+            throw new RuntimeException("Khach hang khong nam trong thung rac nen khong the xoa vinh vien");
+        }
 
         if (datphongRepository.existsByMaKhachHangId(id) || phieuthuephongRepository.existsByMaKhachHangId(id)) {
             throw new RuntimeException("Khong the xoa vinh vien khach hang nay vi ho da co giao dich trong he thong");

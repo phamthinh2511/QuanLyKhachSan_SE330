@@ -12,13 +12,18 @@ import EmployeeModal from "@/components/employees/EmployeeModal";
 import EmployeeViewModal from "@/components/employees/EmployeeViewModal";
 import { getUser } from "@/lib/auth";
 import CustomSelect from "@/components/ui/CustomSelect";
+import PageSkeleton from "@/components/ui/PageSkeleton";
+import PageError from "@/components/ui/PageError";
+
+// Module-level cache
+let employeesCache: Employee[] | null = null;
 
 const PAGE_SIZE = 10;
 
 export default function EmployeesPage() {
   const router = useRouter();
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [employees, setEmployees] = useState<Employee[]>(() => employeesCache || []);
+  const [loading, setLoading] = useState(() => !employeesCache);
   const [error, setError] = useState<string | null>(null);
   const { showToast } = useToast();
 
@@ -29,12 +34,17 @@ export default function EmployeesPage() {
   const [editing, setEditing] = useState<Employee | null>(null);
   const [viewing, setViewing] = useState<Employee | null>(null);
 
-  const fetchEmployees = async () => {
+  const fetchEmployees = async (force = false) => {
     try {
-      setLoading(true);
+      if (!employeesCache || force) {
+        setLoading(true);
+      }
       setError(null);
       const res = await employeesApi.getAll();
-      if (res.result) setEmployees(res.result);
+      if (res.result) {
+        employeesCache = res.result;
+        setEmployees(res.result);
+      }
     } catch (err: any) {
       setError(err.message || "Lỗi tải danh sách nhân viên");
     } finally {
@@ -75,7 +85,7 @@ export default function EmployeesPage() {
         await employeesApi.create(data);
         showToast("Thêm mới nhân viên thành công!");
       }
-      await fetchEmployees();
+      await fetchEmployees(false);
       setModalOpen(false);
       setEditing(null);
     } catch (err: any) {
@@ -89,7 +99,7 @@ export default function EmployeesPage() {
     if (confirm("Bạn có chắc muốn xóa nhân viên này?")) {
       try {
         await employeesApi.delete(id);
-        await fetchEmployees();
+        await fetchEmployees(false);
         showToast("Xóa nhân viên thành công!");
       } catch (err: any) {
         showToast(err.message || "Không thể xóa nhân viên", "error");
@@ -98,19 +108,11 @@ export default function EmployeesPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-full min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <PageSkeleton type="table" />;
   }
 
   if (error) {
-    return (
-      <div className="p-6 text-red-600 bg-red-50 rounded-xl border border-red-100">
-        {error}
-      </div>
-    );
+    return <PageError message={error} />;
   }
 
   return (

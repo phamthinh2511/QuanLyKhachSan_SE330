@@ -100,6 +100,10 @@ public class LoaiphongService {
         Loaiphong loaiphong = loaiphongRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy loại phòng với id: " + id));
 
+        if (!loaiphong.getIsDeleted()) {
+            throw new RuntimeException("Loại phòng không nằm trong thùng rác nên không thể xóa vĩnh viễn");
+        }
+
         if (phongRepository.existsByMaLoaiPhongId(id)) {
             throw new RuntimeException("Không thể xóa vĩnh viễn loại phòng này vì có phòng thuộc loại này tồn tại trong hệ thống");
         }

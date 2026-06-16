@@ -17,4 +17,9 @@ public interface KhachhangRepository extends JpaRepository<Khachhang, Integer> {
     java.util.Optional<Khachhang> findByIdAndIsDeletedFalse(Integer id);
     boolean existsByEmailAndIsDeletedFalse(String email);
     boolean existsByCccdAndIsDeletedFalse(String cccd);
+    boolean existsBySoDienThoaiAndIsDeletedFalse(String soDienThoai);
+    
+    boolean existsByEmailAndIdNotAndIsDeletedFalse(String email, Integer id);
+    boolean existsByCccdAndIdNotAndIsDeletedFalse(String cccd, Integer id);
+    boolean existsBySoDienThoaiAndIdNotAndIsDeletedFalse(String soDienThoai, Integer id);
 }

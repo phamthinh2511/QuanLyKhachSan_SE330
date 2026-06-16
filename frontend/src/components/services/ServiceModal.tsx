@@ -21,6 +21,7 @@ export default function ServiceModal({ service, onSave, onClose }: Props) {
     price: service ? service.price : "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (service) {
@@ -55,10 +56,18 @@ export default function ServiceModal({ service, onSave, onClose }: Props) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     if (!validate()) return;
-    onSave({ ...form, price: form.price === "" ? 0 : form.price, id: service?.id ?? 0, serviceCode: service?.serviceCode ?? "" } as any);
+    setSubmitting(true);
+    try {
+      await onSave({ ...form, price: form.price === "" ? 0 : form.price, id: service?.id ?? 0, serviceCode: service?.serviceCode ?? "" } as any);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTimeout(() => setSubmitting(false), 2000);
+    }
   };
 
   const getInputClass = (fieldName: string) => {
@@ -127,13 +136,13 @@ export default function ServiceModal({ service, onSave, onClose }: Props) {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose}
-              className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
+            <button type="button" onClick={onClose} disabled={submitting}
+              className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition disabled:opacity-50">
               Hủy
             </button>
-            <button type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-medium transition">
-              {service ? "Lưu thay đổi" : "Lưu dịch vụ"}
+            <button type="submit" disabled={submitting}
+              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
+              {submitting ? "Đang xử lý..." : (service ? "Lưu thay đổi" : "Lưu dịch vụ")}
             </button>
           </div>
         </form>
