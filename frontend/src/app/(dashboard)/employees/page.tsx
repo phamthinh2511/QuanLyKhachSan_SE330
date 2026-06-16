@@ -11,6 +11,7 @@ import EmployeeTable from "@/components/employees/EmployeeTable";
 import EmployeeModal from "@/components/employees/EmployeeModal";
 import EmployeeViewModal from "@/components/employees/EmployeeViewModal";
 import { getUser } from "@/lib/auth";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 const PAGE_SIZE = 10;
 
@@ -142,12 +143,12 @@ export default function EmployeesPage() {
         </div>
         <button
           onClick={() => { setEditing(null); setModalOpen(true); }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
         >
           <Plus className="w-4 h-4" />
           Thêm nhân viên
         </button>
-        <select
+        <CustomSelect
           value={filterPosition}
           onChange={(e) => handleFilter(e.target.value)}
           className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -160,7 +161,7 @@ export default function EmployeesPage() {
           <option>Bảo Dưỡng</option>
           <option>Bảo Vệ</option>
           <option>Khác</option>
-        </select>
+        </CustomSelect>
       </div>
 
       {/* Table */}

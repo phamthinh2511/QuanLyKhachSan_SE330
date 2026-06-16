@@ -94,7 +94,7 @@ export default function DashboardPage() {
       <div className="flex gap-3">
         <button
           onClick={() => router.push("/bookings?add=true")}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl flex items-center gap-2 transition cursor-pointer"
+          className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl flex items-center gap-2 transition cursor-pointer"
         >
           + Đặt phòng
         </button>

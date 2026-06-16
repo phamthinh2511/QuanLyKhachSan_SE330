@@ -10,9 +10,9 @@ interface Props {
 }
 
 const statusStyle = {
-  "Đã sử dụng":    "bg-green-100 text-green-700",
-  "Chờ sử dụng": "bg-orange-100 text-orange-600",
-  "Đã hủy": "bg-red-100 text-red-700",
+  "Đã sử dụng":    "bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200 hover:text-emerald-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Chờ sử dụng": "bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 hover:text-amber-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Đã hủy": "bg-rose-100 text-rose-800 border border-rose-200 hover:bg-rose-200 hover:text-rose-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
 };
 
 const headers = ["ID", "Booking", "Khách hàng", "Phòng", "Dịch vụ", "SL", "Đơn giá", "Tổng", "Ngày", "Trạng thái", "Thao tác"];
@@ -55,18 +55,22 @@ export default function ServiceUsageAllTable({ usages, onEdit, onDelete, onRowCo
                 <td className="px-4 py-4 font-semibold text-gray-800">{u.total}</td>
                 <td className="px-4 py-4 text-gray-600 whitespace-nowrap">{u.date}</td>
                 <td className="px-4 py-4">
-                  <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium", statusStyle[u.status])}>
+                  <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium border", statusStyle[u.status])}>
                     {u.status}
                   </span>
                 </td>
                 <td className="px-4 py-4">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button onClick={() => onEdit(u)}
-                      className="flex items-center gap-1.5 border border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600 px-3 py-1.5 rounded-lg text-xs font-medium transition">
-                      <Pencil className="w-3 h-3" /> Sửa
+                      className="flex items-center gap-1.5 bg-amber-50 border border-amber-100 text-amber-600 hover:bg-amber-100 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+                      title="Chỉnh sửa"
+                    >
+                      <Pencil className="w-3.5 h-3.5" /> Sửa
                     </button>
                     <button onClick={() => onDelete(u.id)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                      className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center"
+                      title="Xóa"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>

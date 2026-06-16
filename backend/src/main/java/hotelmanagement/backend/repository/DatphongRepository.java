@@ -21,4 +21,6 @@ public interface DatphongRepository extends JpaRepository<Datphong, Integer> {
     @Param("checkOut") LocalDate checkOut);
 
     boolean existsByMaKhachHangId(Integer customerId);
+
+    List<Datphong> findByTrangThaiAndNgayNhanBefore(String trangThai, LocalDate date);
 }

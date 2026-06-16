@@ -21,6 +21,7 @@ import { useToast } from "@/context/ToastContext";
 import BookingTodayTable from "@/components/bookings/BookingTodayTable";
 import BookingAllTable from "@/components/bookings/BookingAllTable";
 import BookingModal from "@/components/bookings/BookingModal";
+import CustomSelect from "@/components/ui/CustomSelect";
 import CheckoutModal from "@/components/invoices/CheckoutModal";
 
 const today = new Date().toISOString().split("T")[0];
@@ -327,7 +328,7 @@ const searchedBookings = bookings.filter((b) => {
         </div>
         <button
           onClick={() => { setEditing(null); setModalOpen(true); }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition shadow-sm"
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition shadow-sm"
         >
           <Plus className="w-4 h-4" />
           Đặt phòng mới
@@ -351,7 +352,7 @@ const searchedBookings = bookings.filter((b) => {
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50/50 text-slate-800"
               />
-              <select
+              <CustomSelect
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
@@ -359,7 +360,7 @@ const searchedBookings = bookings.filter((b) => {
                 <option value="Tất cả">Tất cả trạng thái (Filter tổng)</option>
                 <option value="Đặt trước">Đặt trước</option>
                 <option value="Đã hủy">Đã hủy</option>
-              </select>
+              </CustomSelect>
             </div>
 
             <BookingAllTable

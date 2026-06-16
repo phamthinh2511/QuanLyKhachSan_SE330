@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Employee, EmployeePosition, EmployeeStatus } from "@/types/employee";
 import { isNotEmpty, isValidEmail, isValidPhone, isPastDate, isAtLeastAge } from "@/lib/validation";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 interface Props {
   employee: Employee | null;
@@ -21,6 +22,7 @@ const emptyForm: Omit<Employee, "id" | "employeeCode"> = {
 export default function EmployeeModal({ employee, onSave, onClose }: Props) {
   const [form, setForm] = useState<Omit<Employee, "id" | "employeeCode">>(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (employee) {
@@ -99,10 +101,18 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!validate()) return;
-    onSave({ ...form, id: employee?.id ?? 0, employeeCode: employee?.employeeCode ?? "" });
+    setIsSubmitting(true);
+    try {
+      await onSave({ ...form, id: employee?.id ?? 0, employeeCode: employee?.employeeCode ?? "" });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getInputClass = (fieldName: string) => {
@@ -184,7 +194,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Vị trí</label>
-              <select 
+              <CustomSelect 
                 value={form.position}
                 onChange={(e) => handleChange("position", e.target.value as EmployeePosition)}
                 className={getInputClass("position")}
@@ -196,7 +206,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
                 <option value="Bảo Dưỡng">Bảo Dưỡng</option>
                 <option value="Bảo Vệ">Bảo Vệ</option>
                 <option value="Khác">Khác</option>
-              </select>
+              </CustomSelect>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Phòng ban</label>
@@ -225,7 +235,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
-              <select 
+              <CustomSelect 
                 value={form.status}
                 onChange={(e) => handleChange("status", e.target.value as EmployeeStatus)}
                 className={getInputClass("status")}
@@ -233,7 +243,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
                 <option value="Đang làm việc">Đang làm việc</option>
                 <option value="Đã nghỉ việc">Đã nghỉ việc</option>
                 <option value="Đang nghỉ phép">Đang nghỉ phép</option>
-              </select>
+              </CustomSelect>
             </div>
           </div>
 
@@ -268,7 +278,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
             </div>
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Loại tài khoản (Quyền)</label>
-              <select 
+              <CustomSelect 
                 value={form.role || "NHAN_VIEN"}
                 onChange={(e) => handleChange("role", e.target.value)}
                 className={getInputClass("role")}
@@ -276,7 +286,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
                 <option value="ADMIN">Quản trị viên (ADMIN)</option>
                 <option value="MANAGER">Quản lý (MANAGER)</option>
                 <option value="NHAN_VIEN">Nhân viên (NHAN_VIEN)</option>
-              </select>
+              </CustomSelect>
             </div>
           </div>
 
@@ -285,9 +295,9 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
               className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
               Hủy
             </button>
-            <button type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-medium transition">
-              {employee ? "Lưu thay đổi" : "Thêm nhân viên"}
+            <button type="submit" disabled={isSubmitting}
+              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
+              {isSubmitting ? "Đang xử lý..." : (employee ? "Lưu thay đổi" : "Thêm nhân viên")}
             </button>
           </div>
         </form>

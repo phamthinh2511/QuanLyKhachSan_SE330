@@ -83,7 +83,7 @@ export default function ServicesPage() {
       <div className="text-center space-y-3">
         <p className="text-red-500 font-medium">{error}</p>
         <button onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-xl hover:bg-blue-700 transition">
+          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-xl hover:bg-blue-500 transition">
           Thử lại
         </button>
       </div>
@@ -100,7 +100,7 @@ export default function ServicesPage() {
         </div>
         <button
           onClick={() => { setEditing(null); setModalOpen(true); }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition h-10"
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition h-10"
         >
           <Plus className="w-4 h-4" />
           Thêm dịch vụ

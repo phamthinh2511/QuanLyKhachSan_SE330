@@ -11,9 +11,9 @@ interface Props {
 }
 
 const statusStyle: Record<string, string> = {
-  "Đã thanh toán":    "bg-green-100 text-green-700",
-  "Chờ thanh toán": "bg-orange-100 text-orange-600",
-  "Một phần": "bg-yellow-100 text-yellow-700",
+  "Đã thanh toán":    "bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200 hover:text-emerald-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Chờ thanh toán": "bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 hover:text-amber-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Một phần": "bg-yellow-100 text-yellow-800 border border-yellow-200 hover:bg-yellow-200 hover:text-yellow-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
 };
 
 const PaymentIcon = ({ method }: { method: string }) => {
@@ -59,33 +59,33 @@ export default function InvoiceTable({ invoices, onView, onDelete, onEdit, onChe
                   </div>
                 </td>
                 <td className="px-4 py-4">
-                  <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium", statusStyle[inv.status])}>
+                  <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium border", statusStyle[inv.status])}>
                     {inv.status}
                   </span>
                 </td>
                 <td className="px-4 py-4">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button onClick={() => onView(inv)}
-                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                      className="p-1.5 text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 rounded-lg transition flex items-center justify-center font-medium"
                       title="Xem chi tiết">
                       <Eye className="w-4 h-4" />
                     </button>
                     {onCheckout && inv.status !== "Đã thanh toán" && (
                       <button onClick={() => onCheckout(inv)}
-                        className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition"
-                        title="Checkout">
+                        className="p-1.5 text-emerald-600 bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 rounded-lg transition flex items-center justify-center font-medium"
+                        title="Thanh toán">
                         <ShoppingCart className="w-4 h-4" />
                       </button>
                     )}
                     {onEdit && (
                       <button onClick={() => onEdit(inv)}
-                        className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition"
+                        className="p-1.5 text-amber-600 bg-amber-50 border border-amber-100 hover:bg-amber-100 rounded-lg transition flex items-center justify-center font-medium"
                         title="Chỉnh sửa">
                         <Pencil className="w-4 h-4" />
                       </button>
                     )}
                     <button onClick={() => onDelete(inv.id)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                      className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center font-medium"
                       title="Xóa">
                       <Trash2 className="w-4 h-4" />
                     </button>

@@ -318,7 +318,7 @@ public PhieuthuephongResponseDto checkIn(CheckInRequest request) {
         ctPhieuthuephongRepository.save(ctPhieu);
     }
 
-    datphong.setTrangThai("Đã nhận phòng tại quầy");
+    datphong.setTrangThai("Đã nhận phòng");
     datphongRepository.save(datphong);
 
     return PhieuthuephongResponseDto.builder()
@@ -338,7 +338,28 @@ public PhieuthuephongResponseDto checkIn(CheckInRequest request) {
             .serviceUsages(new java.util.ArrayList<>()) // Khi mới check-in thì danh sách dịch vụ trống
             .build();
 }
+
+@Transactional
+public void tuDongHuyDonDatPhongQuaHan() {
+    LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+    List<Datphong> expiredBookings = datphongRepository.findByTrangThaiAndNgayNhanBefore("Chưa nhận", today);
+
+    for (Datphong dp : expiredBookings) {
+        dp.setTrangThai("Đã hủy");
+        datphongRepository.save(dp);
+
+        List<CtDatphong> details = ctDatphongRepository.findByMaDatPhong(dp);
+        for (CtDatphong ct : details) {
+            if (ct.getMaPhong() != null) {
+                ct.getMaPhong().setTrangThai("Trống");
+                phongRepository.save(ct.getMaPhong());
+            }
+        }
+    }
+}
+
 public List<DatPhongResponse> getAllBookings() {
+    tuDongHuyDonDatPhongQuaHan();
     List<Datphong> dsDatPhong = datphongRepository.findAll();
     List<DatPhongResponse> listResponses = dsDatPhong.stream()
             .map(this::convertToDatPhongResponse)
@@ -545,7 +566,7 @@ public List<DatPhongResponse> getAllBookings() {
 
             validateRoomAvailability(newRoomId, dp.getNgayNhan(), request.getNgayTra(), dp.getId());
 
-            dp.setTrangThai("Đã nhận phòng tại quầy");
+            dp.setTrangThai("Đã nhận phòng");
             datphongRepository.save(dp);
 
             Integer nvId = request.getMaNhanVienId() != null ? request.getMaNhanVienId() : 1;

@@ -7,6 +7,7 @@ import { getServices } from "@/lib/api/services";
 import { Service } from "@/types/service";
 import { getRentals, RentalSlip } from "@/lib/api/rentals";
 import { isNotEmpty, isPositiveInteger } from "@/lib/validation";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 interface Props {
   usage: ServiceUsage | null;
@@ -30,6 +31,7 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [rentals, setRentals] = useState<RentalSlip[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // Load Rentals
@@ -145,10 +147,18 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!validate()) return;
-    onSave({ ...form, quantity: form.quantity === "" ? 1 : form.quantity, id: usage?.id ?? 0, usageCode: usage?.usageCode ?? "" } as any);
+    setIsSubmitting(true);
+    try {
+      await onSave({ ...form, quantity: form.quantity === "" ? 1 : form.quantity, id: usage?.id ?? 0, usageCode: usage?.usageCode ?? "" } as any);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getInputClass = (fieldName: string) => {
@@ -178,7 +188,7 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
           {/* Booking */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Phiếu thuê phòng</label>
-            <select 
+            <CustomSelect 
               value={form.bookingCode} 
               onChange={(e) => handleBookingChange(e.target.value)}
               className={getInputClass("bookingCode")}
@@ -196,7 +206,7 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
                     {r.rentalCode} — {r.customerName} (Phòng {r.roomNumber})
                   </option>
                 ))}
-            </select>
+            </CustomSelect>
             {errors.bookingCode && <p className="text-red-500 text-xs mt-1 font-medium">{errors.bookingCode}</p>}
           </div>
 
@@ -217,7 +227,7 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
           {/* Dịch vụ */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Dịch vụ</label>
-            <select 
+            <CustomSelect 
               value={form.serviceName} 
               onChange={(e) => handleServiceChange(e.target.value)}
               className={getInputClass("serviceName")}
@@ -228,7 +238,7 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
                   {s.name} ({s.price} VND)
                 </option>
               ))}
-            </select>
+            </CustomSelect>
             {errors.serviceName && <p className="text-red-500 text-xs mt-1 font-medium">{errors.serviceName}</p>}
           </div>
 
@@ -274,7 +284,7 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
-              <select 
+              <CustomSelect 
                 value={form.status}
                 onChange={(e) => handleChange("status", e.target.value as ServiceUsageStatus)}
                 className={getInputClass("status")}
@@ -282,7 +292,7 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
                 <option>Đã sử dụng</option>
                 <option>Chờ sử dụng</option>
                 <option>Đã hủy</option>
-              </select>
+              </CustomSelect>
             </div>
           </div>
 
@@ -291,9 +301,9 @@ export default function ServiceUsageModal({ usage, onSave, onClose }: Props) {
               className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
               Hủy
             </button>
-            <button type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-medium transition">
-              {usage ? "Lưu thay đổi" : "Ghi nhận"}
+            <button type="submit" disabled={isSubmitting}
+              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
+              {isSubmitting ? "Đang xử lý..." : (usage ? "Lưu thay đổi" : "Ghi nhận")}
             </button>
           </div>
         </form>

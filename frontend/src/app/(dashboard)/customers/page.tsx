@@ -10,6 +10,7 @@ import CustomerTable from "@/components/customers/CustomerTable";
 import CustomerModal from "@/components/customers/CustomerModal";
 import CustomerViewModal from "@/components/customers/CustomerViewModal";
 import CustomerDeleteModal from "@/components/customers/CustomerDeleteModal";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 const PAGE_SIZE = 50;
 
@@ -98,7 +99,7 @@ if (error) {
         <div className="text-center space-y-3">
           <p className="text-red-500 font-medium">{error}</p>
           <button onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-xl hover:bg-blue-700 transition">
+            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-xl hover:bg-blue-500 transition">
             Thử lại
           </button>
         </div>
@@ -136,17 +137,17 @@ return (
         </div>
         <button
           onClick={() => { setEditing(null); setModalOpen(true); }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
         >
           <Plus className="w-4 h-4" /> Thêm khách hàng
         </button>
-        <select value={filter} onChange={(e) => handleFilter(e.target.value)}
+        <CustomSelect value={filter} onChange={(e) => handleFilter(e.target.value)}
           className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option>Tất cả</option>
           <option>Thường</option>
           <option>VIP</option>
           <option>Khách hàng thân thiết</option>
-        </select>
+        </CustomSelect>
       </div>
 
       {/* Table */}

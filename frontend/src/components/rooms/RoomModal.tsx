@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { Room, RoomStatus } from "@/types/room";
 import { useRoomTypes } from "@/hooks/useRoomTypes";
 import { isPositiveInteger } from "@/lib/validation";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 interface Props {
   room: Room | null;
@@ -33,6 +34,7 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { roomTypes, loading: loadingTypes } = useRoomTypes();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setForm(room ? { ...room } : { ...emptyForm } as any);
@@ -70,10 +72,18 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!validate()) return;
-    onSave({ ...form } as any);
+    setIsSubmitting(true);
+    try {
+      await onSave({ ...form } as any);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -169,17 +179,17 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Loại phòng</label>
-              <select 
-                value={form.loaiPhongId || ""}
-                onChange={handleTypeChange}
+              <CustomSelect 
+                value={String(form.loaiPhongId || "")}
+                onChange={handleTypeChange as any}
                 className={getInputClass("loaiPhongId")} 
                 disabled={loadingTypes}
               >
                 <option value="" disabled>-- Chọn loại phòng --</option>
                 {roomTypes.map((rt) => (
-                  <option key={rt.id} value={rt.id}>{rt.tenLoaiPhong}</option>
+                  <option key={rt.id} value={String(rt.id)}>{rt.tenLoaiPhong}</option>
                 ))}
-              </select>
+              </CustomSelect>
               {errors.loaiPhongId && <p className="text-red-500 text-xs mt-1 font-medium">{errors.loaiPhongId}</p>}
             </div>
             <div>
@@ -265,9 +275,9 @@ export default function RoomModal({ room, onSave, onClose }: Props) {
               className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
               Hủy
             </button>
-            <button type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-medium transition">
-              {room ? "Lưu thay đổi" : "Thêm phòng"}
+            <button type="submit" disabled={isSubmitting}
+              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
+              {isSubmitting ? "Đang xử lý..." : (room ? "Lưu thay đổi" : "Thêm phòng")}
             </button>
           </div>
         </form>
