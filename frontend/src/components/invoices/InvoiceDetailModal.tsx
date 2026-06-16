@@ -53,7 +53,7 @@ export default function InvoiceDetailModal({ invoice, onClose }: Props) {
           <h2 className="font-semibold text-gray-800">Chi tiết hóa đơn</h2>
           <div className="flex items-center gap-2">
             <button onClick={handleExportExcel}
-              className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-3 py-2 rounded-lg transition">
+              className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-3 py-2 rounded-lg transition">
               <Download className="w-4 h-4" />
               Xuất Excel
             </button>

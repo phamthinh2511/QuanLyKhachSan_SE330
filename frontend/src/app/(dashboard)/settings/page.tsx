@@ -21,6 +21,23 @@ import { Room } from "@/types/room";
 import { Service } from "@/types/service";
 import { RoomTypeModel } from "@/types/room-type";
 import { Account } from "@/types/account";
+import clsx from "clsx";
+
+const customerStatusStyle: Record<string, string> = {
+  "Thường":                 "bg-sky-100 text-sky-800 border border-sky-200 hover:bg-sky-200 hover:text-sky-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "VIP":                    "bg-purple-100 text-purple-800 border border-purple-200 hover:bg-purple-200 hover:text-purple-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Khách hàng thân thiết":  "bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 hover:text-amber-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+};
+
+const employeePositionStyle: Record<string, string> = {
+  "Lễ Tân": "bg-sky-100 text-sky-800 border border-sky-200 hover:bg-sky-200 hover:text-sky-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Quản Lý":      "bg-purple-100 text-purple-800 border border-purple-200 hover:bg-purple-200 hover:text-purple-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Vệ Sinh": "bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200 hover:text-emerald-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Bếp":         "bg-orange-100 text-orange-800 border border-orange-200 hover:bg-orange-200 hover:text-orange-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Bảo Dưỡng":  "bg-cyan-100 text-cyan-800 border border-cyan-200 hover:bg-cyan-200 hover:text-cyan-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Bảo Vệ":     "bg-rose-100 text-rose-800 border border-rose-200 hover:bg-rose-200 hover:text-rose-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Khác":        "bg-indigo-100 text-indigo-800 border border-indigo-200 hover:bg-indigo-200 hover:text-indigo-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+};
 
 type TrashCategory = "customers" | "employees" | "rooms" | "services" | "room-types" | "accounts";
 
@@ -393,11 +410,15 @@ export default function SettingsPage() {
                           <td className="px-6 py-4 font-medium text-gray-800">{c.name}</td>
                           <td className="px-6 py-4 text-gray-500">{c.phone}</td>
                           <td className="px-6 py-4 text-gray-500">{c.email}</td>
-                          <td className="px-6 py-4 text-gray-500">{c.status}</td>
+                          <td className="px-6 py-4">
+                            <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap", customerStatusStyle[c.status] || "bg-gray-100 text-gray-600")}>
+                              {c.status}
+                            </span>
+                          </td>
                           <td className="px-6 py-4 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
-                              <button onClick={() => handleRestore(c.id, "customers", c.name)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Khôi phục"><RotateCcw className="w-4 h-4" /></button>
-                              <button onClick={() => setConfirmDelete({ id: c.id, category: "customers", name: c.name })} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition" title="Xóa vĩnh viễn"><Trash2 className="w-4 h-4" /></button>
+                              <button onClick={() => handleRestore(c.id, "customers", c.name)} className="p-1.5 text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 rounded-lg transition flex items-center justify-center font-medium" title="Khôi phục"><RotateCcw className="w-4 h-4" /></button>
+                              <button onClick={() => setConfirmDelete({ id: c.id, category: "customers", name: c.name })} className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center font-medium" title="Xóa vĩnh viễn"><Trash2 className="w-4 h-4" /></button>
                             </div>
                           </td>
                         </tr>
@@ -408,11 +429,15 @@ export default function SettingsPage() {
                           <td className="px-6 py-4 font-medium text-gray-800">{e.name}</td>
                           <td className="px-6 py-4 text-gray-500">{e.phone}</td>
                           <td className="px-6 py-4 text-gray-500">{e.email}</td>
-                          <td className="px-6 py-4 text-gray-500">{e.position}</td>
+                          <td className="px-6 py-4">
+                            <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap", employeePositionStyle[e.position] || "bg-gray-100 text-gray-600")}>
+                              {e.position}
+                            </span>
+                          </td>
                           <td className="px-6 py-4 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
-                              <button onClick={() => handleRestore(e.id, "employees", e.name)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Khôi phục"><RotateCcw className="w-4 h-4" /></button>
-                              <button onClick={() => setConfirmDelete({ id: e.id, category: "employees", name: e.name })} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition" title="Xóa vĩnh viễn"><Trash2 className="w-4 h-4" /></button>
+                              <button onClick={() => handleRestore(e.id, "employees", e.name)} className="p-1.5 text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 rounded-lg transition flex items-center justify-center font-medium" title="Khôi phục"><RotateCcw className="w-4 h-4" /></button>
+                              <button onClick={() => setConfirmDelete({ id: e.id, category: "employees", name: e.name })} className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center font-medium" title="Xóa vĩnh viễn"><Trash2 className="w-4 h-4" /></button>
                             </div>
                           </td>
                         </tr>
@@ -426,8 +451,8 @@ export default function SettingsPage() {
                           <td className="px-6 py-4 text-gray-500">{r.pricePerNight.toLocaleString("vi-VN")} VND</td>
                           <td className="px-6 py-4 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
-                              <button onClick={() => handleRestore(r.id, "rooms", `Phòng ${r.id}`)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Khôi phục"><RotateCcw className="w-4 h-4" /></button>
-                              <button onClick={() => setConfirmDelete({ id: r.id, category: "rooms", name: `Phòng ${r.id}` })} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition" title="Xóa vĩnh viễn"><Trash2 className="w-4 h-4" /></button>
+                              <button onClick={() => handleRestore(r.id, "rooms", `Phòng ${r.id}`)} className="p-1.5 text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 rounded-lg transition flex items-center justify-center font-medium" title="Khôi phục"><RotateCcw className="w-4 h-4" /></button>
+                              <button onClick={() => setConfirmDelete({ id: r.id, category: "rooms", name: `Phòng ${r.id}` })} className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center font-medium" title="Xóa vĩnh viễn"><Trash2 className="w-4 h-4" /></button>
                             </div>
                           </td>
                         </tr>
@@ -440,8 +465,8 @@ export default function SettingsPage() {
                           <td className="px-6 py-4 text-gray-500 truncate max-w-[200px]">{s.description}</td>
                           <td className="px-6 py-4 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
-                              <button onClick={() => handleRestore(s.id, "services", s.name)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Khôi phục"><RotateCcw className="w-4 h-4" /></button>
-                              <button onClick={() => setConfirmDelete({ id: s.id, category: "services", name: s.name })} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition" title="Xóa vĩnh viễn"><Trash2 className="w-4 h-4" /></button>
+                              <button onClick={() => handleRestore(s.id, "services", s.name)} className="p-1.5 text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 rounded-lg transition flex items-center justify-center font-medium" title="Khôi phục"><RotateCcw className="w-4 h-4" /></button>
+                              <button onClick={() => setConfirmDelete({ id: s.id, category: "services", name: s.name })} className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center font-medium" title="Xóa vĩnh viễn"><Trash2 className="w-4 h-4" /></button>
                             </div>
                           </td>
                         </tr>
@@ -454,8 +479,8 @@ export default function SettingsPage() {
                           <td className="px-6 py-4 text-gray-500">{rt.sucChuaToiDa} khách</td>
                           <td className="px-6 py-4 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
-                              <button onClick={() => handleRestore(rt.id!, "room-types", rt.tenLoaiPhong)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Khôi phục"><RotateCcw className="w-4 h-4" /></button>
-                              <button onClick={() => setConfirmDelete({ id: rt.id!, category: "room-types", name: rt.tenLoaiPhong })} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition" title="Xóa vĩnh viễn"><Trash2 className="w-4 h-4" /></button>
+                              <button onClick={() => handleRestore(rt.id!, "room-types", rt.tenLoaiPhong)} className="p-1.5 text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 rounded-lg transition flex items-center justify-center font-medium" title="Khôi phục"><RotateCcw className="w-4 h-4" /></button>
+                              <button onClick={() => setConfirmDelete({ id: rt.id!, category: "room-types", name: rt.tenLoaiPhong })} className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center font-medium" title="Xóa vĩnh viễn"><Trash2 className="w-4 h-4" /></button>
                             </div>
                           </td>
                         </tr>
@@ -464,12 +489,18 @@ export default function SettingsPage() {
                         <tr key={a.id} className="hover:bg-gray-50/50 transition">
                           <td className="px-6 py-4 font-semibold text-gray-700">{a.id}</td>
                           <td className="px-6 py-4 font-medium text-gray-800">{a.username}</td>
-                          <td className="px-6 py-4 text-gray-500">{a.role}</td>
+                          <td className="px-6 py-4">
+                            <span className={clsx("px-2 py-0.5 inline-block rounded text-[10px] font-bold uppercase whitespace-nowrap", 
+                              a.role === "ADMIN" ? "bg-red-100 text-red-700" : (a.role === "MANAGER" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700")
+                            )}>
+                              {a.role}
+                            </span>
+                          </td>
                           <td className="px-6 py-4 text-gray-500">{new Date(a.createdAt).toLocaleDateString("vi-VN")}</td>
                           <td className="px-6 py-4 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
-                              <button onClick={() => handleRestore(a.id, "accounts", a.username)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Khôi phục"><RotateCcw className="w-4 h-4" /></button>
-                              <button onClick={() => setConfirmDelete({ id: a.id, category: "accounts", name: a.username })} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition" title="Xóa vĩnh viễn"><Trash2 className="w-4 h-4" /></button>
+                              <button onClick={() => handleRestore(a.id, "accounts", a.username)} className="p-1.5 text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 rounded-lg transition flex items-center justify-center font-medium" title="Khôi phục"><RotateCcw className="w-4 h-4" /></button>
+                              <button onClick={() => setConfirmDelete({ id: a.id, category: "accounts", name: a.username })} className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center font-medium" title="Xóa vĩnh viễn"><Trash2 className="w-4 h-4" /></button>
                             </div>
                           </td>
                         </tr>
@@ -534,7 +565,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => setDeleteStep("verify")}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition shadow-sm"
+                    className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-medium transition shadow-sm"
                   >
                     Tiếp tục
                   </button>
@@ -592,7 +623,7 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={deleteInputText.trim() !== confirmDelete.name || deleting}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-xl text-sm font-medium transition shadow-sm flex items-center gap-2"
+                    className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-xl text-sm font-medium transition shadow-sm flex items-center gap-2"
                   >
                     {deleting && <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
                     Xóa vĩnh viễn
@@ -620,7 +651,7 @@ export default function SettingsPage() {
                     type="button"
                     onClick={handleHardDelete}
                     disabled={deleting}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-xl text-sm font-medium transition shadow-sm flex items-center gap-2"
+                    className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-xl text-sm font-medium transition shadow-sm flex items-center gap-2"
                   >
                     {deleting && <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
                     Xóa vĩnh viễn

@@ -10,9 +10,9 @@ interface Props {
 }
 
 const statusStyle: Record<string, string> = {
-  "Thường":                 "bg-gray-100 text-gray-600",
-  "VIP":                    "bg-purple-100 text-purple-700",
-  "Khách hàng thân thiết":  "bg-yellow-100 text-yellow-700",
+  "Thường":                 "bg-sky-100 text-sky-800 border border-sky-200 hover:bg-sky-200 hover:text-sky-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "VIP":                    "bg-purple-100 text-purple-800 border border-purple-200 hover:bg-purple-200 hover:text-purple-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Khách hàng thân thiết":  "bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 hover:text-amber-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
 };
 
 export default function CustomerTable({ customers, onEdit, onDelete, onView }: Props) {
@@ -54,21 +54,24 @@ export default function CustomerTable({ customers, onEdit, onDelete, onView }: P
                     </span>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       <button 
                         onClick={() => onView?.(c)}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                        className="p-1.5 text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 rounded-lg transition flex items-center justify-center"
+                        title="Xem">
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onEdit(c)}
-                        className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition"
+                        className="p-1.5 text-amber-600 bg-amber-50 border border-amber-100 hover:bg-amber-100 rounded-lg transition flex items-center justify-center"
+                        title="Sửa"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onDelete(c.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                        className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center"
+                        title="Xóa"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

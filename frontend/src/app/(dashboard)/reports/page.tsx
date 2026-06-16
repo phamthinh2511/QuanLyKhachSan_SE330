@@ -8,6 +8,7 @@ import ReportTabs from "@/components/reports/ReportTabs";
 import { getReportData, exportRevenueReport, ReportData } from "@/lib/api/invoices";
 import { useToast } from "@/context/ToastContext";
 import { getUser } from "@/lib/auth";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 export type Period = string;
 export type ReportTab = "Phân tích doanh thu" | "Tỉ lệ bận phòng" | "Sử dụng dịch vụ" | "Năng suất phòng";
@@ -194,48 +195,45 @@ export default function ReportsPage() {
           {/* Selector Dropdowns */}
           <div className="flex gap-2">
             {/* Year Selector */}
-            <div className="relative w-28">
-              <select
-                value={selectedYear}
+            <div className="relative w-32">
+              <CustomSelect
+                value={String(selectedYear)}
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="w-full pl-3 pr-8 py-2 border border-gray-200 bg-white rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none"
+                className="w-full pl-3 pr-8 py-2 border border-gray-200 bg-white rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               >
                 {years.map((y) => (
-                  <option key={y} value={y}>Năm {y}</option>
+                  <option key={y} value={String(y)}>Năm {y}</option>
                 ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </CustomSelect>
             </div>
 
             {/* Month value Selector */}
             {filterType === "month" && (
-              <div className="relative w-28 animate-fadeIn">
-                <select
-                  value={selectedValue}
+              <div className="relative w-32 animate-fadeIn">
+                <CustomSelect
+                  value={String(selectedValue)}
                   onChange={(e) => setSelectedValue(Number(e.target.value))}
-                  className="w-full pl-3 pr-8 py-2 border border-gray-200 bg-white rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none"
+                  className="w-full pl-3 pr-8 py-2 border border-gray-200 bg-white rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 >
                   {months.map((m) => (
-                    <option key={m} value={m}>Tháng {m}</option>
+                    <option key={m} value={String(m)}>Tháng {m}</option>
                   ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                </CustomSelect>
               </div>
             )}
 
             {/* Quarter value Selector */}
             {filterType === "quarter" && (
-              <div className="relative w-28 animate-fadeIn">
-                <select
-                  value={selectedValue}
+              <div className="relative w-32 animate-fadeIn">
+                <CustomSelect
+                  value={String(selectedValue)}
                   onChange={(e) => setSelectedValue(Number(e.target.value))}
-                  className="w-full pl-3 pr-8 py-2 border border-gray-200 bg-white rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none"
+                  className="w-full pl-3 pr-8 py-2 border border-gray-200 bg-white rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 >
                   {quarters.map((q) => (
-                    <option key={q} value={q}>Quý {q}</option>
+                    <option key={q} value={String(q)}>Quý {q}</option>
                   ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                </CustomSelect>
               </div>
             )}
           </div>
@@ -252,7 +250,7 @@ export default function ReportsPage() {
             <button
               onClick={handleExportExcel}
               disabled={loading}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 py-2 rounded-xl transition shadow-sm font-medium disabled:opacity-50"
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-4 py-2 rounded-xl transition shadow-sm font-medium disabled:opacity-50"
             >
               <Download className="w-4 h-4" />
               Xuất Excel

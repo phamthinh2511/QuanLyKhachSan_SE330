@@ -9,6 +9,7 @@ import { getRooms } from "@/lib/api/rooms";
 import { Customer } from "@/types/customer";
 import { Room } from "@/types/room";
 import { isNotEmpty, isValidEmail, isValidPhone, isValidIdCard, isPastDate, isPositiveInteger } from "@/lib/validation";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 interface Props {
   booking: Booking | null;
@@ -62,6 +63,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Đồng bộ chuỗi chặn ngày quá khứ theo mốc thời gian thực tại của hệ thống (Năm 2026)
@@ -354,12 +356,17 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!validate()) return;
 
+    setIsSubmitting(true);
     const bookingType = form.status === "Đang sử dụng" ? "THUE_TRUC_TIEP" : "DAT_TRUOC";
     const selectedRoom = rooms.find((r) => r.roomNumber === form.roomNumber);
 
-    if (!selectedRoom) return;
+    if (!selectedRoom) {
+      setIsSubmitting(false);
+      return;
+    }
 
     let customerId = form.customerId;
     let customerName = form.customerName;
@@ -386,6 +393,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
         } else {
           alert("Lỗi khi thêm mới khách hàng: " + (err.message || err));
         }
+        setIsSubmitting(false);
         return;
       }
     }
@@ -420,6 +428,8 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
       } else {
         alert(err.message || "Đã xảy ra lỗi trong quá trình xử lý đơn phòng.");
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -456,7 +466,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-6 flex-1 overflow-y-auto">
             {/* SECTION 1: CUSTOMER INFORMATION */}
-            <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-5 space-y-4 shadow-sm relative overflow-hidden">
+            <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-5 space-y-4 shadow-sm relative">
               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-3 border-b border-slate-100">
@@ -564,17 +574,16 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Giới tính</label>
-                  <select
+                  <CustomSelect
                     id="customerGender"
                     value={form.customerGender}
                     onChange={(e) => handleCustomerFieldChange("customerGender", e.target.value)}
                     className={getInputStyle("customerGender")}
-                    required
                   >
                     <option value="Nam">Nam</option>
                     <option value="Nữ">Nữ</option>
                     <option value="Khác">Khác</option>
-                  </select>
+                  </CustomSelect>
                 </div>
               </div>
 
@@ -649,7 +658,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Hạng khách hàng</label>
-                  <select
+                  <CustomSelect
                     id="customerStatus"
                     value={form.customerStatus}
                     onChange={(e) => handleCustomerFieldChange("customerStatus", e.target.value)}
@@ -658,13 +667,13 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                     <option value="Thường">Thường</option>
                     <option value="VIP">VIP</option>
                     <option value="Khách hàng thân thiết">Khách hàng thân thiết</option>
-                  </select>
+                  </CustomSelect>
                 </div>
               </div>
             </div>
 
             {/* SECTION 2: BOOKING INFORMATION */}
-            <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-5 space-y-4 shadow-sm relative overflow-hidden">
+            <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-5 space-y-4 shadow-sm relative">
               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
               <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
@@ -677,7 +686,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Chọn phòng trống</label>
-                  <select
+                  <CustomSelect
                     id="maPhongId"
                     value={form.roomNumber}
                     onChange={(e) => {
@@ -685,7 +694,6 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                       if (fieldErrors.maPhongId) setFieldErrors(p => { const c = { ...p }; delete c.maPhongId; return c; });
                     }}
                     className={getInputStyle("maPhongId")}
-                    required
                   >
                     <option value="">Chọn phòng</option>
                     {rooms
@@ -704,13 +712,13 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                           Phòng {r.roomNumber} — {r.type} ({r.pricePerNight.toLocaleString("vi-VN")} VND/đêm)
                         </option>
                       ))}
-                  </select>
+                  </CustomSelect>
                   {fieldErrors.maPhongId && <span className="text-xs text-red-500 font-medium mt-1 block">{fieldErrors.maPhongId}</span>}
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Trạng thái đặt</label>
-                  <select
+                  <CustomSelect
                     value={form.status}
                     onChange={(e) => setForm({ ...form, status: e.target.value as BookingStatus })}
                     className={getInputStyle("trangThai")}
@@ -718,7 +726,7 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
                     <option value="Đặt trước">Đặt trước</option>
                     <option value="Đang sử dụng">Đang sử dụng</option>
                     <option value="Đã hủy">Đã hủy</option>
-                  </select>
+                  </CustomSelect>
                 </div>
               </div>
 
@@ -810,9 +818,10 @@ export default function BookingModal({ booking, bookings = [], onSave, onClose }
               </button>
               <button
                 type="submit"
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-semibold shadow-md shadow-blue-500/10 transition duration-150"
+                disabled={isSubmitting}
+                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-sm font-semibold shadow-md shadow-blue-500/10 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {booking ? "Cập nhật đặt phòng" : "Hoàn tất đặt phòng"}
+                {isSubmitting ? "Đang xử lý..." : (booking ? "Cập nhật đặt phòng" : "Hoàn tất đặt phòng")}
               </button>
             </div>
           </form>

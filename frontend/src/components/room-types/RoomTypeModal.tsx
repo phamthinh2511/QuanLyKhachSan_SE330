@@ -157,7 +157,7 @@ export default function RoomTypeModal({ roomType, onSave, onClose }: Props) {
               Hủy
             </button>
             <button type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-medium transition">
+              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-medium transition">
               {roomType ? "Lưu thay đổi" : "Thêm loại phòng"}
             </button>
           </div>

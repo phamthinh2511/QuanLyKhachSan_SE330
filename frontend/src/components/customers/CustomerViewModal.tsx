@@ -10,9 +10,9 @@ interface Props {
 }
 
 const statusStyle: Record<string, string> = {
-  "Thường": "bg-gray-100 text-gray-600",
-  "VIP": "bg-purple-100 text-purple-700",
-  "Khách hàng thân thiết": "bg-yellow-100 text-yellow-700",
+  "Thường":                 "bg-sky-100 text-sky-800 border border-sky-200 hover:bg-sky-200 hover:text-sky-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "VIP":                    "bg-purple-100 text-purple-800 border border-purple-200 hover:bg-purple-200 hover:text-purple-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Khách hàng thân thiết":  "bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 hover:text-amber-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
 };
 
 export default function CustomerViewModal({ customer, onClose }: Props) {

@@ -9,6 +9,7 @@ import ServiceUsageStatCards from "@/components/serviceusages/ServiceUsageStatCa
 import ServiceUsageTodayTable from "@/components/serviceusages/ServiceUsageTodayTable";
 import ServiceUsageAllTable from "@/components/serviceusages/ServiceUsageAllTable";
 import ServiceUsageModal from "@/components/serviceusages/ServiceUsageModal";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 const today = new Date().toISOString().split("T")[0];
 const PAGE_SIZE = 50;
@@ -158,12 +159,12 @@ export default function ServiceUsagePage() {
               </div>
               <button
                 onClick={() => { setEditing(null); setModalOpen(true); }}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
               >
                 <Plus className="w-4 h-4" />
                 Ghi nhận dịch vụ
               </button>
-              <select
+              <CustomSelect
                 value={filterStatus}
                 onChange={(e) => handleFilter(e.target.value)}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -172,7 +173,7 @@ export default function ServiceUsagePage() {
                 <option>Đã sử dụng</option>
                 <option>Chờ sử dụng</option>
                 <option>Đã hủy</option>
-              </select>
+              </CustomSelect>
             </div>
 
             <ServiceUsageAllTable

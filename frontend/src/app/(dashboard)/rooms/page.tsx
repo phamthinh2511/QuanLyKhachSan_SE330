@@ -9,6 +9,7 @@ import RoomTable from "@/components/rooms/RoomTable";
 import RoomGrid from "@/components/rooms/RoomGrid";
 import RoomModal from "@/components/rooms/RoomModal";
 import { apiClient } from "@/lib/api/client";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { mapBookingStatus } from "@/app/(dashboard)/bookings/page";
 
 interface BookingItem {
@@ -226,7 +227,7 @@ export default function RoomsPage() {
       <div className="text-center space-y-3">
         <p className="text-red-500 font-medium">{error}</p>
         <button onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-xl hover:bg-blue-700 transition">
+          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-xl hover:bg-blue-500 transition">
           Thử lại
         </button>
       </div>
@@ -254,25 +255,25 @@ export default function RoomsPage() {
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
         <button onClick={() => { setEditing(null); setModalOpen(true); }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition shrink-0">
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition shrink-0">
           <Plus className="w-4 h-4" /> Thêm phòng
         </button>
-        <select value={filterType} onChange={(e) => handleFilterType(e.target.value)}
+        <CustomSelect value={filterType} onChange={(e) => handleFilterType(e.target.value)}
           className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option>Tất cả</option>
           <option>Standard</option>
           <option>Deluxe</option>
           <option>Suite</option>
           <option>Presidential</option>
-        </select>
-        <select value={filterStatus} onChange={(e) => handleFilterStatus(e.target.value)}
+        </CustomSelect>
+        <CustomSelect value={filterStatus} onChange={(e) => handleFilterStatus(e.target.value)}
           className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option>Tất cả</option>
           <option>Trống</option>
           <option>Đang sử dụng</option>
           <option>Đã đặt</option>
           <option>Bảo trì</option>
-        </select>
+        </CustomSelect>
 
 
         <div className="flex border border-gray-200 rounded-xl overflow-hidden">

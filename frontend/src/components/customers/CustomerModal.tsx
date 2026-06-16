@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Customer, CustomerStatus } from "@/types/customer";
 import { isNotEmpty, isValidEmail, isValidPhone, isValidIdCard, isPastDate } from "@/lib/validation";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 interface Props {
   customer: Customer | null;
@@ -20,6 +21,7 @@ const emptyForm: Omit<Customer, "id"> = {
 export default function CustomerModal({ customer, onSave, onClose }: Props) {
   const [form, setForm] = useState<Omit<Customer, "id">>(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setForm(customer ? { ...customer } : emptyForm);
@@ -69,10 +71,18 @@ export default function CustomerModal({ customer, onSave, onClose }: Props) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!validate()) return;
-    onSave({ ...form, id: customer?.id ?? 0 });
+    setIsSubmitting(true);
+    try {
+      await onSave({ ...form, id: customer?.id ?? 0 });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getInputClass = (fieldName: string) => {
@@ -114,7 +124,7 @@ export default function CustomerModal({ customer, onSave, onClose }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Giới tính</label>
-              <select 
+              <CustomSelect 
                 value={form.gender} 
                 onChange={(e) => handleChange("gender", e.target.value)} 
                 className={getInputClass("gender")}
@@ -122,7 +132,7 @@ export default function CustomerModal({ customer, onSave, onClose }: Props) {
                 <option>Nam</option>
                 <option>Nữ</option>
                 <option>Khác</option>
-              </select>
+              </CustomSelect>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Ngày sinh</label>
@@ -187,7 +197,7 @@ export default function CustomerModal({ customer, onSave, onClose }: Props) {
           {/* Trạng thái */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
-            <select 
+            <CustomSelect 
               value={form.status} 
               onChange={(e) => handleChange("status", e.target.value as CustomerStatus)} 
               className={getInputClass("status")}
@@ -195,7 +205,7 @@ export default function CustomerModal({ customer, onSave, onClose }: Props) {
               <option>Thường</option>
               <option>VIP</option>
               <option>Khách hàng thân thiết</option>
-            </select>
+            </CustomSelect>
           </div>
 
           {/* Actions */}
@@ -204,9 +214,9 @@ export default function CustomerModal({ customer, onSave, onClose }: Props) {
               className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
               Hủy
             </button>
-            <button type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-medium transition">
-              {customer ? "Lưu thay đổi" : "Thêm khách hàng"}
+            <button type="submit" disabled={isSubmitting}
+              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
+              {isSubmitting ? "Đang xử lý..." : (customer ? "Lưu thay đổi" : "Thêm khách hàng")}
             </button>
           </div>
         </form>

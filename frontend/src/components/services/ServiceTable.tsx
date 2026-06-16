@@ -1,11 +1,23 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { Service } from "@/types/service";
+import clsx from "clsx";
 
 interface Props {
   services: Service[];
   onEdit: (s: Service) => void;
   onDelete: (id: number) => void;
 }
+
+const getDescriptionBadgeStyle = (desc: string) => {
+  const text = (desc || "").toLowerCase();
+  if (text.includes("ăn") || text.includes("uống") || text.includes("ẩm thực") || text.includes("nước") || text.includes("bia") || text.includes("rượu")) {
+    return "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200 hover:text-amber-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs";
+  }
+  if (text.includes("spa") || text.includes("massage") || text.includes("thư giãn") || text.includes("đặc biệt") || text.includes("giặt")) {
+    return "bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200 hover:text-purple-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs";
+  }
+  return "bg-sky-100 text-sky-800 border-sky-200 hover:bg-sky-200 hover:text-sky-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs";
+};
 
 export default function ServiceTable({ services, onEdit, onDelete }: Props) {
   return (
@@ -35,15 +47,21 @@ export default function ServiceTable({ services, onEdit, onDelete }: Props) {
                 <td className="px-6 py-4 font-bold text-gray-700">{s.serviceCode}</td>
                 <td className="px-6 py-4 font-medium text-gray-800">{s.name}</td>
                 <td className="px-6 py-4 font-semibold text-gray-800">{s.price.toLocaleString("vi-VN")} VNĐ</td>
-                <td className="px-6 py-4 text-gray-500 max-w-xs truncate">{s.description}</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium border", getDescriptionBadgeStyle(s.description))}>
+                    {s.description || "Dịch vụ phòng"}
+                  </span>
+                </td>
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button onClick={() => onEdit(s)}
-                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                      className="p-1.5 text-amber-600 bg-amber-50 border border-amber-100 hover:bg-amber-100 rounded-lg transition flex items-center justify-center"
+                      title="Chỉnh sửa">
                       <Pencil className="w-4 h-4" />
                     </button>
                     <button onClick={() => onDelete(s.id)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                      className="p-1.5 text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center"
+                      title="Xóa">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>

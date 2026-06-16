@@ -132,7 +132,7 @@ export default function ServiceModal({ service, onSave, onClose }: Props) {
               Hủy
             </button>
             <button type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-medium transition">
+              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-medium transition">
               {service ? "Lưu thay đổi" : "Lưu dịch vụ"}
             </button>
           </div>

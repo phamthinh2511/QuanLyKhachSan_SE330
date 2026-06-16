@@ -11,13 +11,13 @@ interface Props {
 }
 
 const statusStyle: Record<string, string> = {
-  "Đang sử dụng": "bg-green-100 text-green-700",
-  "Đã trả phòng": "bg-gray-100 text-gray-500",
-  "Checked-in":   "bg-green-100 text-green-700",
-  "Checked-out":  "bg-gray-100 text-gray-500",
-  "Đã đặt":       "bg-blue-100 text-blue-700",
-  "Đã hủy":       "bg-red-100 text-red-500",
-  "Đặt trước":    "bg-blue-100 text-blue-700",
+  "Đang sử dụng": "bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200 hover:text-emerald-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Đã trả phòng": "bg-sky-100 text-sky-800 border border-sky-200 hover:bg-sky-200 hover:text-sky-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Checked-in":   "bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200 hover:text-emerald-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Checked-out":  "bg-sky-100 text-sky-800 border border-sky-200 hover:bg-sky-200 hover:text-sky-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Đã đặt":       "bg-sky-100 text-sky-800 border border-sky-200 hover:bg-sky-200 hover:text-sky-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Đã hủy":       "bg-rose-100 text-rose-800 border border-rose-200 hover:bg-rose-200 hover:text-rose-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
+  "Đặt trước":    "bg-sky-100 text-sky-800 border border-sky-200 hover:bg-sky-200 hover:text-sky-900 transition-all duration-200 cursor-default hover:scale-105 hover:shadow-xs",
 };
 
 export default function BookingAllTable({ bookings, onEdit, onDelete, onRowContextMenu }: Props) {
@@ -52,15 +52,17 @@ export default function BookingAllTable({ bookings, onEdit, onDelete, onRowConte
                 <td className="px-4 py-4 text-gray-600">{b.guests}</td>
                 <td className="px-4 py-4 font-semibold text-gray-800">{b.amount.toLocaleString()}</td>
                 <td className="px-4 py-4">
-                  <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap", statusStyle[b.status])}>
+                  <span className={clsx("px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap border", statusStyle[b.status])}>
                     {b.status}
                   </span>
                 </td>
                 <td className="px-4 py-4">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button onClick={() => onEdit(b)}
-                      className="flex items-center gap-1.5 border border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600 px-3 py-1.5 rounded-lg text-xs font-medium transition">
-                      <Pencil className="w-3 h-3" /> Sửa
+                      className="p-1.5 text-amber-600 bg-amber-50 border border-amber-100 hover:bg-amber-100 rounded-lg transition flex items-center justify-center gap-1.5 text-xs font-semibold px-2.5 py-1.5"
+                      title="Sửa"
+                    >
+                      <Pencil className="w-3.5 h-3.5" /> Sửa
                     </button>
 
                     {/* Nút xóa đã được dọn rác cú pháp và thêm async/await */}
@@ -75,8 +77,8 @@ export default function BookingAllTable({ bookings, onEdit, onDelete, onRowConte
                           }
                         }
                       }}
-                      title="Xóa đơn hàng"
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                      title="Xóa đơn đặt"
+                      className="p-1.5 text-red-650 bg-red-50 border border-red-100 hover:bg-red-100 rounded-lg transition flex items-center justify-center"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

@@ -9,6 +9,7 @@ import InvoiceEditModal from "@/components/invoices/InvoiceEditModal";
 import { getPagedInvoices, deleteInvoice, updateInvoice, exportInvoices } from "@/lib/api/invoices";
 import { Download, Calendar, Search, ChevronDown } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 const PAGE_SIZE = 15;
 
@@ -190,9 +191,10 @@ const sortedInvoices = [...invoices].sort((a: any, b: any) => {
     if (filter === "Chờ thanh toán") {
       return timeB - timeA;
     }
-if (filter === "Đã thanh toán") {
+    if (filter === "Đã thanh toán") {
       return timeA - timeB;
     }
+    return timeB - timeA;
   });
   return (
     <div className="p-6 space-y-6">
@@ -216,7 +218,7 @@ if (filter === "Đã thanh toán") {
           </div>
           <button
             onClick={handleExportExcel}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition shadow-sm"
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition shadow-sm"
           >
             <Download className="w-4 h-4" />
             Xuất Excel
@@ -250,62 +252,58 @@ if (filter === "Đã thanh toán") {
         <div className="flex gap-2 items-center w-full md:w-auto">
           <div className="relative w-full md:w-44">
             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            <select
+            <CustomSelect
               value={timeOption}
               onChange={(e) => setTimeOption(e.target.value)}
-              className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white hover:bg-gray-50 transition appearance-none"
+              className="w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white hover:bg-gray-50 transition"
             >
               <option value="this-month">Tháng này</option>
               <option value="last-month">Tháng trước</option>
               <option value="custom">Chọn tháng...</option>
               <option value="all">Tất cả</option>
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </CustomSelect>
           </div>
 
           {/* Sub Month & Year pickers revealed when "custom" selected */}
           {timeOption === "custom" && (
             <div className="flex gap-1.5 animate-fadeIn">
-              <div className="relative w-24">
-                <select
-                  value={customMonth}
+              <div className="relative w-28">
+                <CustomSelect
+                  value={String(customMonth)}
                   onChange={(e) => setCustomMonth(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white hover:bg-gray-50 transition appearance-none text-center"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white hover:bg-gray-50 transition"
                 >
                   {months.map((m) => (
-                    <option key={m} value={m}>Tháng {m}</option>
+                    <option key={m} value={String(m)}>Tháng {m}</option>
                   ))}
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                </CustomSelect>
               </div>
               <div className="relative w-24">
-                <select
-                  value={customYear}
+                <CustomSelect
+                  value={String(customYear)}
                   onChange={(e) => setCustomYear(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white hover:bg-gray-50 transition appearance-none text-center"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white hover:bg-gray-50 transition"
                 >
                   {years.map((y) => (
-                    <option key={y} value={y}>{y}</option>
+                    <option key={y} value={String(y)}>{y}</option>
                   ))}
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                </CustomSelect>
               </div>
             </div>
           )}
         </div>
 
         {/* Status Dropdown */}
-        <div className="relative w-full md:w-44">
-          <select
+        <div className="relative w-full md:w-48">
+          <CustomSelect
             value={filter}
             onChange={(e) => handleFilter(e.target.value)}
-            className="w-full pl-4 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white hover:bg-gray-50 transition appearance-none"
+            className="w-full pl-4 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white hover:bg-gray-50 transition"
           >
             <option value="Tất cả">Trạng thái: Tất cả</option>
             <option value="Đã thanh toán">Đã thanh toán</option>
             <option value="Chờ thanh toán">Chờ thanh toán</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          </CustomSelect>
         </div>
       </div>
 
