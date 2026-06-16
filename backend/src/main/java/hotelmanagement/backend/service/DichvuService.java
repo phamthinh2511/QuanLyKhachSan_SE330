@@ -98,6 +98,10 @@ public class DichvuService {
         Dichvu dichvu = dichvuRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy dịch vụ với id: " + id));
 
+        if (!dichvu.getIsDeleted()) {
+            throw new RuntimeException("Dịch vụ không nằm trong thùng rác nên không thể xóa vĩnh viễn");
+        }
+
         if (sudungdichvuRepository.existsByMaDichVuId(id) || ctHoadonRepository.existsByMaDichVuId(id)) {
             throw new RuntimeException("Không thể xóa vĩnh viễn dịch vụ này vì đã có lịch sử giao dịch liên quan");
         }

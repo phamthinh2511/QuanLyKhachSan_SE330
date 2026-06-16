@@ -74,6 +74,16 @@ public class PhongService {
                 throw new RuntimeException("Không có đủ thông tin loại phòng (cần tenLoaiPhong hợp lệ trong object loaiPhong).");
             }
         }
+
+        // Validate sức chứa của phòng
+        if (phong.getSucChua() != null) {
+            if (phong.getSucChua() <= 0) {
+                throw new RuntimeException("Sức chứa của phòng phải lớn hơn 0");
+            }
+            if (phong.getMaLoaiPhong() != null && phong.getSucChua() > phong.getMaLoaiPhong().getSucChuaToiDa()) {
+                throw new RuntimeException("Sức chứa của phòng (" + phong.getSucChua() + ") không được vượt quá sức chứa tối đa của loại phòng này (" + phong.getMaLoaiPhong().getSucChuaToiDa() + ")");
+            }
+        }
     }
 
     public List<PhongResponseDto> getAll() {
@@ -90,6 +100,12 @@ public class PhongService {
     }
 
     public PhongResponseDto create(PhongRequestDto dto) {
+        if (dto.getId() == null) {
+            throw new RuntimeException("Số phòng không được để trống");
+        }
+        if (phongRepository.existsById(dto.getId())) {
+            throw new RuntimeException("Số phòng này đã tồn tại trong hệ thống (hoặc đang nằm trong thùng rác)");
+        }
         Phong phong = new Phong();
         phong.setId(dto.getId()); // MaPhong nhập tay
         applyRequestDtoToEntity(phong, dto);
@@ -132,6 +148,10 @@ public class PhongService {
     public void hardDelete(Integer id) {
         Phong p = phongRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng với id: " + id));
+
+        if (!p.getIsDeleted()) {
+            throw new RuntimeException("Phòng không nằm trong thùng rác nên không thể xóa vĩnh viễn");
+        }
 
         if (ctDatphongRepository.existsByMaPhongId(id) ||
             ctPhieuthuephongRepository.existsByMaPhongId(id) ||

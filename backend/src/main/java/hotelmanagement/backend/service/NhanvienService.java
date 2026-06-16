@@ -179,6 +179,10 @@ public class NhanvienService {
         Nhanvien nv = nhanvienRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay nhan vien id: " + id));
 
+        if (!nv.getIsDeleted()) {
+            throw new RuntimeException("Nhan vien khong nam trong thung rac nen khong the xoa vinh vien");
+        }
+
         if (phieuthuephongRepository.existsByMaNhanVienId(id) ||
             hoadonRepository.existsByMaNhanVienId(id) ||
             kiemkephongRepository.existsByMaNhanVienId(id)) {
