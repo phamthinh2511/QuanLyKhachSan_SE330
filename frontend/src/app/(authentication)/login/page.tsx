@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Hotel, Eye, EyeOff, Lock, User, AlertCircle } from "lucide-react";
 import { loginApi } from "@/lib/api/auth";
 import { saveAuth, decodeJwt } from "@/lib/auth";
@@ -118,6 +119,14 @@ export default function LoginPage() {
                     : <Eye className="w-4 h-4" />
                   }
                 </button>
+              </div>
+              <div className="flex justify-end mt-1.5">
+                <Link
+                  href="/forgot-password"
+                  className="text-blue-300 hover:text-white text-sm transition-colors hover:underline underline-offset-2"
+                >
+                  Quên mật khẩu?
+                </Link>
               </div>
             </div>
 
