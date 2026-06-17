@@ -6,6 +6,7 @@ import hotelmanagement.backend.entity.CtDatphong;
 import hotelmanagement.backend.entity.Hoadon;
 import hotelmanagement.backend.repository.DatphongRepository;
 import hotelmanagement.backend.repository.PhongRepository;
+import hotelmanagement.backend.repository.PhieuthuephongRepository;
 import hotelmanagement.backend.repository.CtDatphongRepository;
 import hotelmanagement.backend.repository.HoadonRepository;
 import org.springframework.context.annotation.Bean;
@@ -33,7 +34,8 @@ public class AiChatConfig {
     @Description("Tra cứu danh sách các phòng còn trống trong khách sạn theo khoảng ngày Check-In (ngày nhận phòng) và Check-Out (ngày trả phòng). Yêu cầu định dạng ngày gửi lên là YYYY-MM-DD.")
     public Function<RoomAvailabilityRequest, RoomAvailabilityResponse> checkRoomAvailabilityFunction(
             PhongRepository phongRepository,
-            DatphongRepository datphongRepository) {
+            DatphongRepository datphongRepository,
+            PhieuthuephongRepository phieuthuephongRepository) {
         return request -> {
             try {
                 LocalDate checkIn = LocalDate.parse(request.checkIn());
@@ -41,18 +43,14 @@ public class AiChatConfig {
 
                 // Lấy danh sách ID các phòng đã được đặt trùng lịch trong khoảng này
                 List<Integer> bookedRoomIds = datphongRepository.findBookedRoomIds(checkIn, checkOut);
+                // Lấy danh sách ID các phòng thuê trực tiếp trùng lịch trong khoảng này
+                List<Integer> directRentedRoomIds = phieuthuephongRepository.findDirectRentedRoomIds(checkIn, checkOut);
 
-                List<Phong> availableRooms;
-                if (bookedRoomIds == null || bookedRoomIds.isEmpty()) {
-                    availableRooms = phongRepository.findAllWithLoaiPhong().stream()
-                            .filter(p -> p.getIsDeleted() == null || !p.getIsDeleted())
-                            .toList();
-                } else {
-                    availableRooms = phongRepository.findAllWithLoaiPhong().stream()
-                            .filter(p -> p.getIsDeleted() == null || !p.getIsDeleted())
-                            .filter(p -> !bookedRoomIds.contains(p.getId()))
-                            .toList();
-                }
+                List<Phong> availableRooms = phongRepository.findAllWithLoaiPhong().stream()
+                        .filter(p -> p.getIsDeleted() == null || !p.getIsDeleted())
+                        .filter(p -> (bookedRoomIds == null || !bookedRoomIds.contains(p.getId())) &&
+                                     (directRentedRoomIds == null || !directRentedRoomIds.contains(p.getId())))
+                        .toList();
 
                 List<String> roomDetails = availableRooms.stream()
                         .map(p -> String.format("Phòng %d: Tầng %d, Loại phòng: %s, Sức chứa tối đa: %d người, Đơn giá: %,.0f VND",
@@ -77,7 +75,8 @@ public class AiChatConfig {
     @Description("Tra cứu danh sách các phòng đã được đặt hoặc đang sử dụng (occupied/booked) trong khách sạn theo khoảng ngày Check-In (ngày nhận phòng) và Check-Out (ngày trả phòng). Yêu cầu định dạng ngày gửi lên là YYYY-MM-DD.")
     public Function<BookedRoomsRequest, BookedRoomsResponse> checkBookedRoomsFunction(
             PhongRepository phongRepository,
-            DatphongRepository datphongRepository) {
+            DatphongRepository datphongRepository,
+            PhieuthuephongRepository phieuthuephongRepository) {
         return request -> {
             try {
                 LocalDate checkIn = LocalDate.parse(request.checkIn());
@@ -85,14 +84,13 @@ public class AiChatConfig {
 
                 // Lấy danh sách ID các phòng đã được đặt trùng lịch trong khoảng này
                 List<Integer> bookedRoomIds = datphongRepository.findBookedRoomIds(checkIn, checkOut);
-
-                if (bookedRoomIds == null || bookedRoomIds.isEmpty()) {
-                    return new BookedRoomsResponse(List.of());
-                }
+                // Lấy danh sách ID các phòng thuê trực tiếp trùng lịch trong khoảng này
+                List<Integer> directRentedRoomIds = phieuthuephongRepository.findDirectRentedRoomIds(checkIn, checkOut);
 
                 List<Phong> bookedRooms = phongRepository.findAllWithLoaiPhong().stream()
                         .filter(p -> p.getIsDeleted() == null || !p.getIsDeleted())
-                        .filter(p -> bookedRoomIds.contains(p.getId()))
+                        .filter(p -> (bookedRoomIds != null && bookedRoomIds.contains(p.getId())) ||
+                                     (directRentedRoomIds != null && directRentedRoomIds.contains(p.getId())))
                         .toList();
 
                 List<String> roomDetails = bookedRooms.stream()
