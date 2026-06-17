@@ -72,6 +72,17 @@ public class BookingService {
         }
     }
 
+    private void validateRoomCapacity(Integer roomId, Integer soKhach) {
+        if (soKhach == null || soKhach <= 0) {
+            throw new IllegalStateException("Số lượng khách phải lớn hơn hoặc bằng 1!");
+        }
+        Phong phong = phongRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy phòng!"));
+        if (phong.getSucChua() != null && soKhach > phong.getSucChua()) {
+            throw new IllegalStateException("Số lượng khách vượt quá sức chứa tối đa của phòng (" + phong.getSucChua() + " người)!");
+        }
+    }
+
 @Transactional
 public void xuLyDatHoacThuePhong(BookingRequest request) {
     Khachhang khach = khachhangRepository.findById(request.getMaKhachHangId())
@@ -82,6 +93,8 @@ public void xuLyDatHoacThuePhong(BookingRequest request) {
     if ("Bảo trì".equals(phong.getTrangThai())) {
         throw new IllegalStateException("Phòng đang bảo trì, không thể thao tác!");
     }
+
+    validateRoomCapacity(request.getMaPhongId(), request.getSoKhach());
 
     String trangThaiYeuCau = request.getTrangThai().trim();
     LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
@@ -523,6 +536,7 @@ public List<DatPhongResponse> getAllBookings() {
                 .orElseThrow(() -> new RuntimeException("Khách hàng không tồn tại!"));
 
         Integer newRoomId = request.getMaPhongId();
+        validateRoomCapacity(newRoomId, request.getSoKhach());
         String cleanStatus = request.getTrangThai() != null ? request.getTrangThai().trim() : "";
 
         if ("Đang sử dụng".equals(cleanStatus)) {

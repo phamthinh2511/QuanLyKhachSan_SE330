@@ -85,15 +85,23 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
       } else if (form.username.length < 3) {
         newErrors.username = "Tên đăng nhập phải chứa ít nhất 3 ký tự";
       }
+
+      // Bắt buộc nhập mật khẩu khi thêm mới nhân viên
+      if (!form.password || form.password.trim().length === 0) {
+        newErrors.password = "Mật khẩu không được để trống khi thêm mới";
+      } else if (form.password.length < 6) {
+        newErrors.password = "Mật khẩu phải chứa ít nhất 6 ký tự";
+      }
     } else {
       if (form.username && form.username.length < 3) {
         newErrors.username = "Tên đăng nhập phải chứa ít nhất 3 ký tự";
       }
-    }
 
-    if (form.password && form.password.trim().length > 0) {
-      if (form.password.length < 6) {
-        newErrors.password = "Mật khẩu phải chứa ít nhất 6 ký tự";
+      // Khi chỉnh sửa, mật khẩu có thể để trống
+      if (form.password && form.password.trim().length > 0) {
+        if (form.password.length < 6) {
+          newErrors.password = "Mật khẩu phải chứa ít nhất 6 ký tự";
+        }
       }
     }
 
@@ -142,7 +150,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
           {/* Họ tên + Ngày sinh */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Họ tên</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Họ tên <span className="text-red-500">*</span></label>
               <input 
                 type="text" 
                 placeholder="Nhập họ tên" 
@@ -153,7 +161,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
               {errors.name && <p className="text-red-500 text-xs mt-1 font-medium">{errors.name}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Ngày sinh</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Ngày sinh <span className="text-red-500">*</span></label>
               <input 
                 type="date" 
                 value={form.birthday}
@@ -167,7 +175,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
           {/* SĐT + Email */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại <span className="text-red-500">*</span></label>
               <input 
                 type="text" 
                 placeholder="+84 234-567-8900" 
@@ -178,7 +186,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
               {errors.phone && <p className="text-red-500 text-xs mt-1 font-medium">{errors.phone}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
               <input 
                 type="email" 
                 placeholder="employee@hotel.com" 
@@ -209,7 +217,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
               </CustomSelect>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phòng ban</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phòng ban <span className="text-red-500">*</span></label>
               <input 
                 type="text" 
                 placeholder="vd. Front Desk" 
@@ -224,7 +232,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
           {/* Ngày vào + Trạng thái */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Ngày vào làm</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Ngày vào làm <span className="text-red-500">*</span></label>
               <input 
                 type="date" 
                 value={form.joinDate}
@@ -252,7 +260,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
             <h3 className="text-sm font-semibold text-gray-800 mb-3">Thông tin tài khoản</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tên đăng nhập</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tên đăng nhập <span className="text-red-500">*</span></label>
                 <input 
                   type="text" 
                   placeholder="Tên đăng nhập" 
@@ -264,7 +272,7 @@ export default function EmployeeModal({ employee, onSave, onClose }: Props) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mật khẩu {employee && <span className="text-xs text-gray-400 font-normal">(để trống nếu không đổi)</span>}
+                  Mật khẩu {!employee && <span className="text-red-500">*</span>} {employee && <span className="text-xs text-gray-400 font-normal">(để trống nếu không đổi)</span>}
                 </label>
                 <input 
                   type="password" 

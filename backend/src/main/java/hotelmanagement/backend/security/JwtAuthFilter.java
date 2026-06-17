@@ -22,6 +22,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
+    @Autowired
+    private hotelmanagement.backend.repository.NhanvienRepository nhanvienRepository;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -40,6 +43,25 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            // Kiểm tra xem nhân viên liên kết có bị xóa hoặc đã nghỉ việc hay không
+            java.util.Optional<hotelmanagement.backend.entity.Nhanvien> nvOpt = nhanvienRepository.findByTaikhoanTenDangNhapAndIsDeletedFalse(username);
+            if (nvOpt.isPresent()) {
+                hotelmanagement.backend.entity.Nhanvien nv = nvOpt.get();
+                String trangThai = nv.getTrangThai();
+                boolean isResigned = trangThai != null && (
+                    trangThai.equalsIgnoreCase("NGHI_VIEC") || 
+                    trangThai.equalsIgnoreCase("Đã nghỉ việc") ||
+                    trangThai.toLowerCase().contains("nghỉ việc") ||
+                    trangThai.toLowerCase().contains("nghi_viec")
+                );
+                if (nv.getIsDeleted() || isResigned) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write("{\"code\":401,\"message\":\"Tài khoản thuộc nhân viên đã nghỉ việc hoặc bị xóa.\",\"result\":null}");
+                    return;
+                }
+            }
 
             String role = jwtService.extractRole(token);
 

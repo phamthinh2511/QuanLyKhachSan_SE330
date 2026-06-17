@@ -294,6 +294,7 @@ const searchedBookings = bookings.filter((b) => {
       const employeeId = currUser?.employeeId || 1;
 
       const bookingPayload: BookingRequestPayload = {
+        id: editing ? editing.id : undefined,
         role: "NHAN_VIEN",
         loaiHinh: formData.bookingType || (dbStatus === "Đang sử dụng" ? "THUE_TRUC_TIEP" : "DAT_TRUOC"),
         maKhachHangId: parseInt(formData.customerId),
