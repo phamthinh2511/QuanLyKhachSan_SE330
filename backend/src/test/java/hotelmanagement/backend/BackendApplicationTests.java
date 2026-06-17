@@ -36,6 +36,9 @@ class BackendApplicationTests {
 
             String response3 = aiChatService.generateChatResponse("Vào ngày 15/05/2026 có những phòng nào đang sử dụng?");
             System.out.println("Chatbot response (occupied 15/05): " + response3);
+
+            String response4 = aiChatService.generateChatResponse("Tìm kiếm cho tôi đơn đặt phòng hoặc hóa đơn nào liên quan đến khách hàng tên là Khánh hoặc số điện thoại 0912345678?");
+            System.out.println("Chatbot response (search booking/invoice): " + response4);
             
             System.out.println("CHATBOT TEST END");
         } catch (Exception e) {
