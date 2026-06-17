@@ -129,7 +129,7 @@ public class TaikhoanService {
                 }
                 nv.setIsDeleted(false);
                 nv.setDeletedAt(null);
-                nv.setTrangThai(hotelmanagement.backend.enums.TrangThaiNhanVien.DANG_LAM_VIEC.name());
+                nv.setTrangThai("Đang làm việc");
                 nhanvienRepository.save(nv);
             }
         }

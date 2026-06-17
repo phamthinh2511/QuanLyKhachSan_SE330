@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { Room, RoomStatus } from "@/types/room";
 import { useRooms } from "@/hooks/useRooms";
+import { useRoomTypes } from "@/hooks/useRoomTypes";
 import RoomTable from "@/components/rooms/RoomTable";
 import RoomGrid from "@/components/rooms/RoomGrid";
 import RoomModal from "@/components/rooms/RoomModal";
@@ -32,6 +33,7 @@ const PAGE_SIZE = 10;
 
 export default function RoomsPage() {
   const { rooms, loading, error, handleCreate, handleUpdate, handleDelete } = useRooms();
+  const { roomTypes } = useRoomTypes();
   const [isAdmin, setIsAdmin] = useState(true);
 
   useEffect(() => {
@@ -259,10 +261,11 @@ export default function RoomsPage() {
         <CustomSelect value={filterType} onChange={(e) => handleFilterType(e.target.value)}
           className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option>Tất cả</option>
-          <option>Standard</option>
-          <option>Deluxe</option>
-          <option>Suite</option>
-          <option>Presidential</option>
+          {roomTypes.map((rt) => (
+            <option key={rt.id} value={rt.tenLoaiPhong}>
+              {rt.tenLoaiPhong}
+            </option>
+          ))}
         </CustomSelect>
         <CustomSelect value={filterStatus} onChange={(e) => handleFilterStatus(e.target.value)}
           className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">

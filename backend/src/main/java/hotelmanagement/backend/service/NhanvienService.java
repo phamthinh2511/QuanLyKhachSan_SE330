@@ -93,7 +93,7 @@ public class NhanvienService {
         }
 
         Nhanvien nv = new Nhanvien();
-        nv.setTrangThai(TrangThaiNhanVien.DANG_LAM_VIEC.name());
+        nv.setTrangThai("Đang làm việc");
         applyRequestDto(nv, dto);
         nv.setTaikhoan(tk);
         return toResponseDto(nhanvienRepository.save(nv));
@@ -183,7 +183,7 @@ public class NhanvienService {
 
         nv.setIsDeleted(false);
         nv.setDeletedAt(null);
-        nv.setTrangThai(TrangThaiNhanVien.DANG_LAM_VIEC.name());
+        nv.setTrangThai("Đang làm việc");
 
         return toResponseDto(nhanvienRepository.save(nv));
     }
