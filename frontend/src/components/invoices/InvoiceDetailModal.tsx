@@ -1,6 +1,7 @@
 "use client";
 
-import { X, Download } from "lucide-react";
+import { useRef, useState } from "react";
+import { X, Download, FileText } from "lucide-react";
 import { Invoice } from "@/types/invoice";
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
 }
 
 export default function InvoiceDetailModal({ invoice, onClose }: Props) {
+  const [isExporting, setIsExporting] = useState(false);
+  const invoiceRef = useRef<HTMLDivElement>(null);
   const handleExportExcel = () => {
     let csv = "\uFEFF"; // UTF-8 BOM
     csv += "CHI TIẾT HÓA ĐƠN\n";
@@ -46,6 +49,36 @@ export default function InvoiceDetailModal({ invoice, onClose }: Props) {
     document.body.removeChild(link);
   };
 
+  const handleExportPDF = async () => {
+    try {
+      setIsExporting(true);
+      const { default: jsPDF } = await import("jspdf");
+      const { default: html2canvas } = await import("html2canvas-pro");
+      if (!invoiceRef.current) return;
+
+      const canvas = await html2canvas(invoiceRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: [imgWidth, imgHeight],
+      });
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+      pdf.save(`HoaDon_${invoice.invoiceCode || "Export"}.pdf`);
+    } catch (error) {
+      console.error("Lỗi khi xuất PDF:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -53,6 +86,14 @@ export default function InvoiceDetailModal({ invoice, onClose }: Props) {
         <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white">
           <h2 className="font-semibold text-gray-800">Chi tiết hóa đơn</h2>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportPDF}
+              disabled={isExporting}
+              className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-500 disabled:bg-rose-400 text-white text-sm px-3 py-2 rounded-lg transition"
+            >
+              <FileText className="w-4 h-4" />
+              {isExporting ? "Đang xuất..." : "Xuất PDF"}
+            </button>
             <button onClick={handleExportExcel}
               className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-3 py-2 rounded-lg transition">
               <Download className="w-4 h-4" />
@@ -65,7 +106,7 @@ export default function InvoiceDetailModal({ invoice, onClose }: Props) {
         </div>
 
         {/* Nội dung hóa đơn */}
-        <div className="p-8 bg-white">
+        <div ref={invoiceRef} className="p-8 bg-white">
           {/* Hotel Header */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-blue-600">Nhóm 1</h1>
